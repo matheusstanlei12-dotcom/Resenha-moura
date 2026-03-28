@@ -36,11 +36,11 @@ export const AberturaCaixa = ({ onOpen }: AberturaCaixaProps) => {
 
       // Guardar ID no localStorage para referência rápida
       localStorage.setItem('turno_id', data.id);
-      localStorage.setItem('os_number', data.os_number.toString());
+      localStorage.setItem('os_number', (data.os_number || '---').toString());
       localStorage.setItem('turno_inicio', data.aberto_em);
       localStorage.setItem('fundo_troco', valor.toFixed(2));
       
-      alert(`Caixa Aberto com Sucesso!\nO.S. Número: #${data.os_number}`);
+      alert(`Caixa Aberto com Sucesso!\nO.S. Número: #${data.os_number || '---'}`);
       onOpen();
     } catch (err: any) {
       alert('Erro ao abrir o caixa: ' + err.message);
