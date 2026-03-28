@@ -103,7 +103,10 @@ export const Caixa = () => {
       setMesasPendentes(mesas || []);
 
       const { data: pedidos } = await supabase.from('pedidos')
-        .select('*, profiles:garcom_id(full_name), mesas(numero)')
+        .select(`
+          *, 
+          profiles:garcom_id(full_name)
+        `)
         .neq('status', 'finalizado');
       setPedidosAtivos(pedidos || []);
 
@@ -338,14 +341,18 @@ export const Caixa = () => {
 
       if (selectedMesa) {
         // Buscar IDs dos pedidos que serão fechados
-        const { data: pedidosAtivos } = await supabase.from('pedidos')
+        console.log("Finalizando mesa:", selectedMesa.id);
+        const { data: pedidosAtivosDb } = await supabase.from('pedidos')
           .select('id')
           .eq('mesa_id', selectedMesa.id)
           .neq('status', 'finalizado');
 
-        if (!pedidosAtivos || pedidosAtivos.length === 0) throw new Error("Nenhum pedido ativo encontrado");
+        if (!pedidosAtivosDb || pedidosAtivosDb.length === 0) {
+          console.warn("Mesa tentou ser fechada mas pedidos sumiram no DB:", selectedMesa.id);
+          throw new Error("Nenhum pedido ativo encontrado no banco para esta mesa.");
+        }
 
-        const ids = pedidosAtivos.map(p => p.id);
+        const ids = pedidosAtivosDb.map(p => p.id);
         const masterId = ids[0];
         const otherIds = ids.slice(1);
 

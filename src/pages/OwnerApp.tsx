@@ -136,8 +136,7 @@ export const Dono = () => {
         .from('turnos_caixa')
         .select(`
           *, 
-          profiles:operador_id(full_name),
-          pedidos(*)
+          profiles:operador_id(full_name)
         `)
         .order('aberto_em', { ascending: false })
         .limit(100);
