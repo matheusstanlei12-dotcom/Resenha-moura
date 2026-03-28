@@ -693,7 +693,14 @@ export const Caixa = () => {
                            <b>R$ {taxaServico.toFixed(2)}</b>
                         </div>
                         <div className="d-flex justify-between items-center">
-                           <span style={{ opacity: 0.6 }}>DIVIDIR CONTA POR:</span>
+                           <div className="d-flex flex-col">
+                              <span style={{ opacity: 0.6 }}>DIVIDIR CONTA POR:</span>
+                              {dividirPor > 1 && (
+                                <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 800 }}>
+                                  VLR. INDIVIDUAL: R$ {(totalComTaxa / dividirPor).toFixed(2)}
+                                </span>
+                              )}
+                           </div>
                            <div className="d-flex items-center gap-3">
                               <button onClick={() => setDividirPor(Math.max(1, dividirPor-1))} className="btn-outline" style={{width: '30px', height: '30px', padding: 0}}>-</button>
                               <b>{dividirPor}</b>
@@ -741,7 +748,17 @@ export const Caixa = () => {
                         </div>
 
                         <div className="card" style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                           <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '4px' }}>VALOR PARCIAL (R$)</label>
+                           <div className="d-flex justify-between items-center mb-1">
+                              <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block' }}>VALOR PARCIAL (R$)</label>
+                              {dividirPor > 1 && (
+                                <button 
+                                  onClick={() => setCustomAmount((totalComTaxa / dividirPor).toFixed(2))}
+                                  style={{ background: 'var(--primary-color)', border: 'none', color: '#000', fontSize: '0.6rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                  USAR VALOR INDIVIDUAL
+                                </button>
+                              )}
+                           </div>
                            <input 
                              type="number" 
                              value={customAmount} 
