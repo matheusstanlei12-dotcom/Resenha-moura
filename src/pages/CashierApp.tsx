@@ -4,11 +4,13 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   LogOut, Receipt, History as HistoryIcon, Printer, 
-  Plus, Trash2, Calculator, ChevronLeft, Lock, DollarSign, Pickaxe, BookOpen,
-  ShoppingCart, Store, Search, X, CheckCircle2, Utensils
+  Lock, DollarSign,
+  ShoppingCart, Store, Search, X, Utensils, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
+import { FechamentoCaixa } from '../components/FechamentoCaixa';
+import { AberturaCaixa } from '../components/AberturaCaixa';
 
 type TabType = 'mesas' | 'balcao' | 'historico' | 'cozinha' | 'fechamento';
 type PaymentMethod = 'dinheiro' | 'pix' | 'cartao' | 'debito' | 'credito';
@@ -41,6 +43,33 @@ export const Caixa = () => {
   const [produtos, setProdutos] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('TODOS');
+  const [isCaixaAberto, setIsCaixaAberto] = useState(false);
+  
+  // Verificar turno ativo no banco ao carregar
+  useEffect(() => {
+    const checkActiveTurno = async () => {
+      const { data } = await supabase
+        .from('turnos_caixa')
+        .select('*')
+        .eq('status', 'aberto')
+        .order('aberto_em', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (data) {
+        setIsCaixaAberto(true);
+        localStorage.setItem('turno_id', data.id);
+        localStorage.setItem('turno_inicio', data.aberto_em);
+        localStorage.setItem('fundo_troco', data.fundo_troco.toString());
+      } else {
+        setIsCaixaAberto(false);
+        localStorage.removeItem('turno_id');
+        localStorage.removeItem('turno_inicio');
+        localStorage.removeItem('fundo_troco');
+      }
+    };
+    checkActiveTurno();
+  }, []);
   
   // Quick Sale (Balcão) State
   const [carrinho, setCarrinho] = useState<CartItem[]>([]);
@@ -56,11 +85,14 @@ export const Caixa = () => {
   const [customAmount, setCustomAmount] = useState<string>('');
   const [valorRecebido, setValorRecebido] = useState<string>('');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+
+  const handleRemovePayment = (index: number) => {
+    const newPayments = [...pagamentos];
+    newPayments.splice(index, 1);
+    setPagamentos(newPayments);
+  };
   
-  // Fechamento State
-  const [fundoTroco, setFundoTroco] = useState<string>('0');
-  const [sangria, setSangria] = useState<string>('0');
-  const [dinheiroGaveta, setDinheiroGaveta] = useState<string>('');
+  // Fechamento State (agora gerenciado pelo componente FechamentoCaixa)
   
   const { signOut, profile } = useAuth();
 
@@ -259,6 +291,8 @@ export const Caixa = () => {
   const totalComTaxa = totalCheckout + taxaServico;
   const totalPago = pagamentos.reduce((acc, p) => acc + Number(p.amount), 0);
   const totalRestante = Math.max(0, totalComTaxa - totalPago);
+  const valorIndividual = dividirPor > 1 ? totalComTaxa / dividirPor : totalComTaxa;
+  const suggestedAmount = (dividirPor > 1 && totalRestante >= valorIndividual - 0.01) ? valorIndividual : totalRestante;
 
   // Cálculo de troco reativo
   const valorInput = parseFloat(valorRecebido.replace(',', '.')) || 0;
@@ -266,22 +300,22 @@ export const Caixa = () => {
     .filter(p => p.method === 'dinheiro')
     .reduce((acc, p) => acc + Number(p.amount), 0);
   
-  const baseParaTroco = totalRestante > 0 ? totalRestante : totalEmDinheiro;
+  const customAmountVal = parseFloat(customAmount) || 0;
+  const baseParaTroco = customAmountVal > 0 ? customAmountVal : totalRestante;
   const troco = valorInput > 0 ? Math.max(0, valorInput - baseParaTroco) : 0;
 
   const handleAddPayment = (method: PaymentMethod, amount: number) => {
     if (amount <= 0) return;
-    const finalAmount = Math.min(amount, totalRestante);
-    if (finalAmount <= 0) return;
-    setPagamentos([...pagamentos, { method, amount: finalAmount }]);
-    setValorRecebido('');
+    setPagamentos([...pagamentos, { method, amount }]);
     setCustomAmount('');
+    setSelectedMethod(null);
+    setValorRecebido(''); // Reset troco input after add
   };
 
   const handleFinalizar = async () => {
     // 0. Trava de segurança para categorias críticas
     const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
-    const categoriasCriticas = ['PETISCOS', 'COQUETEIS', 'COQUITEIS', 'DRINKS', 'BEBIDAS ALCOÓLICAS', 'DOSES'];
+    const categoriasCriticas = ['PETISCO', 'PETISCOS', 'COZINHA', 'COQUETÉIS', 'COQUETEIS', 'COQUITEIS'];
     
     const temCriticosEmPreparo = checkoutItens.some(i => {
       const cat = (i.categoria || '').toUpperCase();
@@ -290,7 +324,7 @@ export const Caixa = () => {
     });
 
     if (temCriticosEmPreparo && !ehGestor) {
-      alert("⚠️ BLOQUEIO GESTOR:\n\nHá Petiscos ou Coquetéis em preparação nesta mesa.\n\nApenas Administradores ou o Proprietário podem finalizar a venda com itens críticos em execução.");
+      alert("⚠️ BLOQUEIO GESTOR:\n\nHá itens de COZINHA ou COQUETÉIS em preparação nesta mesa.\n\nApenas Administradores ou o Proprietário podem finalizar a venda com itens críticos em execução.");
       return;
     }
 
@@ -316,12 +350,14 @@ export const Caixa = () => {
         const otherIds = ids.slice(1);
 
         // 1. Atualizar o pedido mestre com o valor total e pagamento
+        const turnoId = localStorage.getItem('turno_id');
         const { error: masterError } = await supabase.from('pedidos')
           .update({ 
             status: 'finalizado', 
             forma_pagamento: formaPagamentoStr,
             total: totalComTaxa,
-            finalizado_at: new Date().toISOString()
+            finalizado_at: new Date().toISOString(),
+            turno_id: turnoId
           })
           .eq('id', masterId);
 
@@ -334,7 +370,8 @@ export const Caixa = () => {
               status: 'finalizado', 
               forma_pagamento: 'AGRUPADO',
               total: 0,
-              finalizado_at: new Date().toISOString()
+              finalizado_at: new Date().toISOString(),
+              turno_id: turnoId
             })
             .in('id', otherIds);
         }
@@ -342,13 +379,15 @@ export const Caixa = () => {
         // 3. Liberar a mesa
         await supabase.from('mesas').update({ status: 'livre', precisa_garcom: false }).eq('id', selectedMesa.id);
       } else {
+        const turnoId = localStorage.getItem('turno_id');
         const { data: newPedido, error: pErr } = await supabase.from('pedidos').insert({
           mesa_id: null,
           garcom_id: profile?.id,
           status: 'finalizado',
           total: totalCheckout,
           forma_pagamento: formaPagamentoStr,
-          finalizado_at: new Date().toISOString()
+          finalizado_at: new Date().toISOString(),
+          turno_id: turnoId
         }).select().single();
 
         if (pErr) throw pErr;
@@ -421,6 +460,8 @@ export const Caixa = () => {
       doc.text('RESENHA DO MOURA', 40, 10, { align: 'center' });
       doc.setFontSize(7); doc.setFont('helvetica', 'normal');
       doc.text('Gastronomia & Entretenimento', 40, 14, { align: 'center' });
+      doc.setFontSize(6);
+      doc.text('CNPJ: 42.418.207/0001-20', 40, 17, { align: 'center' });
       doc.line(5, 20, 75, 20);
       doc.setFontSize(8);
       doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, 5, 24);
@@ -483,41 +524,7 @@ export const Caixa = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleFechamentoCaixa = () => {
-    const fnTroco = parseFloat(fundoTroco) || 0;
-    const fnSangria = parseFloat(sangria) || 0;
-    const fnGaveta = parseFloat(dinheiroGaveta) || 0;
-    const dinhEsperado = fnTroco + paymentTotals.dinheiro - fnSangria;
-    const diff = fnGaveta - dinhEsperado;
-
-    import('jspdf').then(({ default: jsPDF }) => {
-      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [80, 180] });
-      let y = 10;
-      doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-      doc.text('RESENHA DO MOURA', 40, y, { align: 'center' }); y += 6;
-      doc.text('LEITURA Z - FECHAMENTO', 40, y, { align: 'center' }); y += 4;
-      doc.line(5, y, 75, y); y += 6;
-      doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-      doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, 5, y); doc.text(`HORA: ${new Date().toLocaleTimeString('pt-BR')}`, 75, y, { align: 'right' }); y += 4;
-      doc.text(`OPERADOR: ${profile?.full_name?.toUpperCase() || 'CAIXA'}`, 5, y); y += 6;
-      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text('VENDAS POR MODALIDADE:', 5, y); y += 6;
-      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-      doc.text('DINHEIRO:', 5, y); doc.text(`R$ ${paymentTotals.dinheiro.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.text('PIX:', 5, y); doc.text(`R$ ${paymentTotals.pix.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.text('CARTÃO DÉBITO:', 5, y); doc.text(`R$ ${paymentTotals.debito.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.text('CARTÃO CRÉDITO:', 5, y); doc.text(`R$ ${paymentTotals.credito.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      y += 6; doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text('CONFERÊNCIA DE GAVETA:', 5, y); y += 6;
-      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
-      doc.text('Dinheiro Esperado:', 5, y); doc.text(`R$ ${dinhEsperado.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.text('Dinheiro Declarado:', 5, y); doc.text(`R$ ${fnGaveta.toFixed(2)}`, 75, y, { align: 'right' }); y += 6;
-      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text(diff === 0 ? 'CONFERE' : diff > 0 ? `SOBRA: R$ ${diff.toFixed(2)}` : `QUEBRA: R$ ${Math.abs(diff).toFixed(2)}`, 40, y, { align: 'center' });
-      doc.save(`Fechamento_${Date.now()}.pdf`);
-      if (confirm("Encerrar turno e sair?")) signOut();
-    });
-  };
+  // handleFechamentoCaixa movido para o componente FechamentoCaixa
 
   const handleSimularMesasCaixa = async () => {
     if (!confirm("GERAR MESAS DE TESTE?")) return;
@@ -562,7 +569,7 @@ export const Caixa = () => {
     <div className="layout-container" style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
       <aside className="sidebar" style={{ width: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.5rem 0' }}>
          <div style={{ marginBottom: '3rem' }}><div style={{ width: '40px', height: '40px', background: 'var(--primary-color)', borderRadius: '12px' }}></div></div>
-         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', opacity: isCaixaAberto ? 1 : 0.3, pointerEvents: isCaixaAberto ? 'auto' : 'none' }}>
             <button onClick={() => setActiveTab('mesas')} style={{ background: 'none', border: 'none', color: activeTab === 'mesas' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer', position: 'relative' }}>
               <Store size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>MESAS</span>
             </button>
@@ -586,7 +593,7 @@ export const Caixa = () => {
         <OwnerViewBanner panelName="Caixa" />
         <header className="d-flex justify-between items-center mb-6">
            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>
-             {activeTab === 'mesas' ? 'GESTÃO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCÃO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : activeTab === 'historico' ? 'RELATÓRIO DE VENDAS' : 'FECHAMENTO E LEITURA Z'}
+             {!isCaixaAberto ? 'STATUS DO SISTEMA' : (activeTab === 'mesas' ? 'GESTÃO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCÃO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : activeTab === 'historico' ? 'RELATÓRIO DE VENDAS' : 'FECHAMENTO E LEITURA Z')}
            </h1>
            <div className="d-flex items-center gap-4">
               <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>LOGADO COMO: <b style={{color: '#fff'}}>{profile?.full_name?.toUpperCase()}</b></span>
@@ -595,115 +602,119 @@ export const Caixa = () => {
         </header>
 
         <AnimatePresence mode="wait">
-          {activeTab === 'mesas' && (
-            <motion.div key="mesas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
-               {mesasPendentes.map(mesa => (
-                 <div key={mesa.id} className="card hover-surface" style={{ borderLeft: '8px solid var(--primary-color)', padding: '1.5rem', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.6rem', opacity: 0.5, marginBottom: '0.5rem' }}>AGUARDANDO CONTA</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>Mesa {mesa.numero}</div>
-                    <button className="btn-primary w-full mt-4" onClick={() => openTableCheckout(mesa)} style={{ background: 'var(--primary-color)', color: '#000' }}>FECHAR CONTA</button>
-                 </div>
-               ))}
-               {mesasPendentes.length === 0 && (
-                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem', opacity: 0.8 }}>
-                   <Receipt size={80} style={{margin: '0 auto 1.5rem', opacity: 0.3}} />
-                   <h3 style={{ opacity: 0.3 }}>Nenhuma mesa ativa no momento.</h3>
-                   <button onClick={handleSimularMesasCaixa} className="btn-outline mt-6">Simular Mesas</button>
-                 </div>
-               )}
-            </motion.div>
-          )}
-
-          {activeTab === 'balcao' && (
-            <motion.div key="balcao" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem', height: 'calc(100vh - 180px)' }}>
-                <div className="d-flex flex-col gap-3">
-                   <div style={{ position: 'relative' }}>
-                      <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.4 }} />
-                      <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: '#111', border: '1px solid #222', borderRadius: '10px', color: '#fff' }} />
-                   </div>
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: '0.8rem', overflowY: 'auto' }}>
-                      {filteredProdutos.map(p => (
-                        <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: 'pointer' }} onClick={() => addToCart(p)}>
-                           <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{p.nome}</div>
-                           <div style={{ color: 'var(--primary-color)', fontWeight: 900 }}>R$ {Number(p.preco).toFixed(2)}</div>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-               
-               <div className="card d-flex flex-col" style={{ padding: '0', background: '#f8f8f8', border: '1px solid #ddd', borderRadius: '4px', color: '#111', fontFamily: 'monospace' }}>
-                  <div style={{ background: '#eee', padding: '1rem', textAlign: 'center', borderBottom: '2px dashed #ccc' }}>
-                     <h3 style={{ fontSize: '0.9rem', fontWeight: 900 }}>RESENHA DO MOURA</h3>
-                  </div>
-                  <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }} className="d-flex flex-col gap-2">
-                     {carrinho.map(item => (
-                       <div key={item.id} className="d-flex justify-between">
-                          <span>{item.quantidade}x {item.nome}</span>
-                          <span>{(item.preco * item.quantidade).toFixed(2)}</span>
-                       </div>
-                     ))}
-                  </div>
-                  <div style={{ padding: '1rem', background: '#fff', borderTop: '2px dashed #ccc' }}>
-                     <div className="d-flex justify-between mb-4">
-                        <b>TOTAL GERAL:</b>
-                        <b style={{ fontSize: '1.5rem' }}>R$ {carrinho.reduce((acc, i) => acc + (i.preco * i.quantidade), 0).toFixed(2)}</b>
+          {isCaixaAberto ? (
+            <>
+              {activeTab === 'mesas' && (
+                <motion.div key="mesas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
+                   {mesasPendentes.map(mesa => (
+                     <div key={mesa.id} className="card hover-surface" style={{ borderLeft: '8px solid var(--primary-color)', padding: '1.5rem', textAlign: 'center' }}>
+                        <div style={{ fontSize: '0.6rem', opacity: 0.5, marginBottom: '0.5rem' }}>AGUARDANDO CONTA</div>
+                        <div style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>Mesa {mesa.numero}</div>
+                        <button className="btn-primary w-full mt-4" onClick={() => openTableCheckout(mesa)} style={{ background: 'var(--primary-color)', color: '#000' }}>FECHAR CONTA</button>
                      </div>
-                     <button className="btn-primary w-full py-4" onClick={openQuickCheckout}>RECEBER AGORA</button>
-                     <button className="w-full mt-2" style={{ background: 'none', border: 'none', color: '#666', fontSize: '0.6rem' }} onClick={() => setCarrinho([])}>CANCELAR TUDO</button>
-                  </div>
-               </div>
-            </motion.div>
-          )}
+                   ))}
+                   {mesasPendentes.length === 0 && (
+                     <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem', opacity: 0.8 }}>
+                       <Receipt size={80} style={{margin: '0 auto 1.5rem', opacity: 0.3}} />
+                       <h3 style={{ opacity: 0.3 }}>Nenhuma mesa ativa no momento.</h3>
+                       <button onClick={handleSimularMesasCaixa} className="btn-outline mt-6">Simular Mesas</button>
+                     </div>
+                   )}
+                </motion.div>
+              )}
 
-          {activeTab === 'historico' && (
-            <motion.div key="historico" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                 <div className="card" style={{ padding: '1rem' }}>PIX: R$ {paymentTotals.pix.toFixed(2)}</div>
-                 <div className="card" style={{ padding: '1rem' }}>DINHEIRO: R$ {paymentTotals.dinheiro.toFixed(2)}</div>
-                 <div className="card" style={{ padding: '1rem' }}>DÉBITO: R$ {paymentTotals.debito.toFixed(2)}</div>
-                 <div className="card" style={{ padding: '1rem' }}>CRÉDITO: R$ {paymentTotals.credito.toFixed(2)}</div>
-               </div>
-               <div className="card" style={{ padding: 0 }}>
-                  <table style={{ width: '100%' }}>
-                   <thead>
-                     <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
-                       <th style={{ padding: '1rem', textAlign: 'left' }}>Mesa</th>
-                       <th style={{ padding: '1rem', textAlign: 'left' }}>Pagamento</th>
-                       <th style={{ padding: '1rem', textAlign: 'right' }}>Total</th>
-                     </tr>
-                   </thead>
-                   <tbody>
-                     {historicoVendas.map(v => (
-                       <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} onClick={() => handleVerDetalhes(v)}>
-                         <td style={{ padding: '1rem' }}>{v.mesa_id ? `Mesa ${v.mesas?.numero}` : 'Balcão'}</td>
-                         <td style={{ padding: '1rem', fontSize: '0.7rem' }}>{v.forma_pagamento}</td>
-                         <td style={{ padding: '1rem', textAlign: 'right' }}>R$ {Number(v.total).toFixed(2)}</td>
-                       </tr>
-                     ))}
-                   </tbody>
-                </table>
-               </div>
-            </motion.div>
-          )}
-
-          {activeTab === 'fechamento' && (
-             <motion.div key="fechamento" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div className="card" style={{ maxWidth: '500px', margin: '0 auto', padding: '2rem' }}>
-                   <h2 className="mb-6">Fechamento de Caixa</h2>
-                   <div className="mb-4">
-                      <label style={{ display: 'block', marginBottom: '0.5rem' }}>Declaração de Dinheiro em Gaveta (R$)</label>
-                      <input type="number" value={dinheiroGaveta} onChange={e => setDinheiroGaveta(e.target.value)} className="input-field" style={{ fontSize: '2rem', height: '4rem', textAlign: 'center' }} />
+              {activeTab === 'balcao' && (
+                <motion.div key="balcao" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem', height: 'calc(100vh - 180px)' }}>
+                    <div className="d-flex flex-col gap-3">
+                       <div style={{ position: 'relative' }}>
+                          <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.4 }} />
+                          <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: '#111', border: '1px solid #222', borderRadius: '10px', color: '#fff' }} />
+                       </div>
+                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: '0.8rem', overflowY: 'auto' }}>
+                          {filteredProdutos.map(p => (
+                            <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: 'pointer' }} onClick={() => addToCart(p)}>
+                               <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{p.nome}</div>
+                               <div style={{ color: 'var(--primary-color)', fontWeight: 900 }}>R$ {Number(p.preco).toFixed(2)}</div>
+                            </div>
+                          ))}
+                       </div>
+                    </div>
+                   
+                   <div className="card d-flex flex-col" style={{ padding: '0', background: '#f8f8f8', border: '1px solid #ddd', borderRadius: '4px', color: '#111', fontFamily: 'monospace' }}>
+                      <div style={{ background: '#eee', padding: '1rem', textAlign: 'center', borderBottom: '2px dashed #ccc' }}>
+                         <h3 style={{ fontSize: '0.9rem', fontWeight: 900 }}>RESENHA DO MOURA</h3>
+                      </div>
+                      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }} className="d-flex flex-col gap-2">
+                         {carrinho.map(item => (
+                           <div key={item.id} className="d-flex justify-between">
+                              <span>{item.quantidade}x {item.nome}</span>
+                              <span>{(item.preco * item.quantidade).toFixed(2)}</span>
+                           </div>
+                         ))}
+                      </div>
+                      <div style={{ padding: '1rem', background: '#fff', borderTop: '2px dashed #ccc' }}>
+                         <div className="d-flex justify-between mb-4">
+                            <b>TOTAL GERAL:</b>
+                            <b style={{ fontSize: '1.5rem' }}>R$ {carrinho.reduce((acc, i) => acc + (i.preco * i.quantidade), 0).toFixed(2)}</b>
+                         </div>
+                         <button className="btn-primary w-full py-4" onClick={openQuickCheckout}>RECEBER AGORA</button>
+                         <button className="w-full mt-2" style={{ background: 'none', border: 'none', color: '#666', fontSize: '0.6rem' }} onClick={() => setCarrinho([])}>CANCELAR TUDO</button>
+                      </div>
                    </div>
-                   <button className="btn-primary w-full py-4" onClick={handleFechamentoCaixa}>FINALIZAR E IMPRIMIR Z</button>
-                </div>
-             </motion.div>
+                </motion.div>
+              )}
+
+              {activeTab === 'historico' && (
+                <motion.div key="historico" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                     <div className="card" style={{ padding: '1rem' }}>PIX: R$ {paymentTotals.pix.toFixed(2)}</div>
+                     <div className="card" style={{ padding: '1rem' }}>DINHEIRO: R$ {paymentTotals.dinheiro.toFixed(2)}</div>
+                     <div className="card" style={{ padding: '1rem' }}>DÉBITO: R$ {paymentTotals.debito.toFixed(2)}</div>
+                     <div className="card" style={{ padding: '1rem' }}>CRÉDITO: R$ {paymentTotals.credito.toFixed(2)}</div>
+                   </div>
+                   <div className="card" style={{ padding: 0 }}>
+                      <table style={{ width: '100%' }}>
+                       <thead>
+                         <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
+                           <th style={{ padding: '1rem', textAlign: 'left' }}>Mesa</th>
+                           <th style={{ padding: '1rem', textAlign: 'left' }}>Pagamento</th>
+                           <th style={{ padding: '1rem', textAlign: 'right' }}>Total</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {historicoVendas.map(v => (
+                           <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} onClick={() => handleVerDetalhes(v)}>
+                             <td style={{ padding: '1rem' }}>{v.mesa_id ? `Mesa ${v.mesas?.numero}` : 'Balcão'}</td>
+                             <td style={{ padding: '1rem', fontSize: '0.7rem' }}>{v.forma_pagamento}</td>
+                             <td style={{ padding: '1rem', textAlign: 'right' }}>R$ {Number(v.total).toFixed(2)}</td>
+                           </tr>
+                         ))}
+                       </tbody>
+                    </table>
+                   </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'fechamento' && (
+                 <motion.div key="fechamento" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                   <FechamentoCaixa
+                     historicoVendas={historicoVendas}
+                     paymentTotals={paymentTotals}
+                     onRefresh={fetchData}
+                     onClose={() => setIsCaixaAberto(false)}
+                   />
+                 </motion.div>
+              )}
+            </>
+          ) : (
+            <AberturaCaixa onOpen={() => setIsCaixaAberto(true)} />
           )}
         </AnimatePresence>
       </main>
       <AnimatePresence>
         {isCheckoutOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="card" style={{ width: '100%', maxWidth: '850px', maxHeight: '92vh', padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 320px', alignItems: 'stretch' }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', zIndex: 10000 }}>
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="card" style={{ width: '100vw', height: '100vh', maxWidth: 'none', maxHeight: 'none', borderRadius: 0, padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 380px', alignItems: 'stretch' }}>
                 {/* Coluna Esquerda: Itens e Conferência */}
                 <div style={{ padding: '1.2rem', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                    <div className="d-flex justify-between items-center mb-4">
@@ -752,10 +763,9 @@ export const Caixa = () => {
                                    const next = Math.max(1, dividirPor-1);
                                    setDividirPor(next);
                                    if (next > 1) {
-                                      const vlr = totalComTaxa / next;
-                                      setSplitPayments(Array(next).fill(0).map(() => ({ method: null, amount: vlr })));
+                                      setCustomAmount((totalComTaxa / next).toFixed(2));
                                    } else {
-                                      setSplitPayments([]);
+                                      setCustomAmount(totalComTaxa.toFixed(2));
                                    }
                                  }} 
                                  className="btn-outline" 
@@ -768,8 +778,7 @@ export const Caixa = () => {
                                  onClick={() => {
                                    const next = dividirPor + 1;
                                    setDividirPor(next);
-                                   const vlr = totalComTaxa / next;
-                                   setSplitPayments(Array(next).fill(0).map(() => ({ method: null, amount: vlr })));
+                                   setCustomAmount((totalComTaxa / next).toFixed(2));
                                  }} 
                                  className="btn-outline" 
                                  style={{width: '30px', height: '30px', padding: 0}}
@@ -781,7 +790,7 @@ export const Caixa = () => {
                       </div>
                     )}
                     
-                    {dividirPor > 1 && splitPayments.length > 0 && (
+                    {false && (
                       <div className="card mb-4" style={{ padding: '1rem', border: '1px solid var(--primary-color)', background: 'rgba(212, 175, 55, 0.05)' }}>
                          <h4 className="mb-3" style={{ fontSize: '0.8rem', color: 'var(--primary-color)' }}>DIVISÃO POR PESSOA</h4>
                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
@@ -830,12 +839,12 @@ export const Caixa = () => {
                            onClick={() => {
                              const completed = splitPayments.filter(s => s.method !== null);
                              if (completed.length === 0) {
-                               alert("Selecione a forma de pagamento de pelo menos uma pessoa!");
-                               return;
+                                alert("Selecione a forma de pagamento de pelo menos uma pessoa!");
+                                return;
                              }
                              const newPayments = [...pagamentos];
                              completed.forEach(s => {
-                               newPayments.push({ method: s.method!, amount: s.amount });
+                                newPayments.push({ method: s.method!, amount: s.amount });
                              });
                              setPagamentos(newPayments);
                              setDividirPor(1);
@@ -888,13 +897,20 @@ export const Caixa = () => {
 
                         <div className="card" style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
                            <div className="d-flex justify-between items-center mb-1">
-                              <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block' }}>VALOR PARCIAL (R$)</label>
+                              <div className="d-flex flex-col">
+                                <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block' }}>VALOR PARCIAL (R$)</label>
+                                {dividirPor > 1 && (
+                                  <span style={{ fontSize: '0.6rem', color: 'var(--primary-color)', fontWeight: 800 }}>
+                                    PAGAMENTO {pagamentos.length + 1} DE {dividirPor}
+                                  </span>
+                                )}
+                              </div>
                               {dividirPor > 1 && (
                                 <button 
-                                  onClick={() => setCustomAmount((totalComTaxa / dividirPor).toFixed(2))}
+                                  onClick={() => setCustomAmount(valorIndividual.toFixed(2))}
                                   style={{ background: 'var(--primary-color)', border: 'none', color: '#000', fontSize: '0.6rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }}
                                 >
-                                  USAR VALOR INDIVIDUAL
+                                  COTA INDIVIDUAL
                                 </button>
                               )}
                            </div>
@@ -902,9 +918,29 @@ export const Caixa = () => {
                              type="number" 
                              value={customAmount} 
                              onChange={e => setCustomAmount(e.target.value)} 
-                             placeholder={totalRestante.toFixed(2)}
+                             placeholder={suggestedAmount.toFixed(2)}
                              style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid #333', color: '#fff', padding: '0.2rem 0', marginBottom: '0.8rem', fontSize: '1.5rem', fontWeight: 900, outline: 'none' }} 
                            />
+
+                           {selectedMethod === 'dinheiro' && (
+                              <div className="mt-2 mb-4 p-3 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                <div className="d-flex justify-between items-center mb-2">
+                                  <label style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 800 }}>VALOR RECEBIDO DO CLIENTE (R$)</label>
+                                  {troco > 0 && (
+                                    <div style={{ background: '#10b981', color: '#000', fontSize: '0.7rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px' }}>
+                                      TROCO: R$ {troco.toFixed(2)}
+                                    </div>
+                                  )}
+                                </div>
+                                <input 
+                                  type="number" 
+                                  value={valorRecebido} 
+                                  onChange={e => setValorRecebido(e.target.value)} 
+                                  placeholder="0.00"
+                                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid #10b981', color: '#fff', fontSize: '1.2rem', fontWeight: 800, outline: 'none' }}
+                                />
+                              </div>
+                            )}
                            
                            <button 
                              onClick={() => {
@@ -912,7 +948,7 @@ export const Caixa = () => {
                                   alert("Selecione um método de pagamento primeiro!");
                                   return;
                                }
-                               const val = parseFloat(customAmount) || totalRestante;
+                               const val = parseFloat(customAmount) || suggestedAmount;
                                handleAddPayment(selectedMethod, val);
                              }}
                              disabled={!selectedMethod}
@@ -927,34 +963,77 @@ export const Caixa = () => {
                     <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
                        <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '8px' }}>PAGAMENTOS RECEBIDOS</label>
                        {pagamentos.map((p, i) => (
-                         <div key={i} className="d-flex justify-between p-2 rounded-lg mb-2" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: `4px solid ${p.method === 'dinheiro' ? '#10b981' : '#d4af37'}` }}>
+                         <div key={i} className="d-flex justify-between items-center p-2 rounded-lg mb-2" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: `4px solid ${p.method === 'dinheiro' ? '#10b981' : '#d4af37'}` }}>
                             <div className="d-flex flex-col">
                               <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>{p.method.toUpperCase()}</span>
                             </div>
-                            <b style={{ fontSize: '0.9rem' }}>R$ {p.amount.toFixed(2)}</b>
+                            <div className="d-flex items-center gap-3">
+                              <b style={{ fontSize: '0.9rem' }}>R$ {p.amount.toFixed(2)}</b>
+                              <button 
+                                onClick={() => handleRemovePayment(i)} 
+                                style={{ background: 'rgba(220, 53, 69, 0.1)', border: 'none', color: 'var(--danger-color)', padding: '5px', borderRadius: '4px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                          </div>
                        ))}
                        {pagamentos.length === 0 && <div style={{ textAlign: 'center', opacity: 0.3, padding: '1rem', border: '1px dashed #333', borderRadius: '8px', fontSize: '0.7rem' }}>Aguardando...</div>}
                     </div>
 
-                    <div className="mt-auto pt-4" style={{ borderTop: '1px solid #222' }}>
-                       <div className="d-flex justify-between items-end mb-4">
-                          <div>
-                            <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>RESTANTE</span>
-                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: totalRestante > 0.1 ? 'var(--danger-color)' : 'var(--success-color)' }}>R$ {totalRestante.toFixed(2)}</div>
-                          </div>
-                          {totalRestante <= 0.1 && <div style={{ color: 'var(--success-color)', fontWeight: 800, fontSize: '0.8rem' }}>PAGO ✓</div>}
-                       </div>
-                       <button 
-                         className="btn-primary w-full py-4" 
-                         disabled={totalRestante > 0.1} 
-                         onClick={handleFinalizar}
-                         style={{ fontSize: '1rem', background: totalRestante <= 0.1 ? 'var(--success-color)' : 'rgba(255,255,255,0.05)', color: totalRestante <= 0.1 ? '#000' : 'rgba(255,255,255,0.1)' }}
-                       >
-                         {totalRestante <= 0.1 ? 'FINALIZAR VENDA' : 'PAGAMENTO PENDENTE'}
-                       </button>
+                    <div className="pt-4" style={{ borderTop: '1px solid #222' }}>
+                        <div className="d-flex justify-between items-center mb-4">
+                           <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>RESTANTE</span>
+                           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: totalRestante > 0 ? 'var(--danger-color)' : 'var(--success-color)' }}>
+                             R$ {totalRestante.toFixed(2)}
+                           </div>
+                        </div>
+
+                        <button 
+                           onClick={handleFinalizar}
+                           className="btn-primary w-full py-4" 
+                           style={{ 
+                             fontSize: '1rem', 
+                             fontWeight: 900,
+                             background: totalRestante <= 0.1 ? 'var(--success-color)' : '#222',
+                             color: totalRestante <= 0.1 ? '#000' : '#444'
+                           }}
+                        >
+                           {totalRestante <= 0.1 ? 'FINALIZAR VENDA' : 'PAGAMENTO PENDENTE'}
+                        </button>
                     </div>
                 </div>
+             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Detalhes do Pedido (Histórico) */}
+      <AnimatePresence>
+        {isDetailModalOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="modal-overlay" onClick={() => setIsDetailModalOpen(false)}>
+             <motion.div initial={{ y: 20 }} animate={{ y: 0 }} className="card" style={{ maxWidth: '500px', width: '90%' }} onClick={e => e.stopPropagation()}>
+                <div className="d-flex justify-between mb-4">
+                   <h3>DETALHES DO PEDIDO</h3>
+                   <button onClick={() => setIsDetailModalOpen(false)}><X/></button>
+                </div>
+                <div className="mb-4">
+                   <div style={{fontSize: '0.8rem', opacity: 0.6}}>FORMA DE PAGAMENTO:</div>
+                   <div style={{fontWeight: 700}}>{selectedPedidoDetail?.forma_pagamento}</div>
+                </div>
+                <div className="d-flex flex-col gap-2">
+                   {itemsPedidoDetail.map((item: any, idx) => (
+                      <div key={idx} className="d-flex justify-between p-2 rounded" style={{background: 'rgba(255,255,255,0.05)'}}>
+                         <span>{item.quantidade}x {item.produtos?.nome}</span>
+                         <span>R$ {(item.preco_unitario * item.quantidade).toFixed(2)}</span>
+                      </div>
+                   ))}
+                </div>
+                <div className="mt-4 pt-4 text-right" style={{borderTop: '1px solid #333'}}>
+                   <div style={{fontSize: '0.8rem', opacity: 0.6}}>TOTAL:</div>
+                   <div style={{fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-color)'}}>R$ {Number(selectedPedidoDetail?.total).toFixed(2)}</div>
+                </div>
+                <button className="btn-outline w-full mt-6" onClick={() => handleImprimir(itemsPedidoDetail)}>IMPRIMIR SEGUNDA VIA</button>
              </motion.div>
           </motion.div>
         )}

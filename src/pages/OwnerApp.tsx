@@ -11,10 +11,12 @@ import {
   TrendingUp, Users as UsersIcon, Package, Utensils, 
   Clock, Star, LogOut, LayoutDashboard,
   PieChart as PieIcon, LayoutGrid,
-  QrCode, Banknote, CreditCard
+  QrCode, Banknote, CreditCard, Lock, History as HistoryIcon,
+  ChevronDown, ChevronUp, Folder, FileText
 } from 'lucide-react';
+import { FechamentoCaixa } from '../components/FechamentoCaixa';
 
-type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 'rendimentos';
+type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 'caixa';
 
 
 const COLORS = ['#d4af37', '#eab308', '#f59e0b', '#10b981', '#3b82f6'];
@@ -52,6 +54,7 @@ export const Dono = () => {
   const [avgPrepTimes, setAvgPrepTimes] = useState<any[]>([]);
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [historicoCompleto, setHistoricoCompleto] = useState<any[]>([]);
+  const [turnosHistorico, setTurnosHistorico] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
 
@@ -128,6 +131,29 @@ export const Dono = () => {
 
       const { data: allFinalizados } = await supabase.from('pedidos').select('*, mesas(numero)').eq('status', 'finalizado').order('finalizado_at', { ascending: false });
       setHistoricoCompleto(allFinalizados || []);
+
+      const { data: turnos, error: turnosError } = await supabase
+        .from('turnos_caixa')
+        .select(`
+          *, 
+          profiles:operador_id(full_name),
+          pedidos(*)
+        `)
+        .order('aberto_em', { ascending: false })
+        .limit(100);
+      
+      if (turnosError) {
+        console.error("Erro crítico ao buscar turnos:", turnosError);
+        const { data: simpleTurnos } = await supabase
+          .from('turnos_caixa')
+          .select('*, profiles:operador_id(full_name)')
+          .order('aberto_em', { ascending: false })
+          .limit(50);
+        setTurnosHistorico(simpleTurnos || []);
+      } else {
+        console.log("Turnos carregados com sucesso:", turnos?.length);
+        setTurnosHistorico(turnos || []);
+      }
 
 
       const { data: prepData } = await supabase.from('itens_pedido').select('id, preparo_inicio_at, preparo_fim_at, produtos (nome)').not('preparo_inicio_at', 'is', null).not('preparo_fim_at', 'is', null);
@@ -684,15 +710,16 @@ export const Dono = () => {
               </thead>
               <tbody>
                 {historicoCompleto.map(v => {
-                   const taxa = v.mesa_id ? (Number(v.total) / 11) : 0;
-                   const consumo = Number(v.total) - taxa;
+                   const taxa = v.mesa_id ? (Number(v.total || 0) / 11) : 0;
+                   const consumo = Number(v.total || 0) - taxa;
+                   const displayId = v.id ? v.id.split('-')[0].toUpperCase() : '---';
                    return (
                      <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                       <td style={{ padding: '1rem', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'monospace' }}>#{v.id.split('-')[0].toUpperCase()}</td>
+                       <td style={{ padding: '1rem', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'monospace' }}>#{displayId}</td>
                        <td style={{ padding: '1rem' }}>{v.mesa_id ? <span style={{ color: 'var(--primary-color)', fontWeight: 700 }}>MESA {v.mesas?.numero}</span> : <span style={{ color: 'var(--success-color)', fontWeight: 700 }}>BALCÃO</span>}</td>
                        <td style={{ padding: '1rem' }}>R$ {consumo.toFixed(2)}</td>
                        <td style={{ padding: '1rem', color: v.mesa_id ? '#d4af37' : 'inherit' }}>{v.mesa_id ? `R$ ${taxa.toFixed(2)}` : '---'}</td>
-                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800 }}>R$ {Number(v.total).toFixed(2)}</td>
+                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800 }}>R$ {Number(v.total || 0).toFixed(2)}</td>
                      </tr>
                    );
                 })}
@@ -704,6 +731,255 @@ export const Dono = () => {
   };
 
 
+  const paymentTotalsForCaixa = useMemo(() => {
+    const totals = { pix: 0, dinheiro: 0, debito: 0, credito: 0 };
+    historicoCompleto.forEach(p => {
+      if (!p.forma_pagamento) return;
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9.]+)\)/gi);
+      if (matches) {
+        matches.forEach((m: string) => {
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
+          const valMatch = m.match(/R\$([0-9.]+)/);
+          if (typeMatch && valMatch) {
+            const type = typeMatch[1].toUpperCase();
+            const val = parseFloat(valMatch[1]);
+            if (type === 'PIX') totals.pix += val;
+            else if (type === 'DINHEIRO') totals.dinheiro += val;
+            else if (type === 'DÉBITO' || type === 'DEBITO') totals.debito += val;
+            else if (type === 'CRÉDITO' || type === 'CREDITO') totals.credito += val;
+          }
+        });
+      }
+    });
+    return totals;
+  }, [historicoCompleto]);
+
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
+  const [expandedOS, setExpandedOS] = useState<string | null>(null);
+
+  // 1. Agrupar turnos por data de forma robusta (Movido para o topo para seguir as regras de Hooks)
+  const turnosPorData = useMemo(() => {
+      try {
+          if (!turnosHistorico || turnosHistorico.length === 0) return [];
+          
+          const groups: Record<string, any[]> = {};
+          
+          // Ordenar por data decrescente antes de agrupar
+          const sorted = [...turnosHistorico].sort((a, b) => {
+              const dateA = a.aberto_em ? new Date(a.aberto_em).getTime() : 0;
+              const dateB = b.aberto_em ? new Date(b.aberto_em).getTime() : 0;
+              return dateB - dateA;
+          });
+
+          sorted.forEach(t => {
+              if (!t.aberto_em) return;
+              try {
+                  const dateObj = new Date(t.aberto_em);
+                  if (isNaN(dateObj.getTime())) return;
+                  const dateStr = dateObj.toLocaleDateString('pt-BR');
+                  if (!groups[dateStr]) groups[dateStr] = [];
+                  groups[dateStr].push(t);
+              } catch (e) {
+                  console.warn("Erro ao processar data do turno:", t.id);
+              }
+          });
+
+          return Object.entries(groups);
+      } catch (err) {
+          console.error("Erro crítico no agrupamento do fluxo de caixa:", err);
+          return [];
+      }
+  }, [turnosHistorico]);
+
+  const renderCaixa = () => {
+    // 0. Identificar turno aberto para o banner
+    const turnoAberto = turnosHistorico.find(t => t.status === 'aberto');
+
+    return (
+      <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+        <div className="mb-8">
+            <h2 style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>Banco de fechamento de caixa</h2>
+            <p className="text-muted">Gestão de turno atual e histórico organizado por pastas.</p>
+        </div>
+
+        {/* Turno Atual / Gestão em Tempo Real */}
+        <div className="mb-8 p-6 card" style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.2)' }}>
+            <div className="d-flex justify-between items-center mb-6">
+                <div className="d-flex items-center gap-3">
+                    <div style={{ 
+                        width: '12px', 
+                        height: '12px', 
+                        borderRadius: '50%', 
+                        background: turnoAberto ? '#10b981' : '#444',
+                        boxShadow: turnoAberto ? '0 0 10px #10b981' : 'none',
+                        animation: turnoAberto ? 'pulse 2s infinite' : 'none'
+                    }} />
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+                        {turnoAberto ? 'TURNO EM ANDAMENTO' : 'CAIXA FECHADO'}
+                    </h3>
+                </div>
+                {turnoAberto && (
+                    <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>OS ATUAL:</span>
+                        <div style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--primary-color)' }}>#{turnoAberto.os_number || '---'}</div>
+                    </div>
+                )}
+            </div>
+
+            <FechamentoCaixa
+                historicoVendas={historicoCompleto}
+                paymentTotals={paymentTotalsForCaixa}
+                onRefresh={fetchData}
+            />
+        </div>
+
+        <div className="mb-4 d-flex items-center gap-2">
+            <HistoryIcon size={18} opacity={0.5} />
+            <span style={{ fontWeight: 800, fontSize: '0.8rem', opacity: 0.6, letterSpacing: '1px' }}>HISTÓRICO RECENTE</span>
+        </div>
+
+        <div className="d-flex flex-col gap-4">
+            {turnosPorData.length === 0 && (
+                <div className="card text-center" style={{ padding: '3rem', opacity: 0.5 }}>
+                    Nenhum turno registrado no histórico.
+                </div>
+            )}
+            {turnosPorData.map(([data, turnos]) => {
+                const isDateExpanded = expandedDate === data;
+                const totalDia = turnos.reduce((acc, t) => acc + (t.pedidos?.reduce((pAcc: number, p: any) => pAcc + Number(p.total), 0) || 0), 0);
+
+                return (
+                    <div key={data} className="card" style={{ padding: 0, overflow: 'hidden', border: isDateExpanded ? '1px solid var(--primary-color)' : '1px solid rgba(255,255,255,0.05)' }}>
+                        <div 
+                            onClick={() => setExpandedDate(isDateExpanded ? null : data)}
+                            style={{ 
+                                padding: '1.2rem 1.5rem', 
+                                background: isDateExpanded ? 'rgba(212,175,55,0.05)' : 'rgba(255,255,255,0.01)', 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <div className="d-flex items-center gap-4">
+                                <div style={{ background: 'rgba(212,175,55,0.1)', padding: '10px', borderRadius: '12px' }}>
+                                    <Folder size={24} color="#d4af37" fill="rgba(212,175,55,0.1)" />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>PASTA: {data}</div>
+                                    <div style={{ fontSize: '0.75rem', opacity: 0.5, fontWeight: 700 }}>{turnos.length} O.S. ARQUIVADA(S)</div>
+                                </div>
+                            </div>
+                            <div className="d-flex items-center gap-6">
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>TOTAL DO DIA</div>
+                                    <div style={{ fontWeight: 900, color: 'var(--primary-color)', fontSize: '1.1rem' }}>R$ {totalDia.toFixed(2)}</div>
+                                </div>
+                                {isDateExpanded ? <ChevronUp size={20} opacity={0.5} /> : <ChevronDown size={20} opacity={0.5} />}
+                            </div>
+                        </div>
+
+                        {isDateExpanded && (
+                            <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {turnos.map((t) => {
+                                    const isOSExpanded = expandedOS === t.id;
+                                    const fundo = Number(t.fundo_troco || 0);
+                                    const declarado = Number(t.valor_declarado || 0);
+                                    const esperado = fundo + (t.pedidos?.filter((p: any) => p.forma_pagamento?.includes('DINHEIRO')).reduce((acc: number, p: any) => {
+                                        const match = p.forma_pagamento?.match(/DINHEIRO\s*\(R\$([0-9.]+)\)/i);
+                                        return acc + (match ? parseFloat(match[1]) : 0);
+                                    }, 0) || 0);
+                                    
+                                    const diferenca = t.status === 'fechado' ? declarado - esperado : 0;
+                                    const statusColor = Math.abs(diferenca) < 0.1 ? '#10b981' : diferenca > 0 ? '#d4af37' : '#ef4444';
+                                    
+                                    const totalOS = t.pedidos?.reduce((acc: number, p: any) => acc + Number(p.total), 0) || 0;
+                                    const totalTaxas = t.pedidos?.filter((p: any) => p.mesa_id).reduce((acc: number, p: any) => acc + (Number(p.total) / 11), 0) || 0;
+
+                                    return (
+                                        <div key={t.id} style={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', overflow: 'hidden' }}>
+                                            <div 
+                                                onClick={() => setExpandedOS(isOSExpanded ? null : t.id)}
+                                                style={{ padding: '1rem 1.2rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                            >
+                                                <div className="d-flex items-center gap-3">
+                                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px' }}>
+                                                        <FileText size={18} color={t.status === 'aberto' ? '#10b981' : '#fff'} opacity={0.6} />
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: 900, fontSize: '0.95rem', color: t.status === 'aberto' ? '#10b981' : '#fff' }}>O.S. #{t.os_number || '---'}</div>
+                                                        <div style={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 700 }}>OPERADOR: {t.profiles?.full_name?.toUpperCase()} • {new Date(t.aberto_em).toLocaleTimeString('pt-BR')}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="d-flex items-center gap-4">
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>FATURAMENTO</div>
+                                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>R$ {totalOS.toFixed(2)}</div>
+                                                    </div>
+                                                    {isOSExpanded ? <ChevronUp size={16} opacity={0.3} /> : <ChevronDown size={16} opacity={0.3} />}
+                                                </div>
+                                            </div>
+
+                                            {isOSExpanded && (
+                                                <div style={{ padding: '1.2rem', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)' }}>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                                                        <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>VENDAS BRUTAS</div>
+                                                            <div style={{ fontWeight: 800, color: 'var(--primary-color)' }}>R$ {totalOS.toFixed(2)}</div>
+                                                        </div>
+                                                        <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>TAXAS (10%)</div>
+                                                            <div style={{ fontWeight: 800, color: '#a78bfa' }}>R$ {totalTaxas.toFixed(2)}</div>
+                                                        </div>
+                                                        <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>FUNDO DE TROCO</div>
+                                                            <div style={{ fontWeight: 800 }}>R$ {fundo.toFixed(2)}</div>
+                                                        </div>
+                                                        <div className="p-3 rounded-lg" style={{ background: `${statusColor}15`, border: `1px solid ${statusColor}30` }}>
+                                                            <div style={{ fontSize: '0.6rem', color: statusColor, fontWeight: 700 }}>{t.status === 'aberto' ? 'STATUS: ABERTO' : Math.abs(diferenca) < 0.1 ? 'CONFERE ✓' : diferenca > 0 ? `SOBRA: R$ ${diferenca.toFixed(2)}` : `QUEBRA: R$ ${Math.abs(diferenca).toFixed(2)}`}</div>
+                                                            <div style={{ fontWeight: 900, fontSize: '0.9rem', color: statusColor }}>{t.status === 'fechado' ? `Declarado: R$ ${declarado.toFixed(2)}` : 'Em andamento...'}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '0.8rem', letterSpacing: '1px' }}>DETALHAMENTO DE VENDAS</h4>
+                                                    <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
+                                                        <table style={{ width: '100%', fontSize: '0.75rem' }}>
+                                                            <thead>
+                                                                <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    <th style={{ padding: '0.8rem', textAlign: 'left' }}>Cliente/Mesa</th>
+                                                                    <th style={{ padding: '0.8rem', textAlign: 'left' }}>Pagamento</th>
+                                                                    <th style={{ padding: '0.8rem', textAlign: 'right' }}>Total</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {t.pedidos?.map((p: any) => (
+                                                                    <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                                                                        <td style={{ padding: '0.8rem' }}>{p.mesa_id ? `Mesa ${p.mesas?.numero || '?'}` : 'Balcão'}</td>
+                                                                        <td style={{ padding: '0.8rem', fontSize: '0.65rem', opacity: 0.6 }}>{p.forma_pagamento}</td>
+                                                                        <td style={{ padding: '0.8rem', textAlign: 'right', fontWeight: 700 }}>R$ {Number(p.total).toFixed(2)}</td>
+                                                                    </tr>
+                                                                ))}
+                                                                {(!t.pedidos || t.pedidos.length === 0) && (
+                                                                    <tr><td colSpan={3} style={{ padding: '2rem', textAlign: 'center', opacity: 0.4 }}>Nenhuma venda registrada neste turno.</td></tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
@@ -711,9 +987,8 @@ export const Dono = () => {
       case 'produtos': return renderProdutos();
       case 'mesas': return renderMesas();
       case 'avaliacoes': return renderAvaliacoes();
-      case 'rendimentos': return renderRendimentos();
+      case 'caixa': return renderCaixa();
       default: return renderDashboard();
-
     }
   };
 
@@ -732,7 +1007,7 @@ export const Dono = () => {
           <SidebarItem active={activeTab === 'avaliacoes'} icon={<Star size={20}/>} label="Avaliações" onClick={() => setActiveTab('avaliacoes')} />
 
 
-          <SidebarItem active={activeTab === 'rendimentos'} icon={<TrendingUp size={20}/>} label="Rendimentos" onClick={() => setActiveTab('rendimentos')} />
+          <SidebarItem active={activeTab === 'caixa'} icon={<Lock size={20}/>} label="Banco de fechamento de caixa" onClick={() => setActiveTab('caixa')} />
         </nav>
 
 

@@ -43,7 +43,7 @@ export const Garcom = () => {
         const activeIds = pedidosData.map(p => p.id);
         if (activeIds.length > 0) {
           const { data: allItens } = await supabase.from('itens_pedido')
-            .select('*, produtos(nome)')
+            .select('*, produtos(nome, categoria)')
             .in('pedido_id', activeIds);
           if (allItens) setItensPedido(allItens);
         } else {
@@ -223,35 +223,49 @@ export const Garcom = () => {
   };
 
   const handlePedirConta = async (mesaId: string) => {
-    const mesaItens = itensPedido.filter(i => {
-       const p = pedidos.find(ped => ped.id === i.pedido_id);
+    // 0. Buscar itens atuais da mesa para conferência
+    const mesaItens = (itensPedido || []).filter(i => {
+       const p = (pedidos || []).find(ped => ped.id === i.pedido_id);
        return p && p.mesa_id === mesaId;
     });
+
+    if (mesaItens.length === 0) {
+       if(!confirm("Esta mesa não possui itens lançados ou os dados ainda estão carregando. Deseja solicitar o fechamento mesmo assim?")) return;
+    }
 
     // 1. Verificação de categorias críticas em preparo
     const categoriasCriticas = ['PETISCOS', 'COQUETEIS', 'COQUITEIS', 'DRINKS', 'BEBIDAS ALCOÓLICAS', 'DOSES'];
     const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
     
-    const temCriticosEmPreparo = mesaItens.some(i => {
+    const criticosEmPreparo = mesaItens.filter(i => {
       const cat = (i.produtos?.categoria || '').toUpperCase();
       return categoriasCriticas.includes(cat) && i.status !== 'entregue' && i.status !== 'finalizado';
     });
 
-    if (temCriticosEmPreparo && !ehGestor) {
-      alert("⚠️ BLOQUEIO DE SEGURANÇA:\n\nHá Petiscos ou Coquetéis em preparação nesta mesa.\n\nGarçons não podem fechar a conta com itens críticos em execução. Solicite a um Administrador para autorizar ou aguarde a entrega.");
+    if (criticosEmPreparo.length > 0 && !ehGestor) {
+      alert(`⚠️ BLOQUEIO DE SEGURANÇA:\n\nHá itens críticos em preparação nesta mesa:\n${criticosEmPreparo.map(i => `• ${i.produtos?.nome}`).join('\n')}\n\nGarçons não podem fechar a conta com itens críticos em execução. Solicite a um Administrador para autorizar ou aguarde a entrega.`);
       return;
     }
 
-    const temPendenciasGerais = mesaItens.some(i => i.status !== 'entregue' && i.status !== 'finalizado');
-    if (temPendenciasGerais && !ehGestor) {
-      alert("Não é possível pedir a conta enquanto houver itens aguardando entrega ou em preparo!");
+    const pendenciasGerais = mesaItens.filter(i => i.status !== 'entregue' && i.status !== 'finalizado');
+    if (pendenciasGerais.length > 0 && !ehGestor) {
+      alert(`⚠️ PENDÊNCIAS:\n\nNão é possível pedir a conta enquanto houver itens aguardando entrega ou em preparo:\n${pendenciasGerais.map(i => `• ${i.produtos?.nome}`).join('\n')}`);
       return;
     }
 
     if(!confirm("Enviar solicitação de fechamento para o caixa?")) return;
-    await supabase.from('mesas').update({ status: 'aguardando conta' }).eq('id', mesaId);
-    fetchData();
-    setSelectedMesa(null);
+    
+    try {
+      const { error } = await supabase.from('mesas').update({ status: 'aguardando conta' }).eq('id', mesaId);
+      if (error) throw error;
+      
+      alert("Solicitação enviada com sucesso! 🚀");
+      fetchData();
+      setSelectedMesa(null);
+    } catch (err) {
+      console.error("Erro ao fechar mesa:", err);
+      alert("Ocorreu um erro ao processar a solicitação no banco de dados.");
+    }
   };
 
   const handleTransferMesa = async () => {

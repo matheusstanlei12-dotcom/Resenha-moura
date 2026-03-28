@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -7,11 +7,12 @@ import {
   FileText, Plus, Minus, Trash2, Star,
   TrendingUp, AlertTriangle, CheckCircle, Clock,
   BarChart2, Settings, ChevronDown, ChevronUp, Search,
-  QrCode, Link as LinkIcon, X, ShoppingBag, Utensils
+  QrCode, Link as LinkIcon, X, ShoppingBag, Utensils, Lock
 } from 'lucide-react';
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
+import { FechamentoCaixa } from '../components/FechamentoCaixa';
 
-type AdminTab = 'dashboard' | 'estoque' | 'mesas' | 'equipe' | 'avaliacoes' | 'entregues';
+type AdminTab = 'dashboard' | 'estoque' | 'mesas' | 'equipe' | 'avaliacoes' | 'entregues' | 'fechamento';
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -62,6 +63,7 @@ export const Administracao = () => {
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [pedidosAtivos, setPedidosAtivos] = useState<any[]>([]);
   const [itensEntregues, setItensEntregues] = useState<any[]>([]);
+  const [historicoVendas, setHistoricoVendas] = useState<any[]>([]);
 
 
   // UI state
@@ -84,6 +86,17 @@ export const Administracao = () => {
     setPedidosAtivos(pedRes.data || []);
     setAvaliacoes(avRes.data || []);
     setItensEntregues(itemsEntRes.data || []);
+
+    // Histórico (Últimas 24 horas)
+    const now = new Date();
+    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: historico } = await supabase.from('pedidos')
+      .select('*, profiles:garcom_id(full_name), mesas(numero)')
+      .eq('status', 'finalizado')
+      .gte('finalizado_at', last24h)
+      .order('finalizado_at', { ascending: false });
+    setHistoricoVendas(historico || []);
+    
     setLoading(false);
   };
 
@@ -280,6 +293,29 @@ export const Administracao = () => {
     return acc;
   }, {});
 
+  const paymentTotals = useMemo(() => {
+    const totals = { pix: 0, dinheiro: 0, debito: 0, credito: 0, outrosCartoes: 0 };
+    historicoVendas.forEach(p => {
+      if (!p.forma_pagamento) return;
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9.]+)\)/gi);
+      if (matches) {
+        matches.forEach((m: string) => {
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
+          const valMatch = m.match(/R\$([0-9.]+)/);
+          if (typeMatch && valMatch) {
+            const type = typeMatch[1].toUpperCase();
+            const val = parseFloat(valMatch[1]);
+            if (type === 'PIX') totals.pix += val;
+            else if (type === 'DINHEIRO') totals.dinheiro += val;
+            else if (type === 'DÉBITO' || type === 'DEBITO') totals.debito += val;
+            else if (type === 'CRÉDITO' || type === 'CREDITO') totals.credito += val;
+          }
+        });
+      }
+    });
+    return totals;
+  }, [historicoVendas]);
+
   if (loading) return (
     <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050505' }}>
       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
@@ -328,6 +364,7 @@ export const Administracao = () => {
 
 
           <SideItem id="entregues" icon={<CheckCircle size={18}/>} label="Pedidos Entregues" />
+          <SideItem id="fechamento" icon={<Lock size={18}/>} label="Fluxo de Caixa" />
         </nav>
 
 
@@ -679,6 +716,17 @@ export const Administracao = () => {
                   </div>
                 )}
               </div>
+            </motion.div>
+          )}
+
+          {/* === FECHAMENTO === */}
+          {activeTab === 'fechamento' && (
+            <motion.div key="fechamento" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <FechamentoCaixa 
+                historicoVendas={historicoVendas}
+                paymentTotals={paymentTotals}
+                onRefresh={fetchData}
+              />
             </motion.div>
           )}
         </AnimatePresence>
