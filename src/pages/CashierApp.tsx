@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+﻿import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,7 +42,7 @@ export const Caixa = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('TODOS');
   
-  // Quick Sale (Balcão) State
+  // Quick Sale (BalcÃ£o) State
   const [carrinho, setCarrinho] = useState<CartItem[]>([]);
   
   // Checkout Modal State
@@ -96,8 +96,8 @@ export const Caixa = () => {
            data_hora: i.pedidos?.data_hora
          }));
          const COQUITEIS_COZINHA = [
-           "caipirinha cachaça", "caipivodka smirnoff", "caipivodka absolut",
-           "gin tônica tanqueray", "gin tanqueray com red bull", "dry martini",
+           "caipirinha cachaÃ§a", "caipivodka smirnoff", "caipivodka absolut",
+           "gin tÃ´nica tanqueray", "gin tanqueray com red bull", "dry martini",
            "campari", "aperol"
          ];
          const filtered = formatted.filter((item: any) => {
@@ -116,17 +116,17 @@ export const Caixa = () => {
          }
       }
 
-      // 2. Histórico (Finalizados hoje)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // 2. HistÃ³rico (Finalizados hoje)
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const { data: historico } = await supabase.from('pedidos')
         .select('*, profiles:garcom_id(full_name), mesas(numero)')
         .eq('status', 'finalizado')
-        .gte('finalizado_at', today.toISOString())
+        .gte('finalizado_at', startOfDay)
         .order('finalizado_at', { ascending: false });
       setHistoricoVendas(historico || []);
 
-      // 3. Produtos para Venda de Balcão
+      // 3. Produtos para Venda de BalcÃ£o
       const { data: prods } = await supabase.from('produtos').select('*').eq('ativo', true).order('nome', { ascending: true });
       setProdutos(prods || []);
 
@@ -145,7 +145,7 @@ export const Caixa = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Watcher para Imprimir Automático Novos Itens de Cozinha
+  // Watcher para Imprimir AutomÃ¡tico Novos Itens de Cozinha
   useEffect(() => {
     if (isInitialLoad || !autoPrintKds) return;
     cozinhaItems.forEach(item => {
@@ -156,13 +156,13 @@ export const Caixa = () => {
     });
   }, [cozinhaItems, printedItemIds, isInitialLoad, autoPrintKds]);
 
-  // Monitorar solicitações de conta (apenas contador visual para o caixa)
+  // Monitorar solicitaÃ§Ãµes de conta (apenas contador visual para o caixa)
   useEffect(() => {
     const currentCount = mesasPendentes.filter(m => m.status === 'aguardando conta').length;
     setLastAccountRequestCount(currentCount);
   }, [mesasPendentes]);
 
-  // --- Lógica de Carrinho (Balcão) ---
+  // --- LÃ³gica de Carrinho (BalcÃ£o) ---
   const addToCart = (product: any) => {
     const existing = carrinho.find(item => item.id === product.id);
     if (existing) {
@@ -186,7 +186,7 @@ export const Caixa = () => {
     }));
   };
 
-  // --- Lógica de Checkout ---
+  // --- LÃ³gica de Checkout ---
   const openTableCheckout = async (mesa: any) => {
     setSelectedMesa(mesa);
     setPagamentos([]);
@@ -232,20 +232,20 @@ export const Caixa = () => {
     return checkoutItens.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
   }, [checkoutItens]);
 
-  // Taxa de serviço apenas para mesas que ficaram aguardando conta
+  // Taxa de serviÃ§o apenas para mesas que ficaram aguardando conta
   const taxaServico = selectedMesa ? totalCheckout * 0.1 : 0;
   const totalComTaxa = totalCheckout + taxaServico;
   const totalPago = pagamentos.reduce((acc, p) => acc + Number(p.amount), 0);
   const totalRestante = Math.max(0, totalComTaxa - totalPago);
 
-  // Cálculo de troco reativo (Baseado no que falta pagar ou no que foi pago em dinheiro)
+  // CÃ¡lculo de troco reativo (Baseado no que falta pagar ou no que foi pago em dinheiro)
   const valorInput = parseFloat(valorRecebido.replace(',', '.')) || 0;
   const totalEmDinheiro = pagamentos
     .filter(p => p.method === 'dinheiro')
     .reduce((acc, p) => acc + Number(p.amount), 0);
   
   // O troco deve ser: Valor Recebido - (o que falta pagar). 
-  // Se já pagou tudo (totalRestante === 0), usa o total em dinheiro como base.
+  // Se jÃ¡ pagou tudo (totalRestante === 0), usa o total em dinheiro como base.
   const baseParaTroco = totalRestante > 0 ? totalRestante : totalEmDinheiro;
   const troco = valorInput > 0 ? Math.max(0, valorInput - baseParaTroco) : 0;
 
@@ -256,7 +256,7 @@ export const Caixa = () => {
 
   const handleFinalizar = async () => {
     if (totalRestante > 0.05) {
-      alert("A conta ainda não foi totalmente paga!");
+      alert("A conta ainda nÃ£o foi totalmente paga!");
       return;
     }
 
@@ -279,7 +279,7 @@ export const Caixa = () => {
 
         await supabase.from('mesas').update({ status: 'livre', precisa_garcom: false }).eq('id', selectedMesa.id);
       } else {
-        // Fluxo de Balcão (Venda Direta)
+        // Fluxo de BalcÃ£o (Venda Direta)
         const { data: newPedido, error: pErr } = await supabase.from('pedidos').insert({
           mesa_id: null,
           garcom_id: profile?.id,
@@ -303,7 +303,7 @@ export const Caixa = () => {
         setCarrinho([]);
       }
       
-      alert("Venda finalizada com sucesso! 💰");
+      alert("Venda finalizada com sucesso! ðŸ’°");
       setIsCheckoutOpen(false);
       fetchData();
     } catch (err) {
@@ -362,7 +362,7 @@ export const Caixa = () => {
       const taxa = selectedMesa ? subtotal * 0.1 : 0;
       const total = subtotal + taxa;
 
-      // CABEÇALHO
+      // CABEÃ‡ALHO
       doc.setFontSize(14); doc.setFont('helvetica', 'bold');
       doc.text('RESENHA DO MOURA', 40, 10, { align: 'center' });
 
@@ -376,12 +376,12 @@ export const Caixa = () => {
       doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, 5, 24);
       doc.text(`HORA: ${new Date().toLocaleTimeString('pt-BR')}`, 75, 24, { align: 'right' });
       doc.setFont('helvetica', 'bold');
-      doc.text(selectedMesa ? `MESA: ${selectedMesa.numero}` : 'VENDA DE BALCÃO', 5, 28);
+      doc.text(selectedMesa ? `MESA: ${selectedMesa.numero}` : 'VENDA DE BALCÃƒO', 5, 28);
       doc.setFont('helvetica', 'normal');
       doc.text(`OP: ${profile?.full_name?.split(' ')[0]}`, 75, 28, { align: 'right' });
       doc.line(5, 30, 75, 30);
       
-      // CABEÇALHO ITENS
+      // CABEÃ‡ALHO ITENS
       doc.setFontSize(7); doc.setFont('helvetica', 'bold');
       doc.text('QTD', 5, 34);
       doc.text('ITENS', 15, 34);
@@ -430,10 +430,10 @@ export const Caixa = () => {
         }
       }
 
-      // RODAPÉ
+      // RODAPÃ‰
       y += 12;
       doc.setFontSize(7); doc.setFont('helvetica', 'italic');
-      doc.text('Obrigado pela preferência!', 40, y, { align: 'center' });
+      doc.text('Obrigado pela preferÃªncia!', 40, y, { align: 'center' });
       doc.text('Resenha do Moura - Volte Sempre!', 40, y + 4, { align: 'center' });
 
 
@@ -445,10 +445,10 @@ export const Caixa = () => {
     const totals = { pix: 0, dinheiro: 0, debito: 0, credito: 0, outrosCartoes: 0 };
     historicoVendas.forEach(p => {
       if (!p.forma_pagamento) return;
-      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9.]+)\)/gi);
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÃ‰BITO|DEBITO|CRÃ‰DITO|CREDITO|CARTAO|CARTÃƒO)\s*\(R\$([0-9.]+)\)/gi);
       if (matches) {
         matches.forEach((m: string) => {
-          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÃ‰BITO|DEBITO|CRÃ‰DITO|CREDITO|CARTAO|CARTÃƒO)/i);
           const valMatch = m.match(/R\$([0-9.]+)/);
           if (typeMatch && valMatch) {
             const type = typeMatch[1].toUpperCase();
@@ -456,9 +456,9 @@ export const Caixa = () => {
             
             if (type === 'PIX') totals.pix += val;
             else if (type === 'DINHEIRO') totals.dinheiro += val;
-            else if (type === 'DÉBITO' || type === 'DEBITO') totals.debito += val;
-            else if (type === 'CRÉDITO' || type === 'CREDITO') totals.credito += val;
-            else if (type === 'CARTAO' || type === 'CARTÃO') totals.outrosCartoes += val;
+            else if (type === 'DÃ‰BITO' || type === 'DEBITO') totals.debito += val;
+            else if (type === 'CRÃ‰DITO' || type === 'CREDITO') totals.credito += val;
+            else if (type === 'CARTAO' || type === 'CARTÃƒO') totals.outrosCartoes += val;
           }
         });
       }
@@ -508,8 +508,8 @@ export const Caixa = () => {
       doc.setFontSize(9); doc.setFont('helvetica', 'normal');
       doc.text('DINHEIRO:', 5, y); doc.text(`R$ ${paymentTotals.dinheiro.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
       doc.text('PIX:', 5, y); doc.text(`R$ ${paymentTotals.pix.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.text('CARTÃO DÉBITO:', 5, y); doc.text(`R$ ${paymentTotals.debito.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.text('CARTÃO CRÉDITO:', 5, y); doc.text(`R$ ${paymentTotals.credito.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
+      doc.text('CARTÃƒO DÃ‰BITO:', 5, y); doc.text(`R$ ${paymentTotals.debito.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
+      doc.text('CARTÃƒO CRÃ‰DITO:', 5, y); doc.text(`R$ ${paymentTotals.credito.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
       if (paymentTotals.outrosCartoes > 0) {
         doc.text('OUTROS (ANTIGO):', 5, y); doc.text(`R$ ${paymentTotals.outrosCartoes.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
       }
@@ -522,7 +522,7 @@ export const Caixa = () => {
       
       doc.line(5, y, 75, y); y += 6;
       doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text('CONFERÊNCIA DE GAVETA (ESP.):', 5, y); y += 6;
+      doc.text('CONFERÃŠNCIA DE GAVETA (ESP.):', 5, y); y += 6;
       
       doc.setFontSize(9); doc.setFont('helvetica', 'normal');
       doc.text('Dinheiro Operador:', 5, y); doc.text(`R$ ${fnGaveta.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
@@ -548,12 +548,12 @@ export const Caixa = () => {
   };
 
   const handleSimularMesasCaixa = async () => {
-    if (!confirm("GERAR MESAS DE TESTE: Isso vai ocupar até 3 mesas livres com pedidos aleatórios e colocá-las como 'Aguardando Conta' para você testar o fechamento de caixa. Deseja continuar?")) return;
+    if (!confirm("GERAR MESAS DE TESTE: Isso vai ocupar atÃ© 3 mesas livres com pedidos aleatÃ³rios e colocÃ¡-las como 'Aguardando Conta' para vocÃª testar o fechamento de caixa. Deseja continuar?")) return;
     
-    // 1. Pegar até 3 mesas livres
+    // 1. Pegar atÃ© 3 mesas livres
     const { data: mesasLivres } = await supabase.from('mesas').select('*').eq('status', 'livre').limit(3);
     if (!mesasLivres || mesasLivres.length === 0) {
-      alert("Não há mesas livres para simular. Tente finalizar as mesas atuais, limpar o histórico no Supabase ou adicionar mais mesas no Menu Gestão.");
+      alert("NÃ£o hÃ¡ mesas livres para simular. Tente finalizar as mesas atuais, limpar o histÃ³rico no Supabase ou adicionar mais mesas no Menu GestÃ£o.");
       return;
     }
 
@@ -591,13 +591,13 @@ export const Caixa = () => {
        }
     }
 
-    alert("Simulação gerada com sucesso!");
+    alert("SimulaÃ§Ã£o gerada com sucesso!");
     fetchData();
   };
 
   const handleSimularCozinha = async () => {
-    if (!confirm("GERAR PEDIDOS DE COZINHA: Serão criados itens aleatórios (bebidas/petiscos) na fila de preparo. Continuar?")) return;
-    const { data: prods } = await supabase.from('produtos').select('*').in('categoria', ['PETISCO', 'COQUETÉIS', 'BEBIDAS']).limit(10);
+    if (!confirm("GERAR PEDIDOS DE COZINHA: SerÃ£o criados itens aleatÃ³rios (bebidas/petiscos) na fila de preparo. Continuar?")) return;
+    const { data: prods } = await supabase.from('produtos').select('*').in('categoria', ['PETISCO', 'COQUETÃ‰IS', 'BEBIDAS']).limit(10);
     if (!prods || prods.length === 0) { alert('Nenhum petisco ou bebida encontrado.'); return; }
 
     const { data: p } = await supabase.from('pedidos').insert({
@@ -625,10 +625,10 @@ export const Caixa = () => {
   };
 
   const handleSimularHistorico = async () => {
-    if (!confirm("GERAR VENDAS DO DIA: Serão geradas vendas fechadas de PIX, CARTÃO e DINHEIRO para o painel de fechamento. Continuar?")) return;
+    if (!confirm("GERAR VENDAS DO DIA: SerÃ£o geradas vendas fechadas de PIX, CARTÃƒO e DINHEIRO para o painel de fechamento. Continuar?")) return;
     
-    // Gerar uma venda para CADA método para garantir que caia nos totais
-    const pagamentosFixos = ['DINHEIRO', 'PIX', 'CARTÃO DÉBITO', 'CARTÃO CRÉDITO'];
+    // Gerar uma venda para CADA mÃ©todo para garantir que caia nos totais
+    const pagamentosFixos = ['DINHEIRO', 'PIX', 'CARTÃƒO DÃ‰BITO', 'CARTÃƒO CRÃ‰DITO'];
     
     for (const pagType of pagamentosFixos) {
        const totalRand = Math.floor(Math.random() * 80) + 40; // 40 a 120
@@ -649,7 +649,7 @@ export const Caixa = () => {
     fetchData();
   };
 
-  const categories = ['TODOS', 'PETISCO', 'BEBIDAS', 'COQUETÉIS', 'DESTILADOS (DOSE)'];
+  const categories = ['TODOS', 'PETISCO', 'BEBIDAS', 'COQUETÃ‰IS', 'DESTILADOS (DOSE)'];
 
   if (loading) return <div className="layout-container d-flex justify-center items-center" style={{height: '100vh', background: '#000', color: 'var(--primary-color)'}}>CARREGANDO CAIXA RESENHA...</div>;
 
@@ -669,7 +669,7 @@ export const Caixa = () => {
               )}
             </button>
             <button onClick={() => setActiveTab('balcao')} style={{ background: 'none', border: 'none', color: activeTab === 'balcao' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <ShoppingCart size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>BALCÃO</span>
+              <ShoppingCart size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>BALCÃƒO</span>
             </button>
             <button onClick={() => setActiveTab('cozinha')} style={{ background: 'none', border: 'none', color: activeTab === 'cozinha' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer', position: 'relative' }}>
               <Utensils size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>COZINHA</span>
@@ -680,7 +680,7 @@ export const Caixa = () => {
               )}
             </button>
             <button onClick={() => setActiveTab('historico')} style={{ background: 'none', border: 'none', color: activeTab === 'historico' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <HistoryIcon size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>HISTÓRICO</span>
+              <HistoryIcon size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>HISTÃ“RICO</span>
             </button>
             <div style={{ flex: 1 }}></div>
             <button onClick={() => setActiveTab('fechamento')} style={{ background: 'none', border: 'none', color: activeTab === 'fechamento' ? 'var(--danger-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
@@ -695,7 +695,7 @@ export const Caixa = () => {
         <OwnerViewBanner panelName="Caixa" />
         <header className="d-flex justify-between items-center mb-6">
            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>
-             {activeTab === 'mesas' ? 'GESTÃO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCÃO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : activeTab === 'historico' ? 'RELATÓRIO DE VENDAS' : 'FECHAMENTO E LEITURA Z'}
+             {activeTab === 'mesas' ? 'GESTÃƒO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCÃƒO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : activeTab === 'historico' ? 'RELATÃ“RIO DE VENDAS' : 'FECHAMENTO E LEITURA Z'}
            </h1>
            <div className="d-flex items-center gap-4">
               <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>LOGADO COMO: <b style={{color: '#fff'}}>{profile?.full_name?.toUpperCase()}</b></span>
@@ -718,7 +718,7 @@ export const Caixa = () => {
                    <Receipt size={80} style={{margin: '0 auto 1.5rem', opacity: 0.3}} />
                    <h3 style={{ opacity: 0.3 }}>Nenhuma mesa ativa no momento.</h3>
                    <button onClick={handleSimularMesasCaixa} className="btn-outline mt-6" style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
-                     GERAR MESAS DE TESTE (SIMULAÇÃO)
+                     GERAR MESAS DE TESTE (SIMULAÃ‡ÃƒO)
                    </button>
                  </div>
                )}
@@ -805,7 +805,7 @@ export const Caixa = () => {
                     <Utensils size={80} style={{margin: '0 auto 1.5rem', opacity: 0.3}} />
                     <h3 style={{ opacity: 0.3 }}>Nenhum pedido pendente de cozinha/bar.</h3>
                     <button onClick={handleSimularCozinha} className="btn-outline mt-6" style={{ borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
-                      GERAR FILA DA COZINHA (SIMULAÇÃO)
+                      GERAR FILA DA COZINHA (SIMULAÃ‡ÃƒO)
                     </button>
                  </div>
                ) : (
@@ -852,11 +852,11 @@ export const Caixa = () => {
                     <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#f59e0b' }}>R$ {paymentTotals.dinheiro.toFixed(2).replace('.', ',')}</div>
                  </div>
                  <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #3b82f6' }}>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.5, fontWeight: 700 }}>DÉBITO</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.5, fontWeight: 700 }}>DÃ‰BITO</div>
                     <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#3b82f6' }}>R$ {paymentTotals.debito.toFixed(2).replace('.', ',')}</div>
                  </div>
                  <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
-                    <div style={{ fontSize: '0.7rem', opacity: 0.5, fontWeight: 700 }}>CRÉDITO</div>
+                    <div style={{ fontSize: '0.7rem', opacity: 0.5, fontWeight: 700 }}>CRÃ‰DITO</div>
                     <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#8b5cf6' }}>R$ {paymentTotals.credito.toFixed(2).replace('.', ',')}</div>
                  </div>
                </div>
@@ -882,7 +882,7 @@ export const Caixa = () => {
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                       >
                         <td style={{ padding: '1rem', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'monospace' }}>#{v.id.split('-')[0].toUpperCase()}</td>
-                        <td style={{ padding: '1rem' }}>{v.mesa_id ? <span style={{ color: 'var(--primary-color)', fontWeight: 700 }}>MESA</span> : <span style={{ color: 'var(--success-color)', fontWeight: 700 }}>BALCÃO</span>}</td>
+                        <td style={{ padding: '1rem' }}>{v.mesa_id ? <span style={{ color: 'var(--primary-color)', fontWeight: 700 }}>MESA</span> : <span style={{ color: 'var(--success-color)', fontWeight: 700 }}>BALCÃƒO</span>}</td>
                         <td style={{ padding: '1rem' }}>{v.mesa_id ? `Mesa ${v.mesas?.numero}` : 'Venda Direta'}</td>
                         <td style={{ padding: '1rem', fontSize: '0.7rem', opacity: 0.6 }}>{v.forma_pagamento}</td>
                         <td style={{ padding: '1rem', opacity: 0.5 }}>{new Date(v.finalizado_at || v.data_hora).toLocaleTimeString()}</td>
@@ -900,7 +900,7 @@ export const Caixa = () => {
               <div className="mb-8 d-flex justify-between items-center bg-surface p-6 rounded-xl border border-border" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div>
                   <h2 style={{ fontSize: '2rem', fontWeight: 900, marginBottom: '0.5rem' }}>Fechamento de Caixa</h2>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Siga o procedimento de conferência cega para encerramento do turno.</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>Siga o procedimento de conferÃªncia cega para encerramento do turno.</p>
                 </div>
                 <button onClick={handleSimularHistorico} className="btn-outline" style={{ width: 'auto', padding: '0.75rem 1.5rem', borderColor: 'var(--primary-color)', color: 'var(--primary-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <HistoryIcon size={20} /> GERAR VENDAS PARA TESTE
@@ -910,7 +910,7 @@ export const Caixa = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', alignItems: 'start' }}>
                 {/* COLUNA ESQUERDA: ENTRADAS DO OPERADOR */}
                 <div className="card d-flex flex-col gap-6" style={{ padding: '2rem' }}>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-color)', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '1rem', marginBottom: '0.5rem' }}>Dados de Conferência</h3>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-color)', borderBottom: '1px solid rgba(212,175,55,0.2)', paddingBottom: '1rem', marginBottom: '0.5rem' }}>Dados de ConferÃªncia</h3>
                   
                   <div>
                     <label style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>FUNDO DE TROCO INICIAL (ABERTURA)</label>
@@ -931,7 +931,7 @@ export const Caixa = () => {
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', margin: '0.5rem 0' }}></div>
 
                   <div className="p-4 rounded-xl" style={{ background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.2)' }}>
-                    <label style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--primary-color)', display: 'block', marginBottom: '0.75rem' }}>VALOR TOTAL NA GAVETA (ESPÉCIE)</label>
+                    <label style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--primary-color)', display: 'block', marginBottom: '0.75rem' }}>VALOR TOTAL NA GAVETA (ESPÃ‰CIE)</label>
                     <div style={{ position: 'relative' }}>
                       <span style={{ position: 'absolute', left: '1.2rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 900, fontSize: '1.5rem', color: 'var(--primary-color)' }}>R$</span>
                       <input type="number" step="0.01" value={dinheiroGaveta} onChange={e => setDinheiroGaveta(e.target.value)} placeholder="0,00" className="input-field" style={{ paddingLeft: '3.5rem', fontSize: '2rem', fontWeight: 900, color: '#fff', height: '4.5rem', borderColor: 'var(--primary-color)' }} />
@@ -940,7 +940,7 @@ export const Caixa = () => {
                   </div>
                 </div>
 
-                {/* COLUNA DIREITA: RESUMO E CONCLUSÃO */}
+                {/* COLUNA DIREITA: RESUMO E CONCLUSÃƒO */}
                 <div className="d-flex flex-col gap-6">
                   <div className="card d-flex flex-col gap-5" style={{ background: '#0a0a0a', padding: '2rem', border: '1px solid rgba(255,255,255,0.03)' }}>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 800, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', color: '#fff' }}>Resultado da Auditoria</h3>
@@ -951,7 +951,7 @@ export const Caixa = () => {
                           <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>R$ {paymentTotals.dinheiro.toFixed(2)}</span>
                       </div>
                       <div className="d-flex justify-between items-center">
-                          <span style={{ opacity: 0.6 }}>Vendas (Cartão/PIX):</span>
+                          <span style={{ opacity: 0.6 }}>Vendas (CartÃ£o/PIX):</span>
                           <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>R$ {(paymentTotals.pix + paymentTotals.debito + paymentTotals.credito + paymentTotals.outrosCartoes).toFixed(2)}</span>
                       </div>
                     </div>
@@ -978,7 +978,7 @@ export const Caixa = () => {
                             <div className="d-flex flex-col items-center justify-center p-6 rounded-2xl text-center" style={{ background: `rgba(${diff === 0 ? '16,185,129' : diff > 0 ? '245,158,11' : '239,68,68'}, 0.08)`, border: `2px solid ${diffColor}` }}>
                               <span style={{ fontWeight: 900, color: diffColor, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '0.5rem' }}>{diffLabel}</span>
                               <b style={{ fontSize: '2.5rem', color: diffColor }}>R$ {Math.abs(diff).toFixed(2).replace('.', ',')}</b>
-                              {diff !== 0 && <span style={{ fontSize: '0.75rem', color: diffColor, opacity: 0.8, marginTop: '5px' }}>Diferença apurada na auditoria manual</span>}
+                              {diff !== 0 && <span style={{ fontSize: '0.75rem', color: diffColor, opacity: 0.8, marginTop: '5px' }}>DiferenÃ§a apurada na auditoria manual</span>}
                             </div>
                           </>
                         );
@@ -987,7 +987,7 @@ export const Caixa = () => {
 
                   <button className="btn-primary w-full py-6" onClick={handleFechamentoCaixa} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', borderRadius: '20px', boxShadow: '0 10px 40px rgba(212, 175, 55, 0.2)' }}>
                       <div className="d-flex items-center gap-2" style={{ fontSize: '1.4rem', fontWeight: 900 }}><Printer size={28} /> EMITIR LEITURA Z</div>
-                      <span style={{ fontSize: '0.8rem', fontWeight: 400, opacity: 0.9, color: '#000' }}>Confirmar fechamento e baixar relatório PDF</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 400, opacity: 0.9, color: '#000' }}>Confirmar fechamento e baixar relatÃ³rio PDF</span>
                   </button>
                 </div>
               </div>
@@ -1002,12 +1002,12 @@ export const Caixa = () => {
         {isCheckoutOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="card" style={{ width: '100%', maxWidth: '900px', padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 350px' }}>
-                {/* LADO ESQUERDO: CONFERÊNCIA */}
+                {/* LADO ESQUERDO: CONFERÃŠNCIA */}
                 <div style={{ padding: '2.5rem', borderRight: '1px solid #222' }}>
                    <div className="d-flex justify-between items-center mb-8">
                       <div>
-                        <h2 style={{ fontSize: '2rem', fontWeight: 900 }}>CONFERÊNCIA</h2>
-                        <span style={{ opacity: 0.5 }}>{selectedMesa ? `Mesa ${selectedMesa.numero}` : 'Venda Rápida'}</span>
+                        <h2 style={{ fontSize: '2rem', fontWeight: 900 }}>CONFERÃŠNCIA</h2>
+                        <span style={{ opacity: 0.5 }}>{selectedMesa ? `Mesa ${selectedMesa.numero}` : 'Venda RÃ¡pida'}</span>
                       </div>
                       <button onClick={() => setIsCheckoutOpen(false)} style={{ background: '#222', border: 'none', color: '#fff', padding: '10px', borderRadius: '50%' }}><X size={20}/></button>
                    </div>
@@ -1024,21 +1024,29 @@ export const Caixa = () => {
                       ))}
                    </div>
 
-                   <div className="d-flex justify-between gap-4">
+                   <div className="d-flex flex-col gap-3">
                       {selectedMesa && (
-                        <div className="card text-center" style={{ flex: 1, padding: '1rem' }}>
-                           <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>DIVIDIR POR</span>
-                           <div className="d-flex justify-center items-center gap-4 py-2">
-                              <button onClick={() => setDividirPor(Math.max(1, dividirPor-1))} className="btn-outline" style={{width: '32px', padding: '0'}}>-</button>
-                              <span style={{ fontSize: '1.5rem', fontWeight: 900 }}>{dividirPor}</span>
-                              <button onClick={() => setDividirPor(dividirPor+1)} className="btn-outline" style={{width: '32px', padding: '0'}}>+</button>
+                        <div className="card" style={{ padding: '1.2rem', background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.1)' }}>
+                           <div className="d-flex justify-between items-center mb-3">
+                              <span style={{ fontSize: '0.75rem', fontWeight: 800, opacity: 0.6 }}>DIVIDIR CONTA</span>
+                              <div className="d-flex items-center gap-3">
+                                 <button onClick={() => setDividirPor(Math.max(1, dividirPor-1))} className="btn-outline" style={{width: '32px', height: '32px', padding: '0', fontSize: '1.2rem'}}>-</button>
+                                 <span style={{ fontSize: '1.4rem', fontWeight: 900, minWidth: '30px', textAlign: 'center' }}>{dividirPor}</span>
+                                 <button onClick={() => setDividirPor(dividirPor+1)} className="btn-outline" style={{width: '32px', height: '32px', padding: '0', fontSize: '1.2rem'}}>+</button>
+                              </div>
                            </div>
-                           <span style={{ color: 'var(--primary-color)', fontWeight: 800, fontSize: '0.9rem' }}>R$ {(totalComTaxa / dividirPor).toFixed(2)} p/ pessoa</span>
+                           <div className="d-flex justify-between items-center">
+                              <span style={{ fontSize: '0.8rem', opacity: 0.8 }}>VALOR POR PESSOA:</span>
+                              <b style={{ color: 'var(--primary-color)', fontSize: '1.3rem', fontWeight: 900 }}>R$ {(totalComTaxa / dividirPor).toFixed(2)}</b>
+                           </div>
                         </div>
                       )}
-                      <button className="btn-outline" style={{ flex: 1 }} onClick={() => handleImprimir(checkoutItens)}>
-                        <Printer size={18} /> IMPRIMIR CUPOM
-                      </button>
+                      
+                      <div className="d-flex gap-2">
+                        <button className="btn-outline" style={{ flex: 1, padding: '1rem' }} onClick={() => handleImprimir(checkoutItens)}>
+                          <Printer size={18} /> IMPRIMIR CONFERÃŠNCIA
+                        </button>
+                      </div>
                    </div>
                 </div>
 
@@ -1047,17 +1055,36 @@ export const Caixa = () => {
                     <div className="mb-8">
                        <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>VALOR TOTAL</span>
                        <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalComTaxa.toFixed(2)}</div>
-                       {selectedMesa && <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>(Inclui 10% de serviço)</span>}
+                       {selectedMesa && <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>(Inclui 10% de serviÃ§o)</span>}
                     </div>
 
                     <div className="mb-6">
                        <span style={{ fontSize: '0.7rem', opacity: 0.4, marginBottom: '0.8rem', display: 'block' }}>FORMA DE PAGAMENTO</span>
-                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                          <button onClick={() => handleAddPayment('dinheiro', totalRestante)} className="btn-success">DINHEIRO</button>
-                          <button onClick={() => handleAddPayment('pix', totalRestante)} className="btn-primary">PIX</button>
-                          <button onClick={() => handleAddPayment('debito', totalRestante)} className="btn-outline">DÉBITO</button>
-                          <button onClick={() => handleAddPayment('credito', totalRestante)} className="btn-outline">CRÉDITO</button>
-                       </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "0.8rem" }}>
+                           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                              <button onClick={() => handleAddPayment("dinheiro", totalRestante)} className="btn-success" style={{ fontSize: "0.7rem" }}>DINHEIRO TOTAL</button>
+                              <button onClick={() => handleAddPayment("pix", totalRestante)} className="btn-primary" style={{ fontSize: "0.7rem" }}>PIX TOTAL</button>
+                           </div>
+                           
+                           {dividirPor > 1 && (
+                             <div style={{ padding: "1rem", background: "rgba(255,255,255,0.03)", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+                               <span style={{ fontSize: "0.65rem", opacity: 0.5, marginBottom: "0.8rem", display: "block", textAlign: "center" }}>PAGAR POR PESSOA (1 COTA)</span>
+                               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                                 <button onClick={() => handleAddPayment("dinheiro", totalComTaxa / dividirPor)} style={{ background: "#059669", color: "#fff", padding: "0.8rem", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800 }}>💵 COTA DINHEIRO</button>
+                                 <button onClick={() => handleAddPayment("pix", totalComTaxa / dividirPor)} style={{ background: "#b5952f", color: "#000", padding: "0.8rem", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800 }}>📱 COTA PIX</button>
+                                 <button onClick={() => handleAddPayment("debito", totalComTaxa / dividirPor)} style={{ background: "transparent", border: "1px solid #444", color: "#fff", padding: "0.8rem", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800 }}>💳 COTA DÉBITO</button>
+                                 <button onClick={() => handleAddPayment("credito", totalComTaxa / dividirPor)} style={{ background: "transparent", border: "1px solid #444", color: "#fff", padding: "0.8rem", borderRadius: "8px", fontSize: "0.75rem", fontWeight: 800 }}>💳 COTA CRÉDITO</button>
+                               </div>
+                             </div>
+                           )}
+                           
+                           {dividirPor === 1 && (
+                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+                               <button onClick={() => handleAddPayment("debito", totalRestante)} className="btn-outline" style={{ fontSize: "0.7rem" }}>DÉBITO</button>
+                               <button onClick={() => handleAddPayment("credito", totalRestante)} className="btn-outline" style={{ fontSize: "0.7rem" }}>CRÉDITO</button>
+                             </div>
+                           )}
+                        </div>
                     </div>
 
                     {pagamentos.length > 0 && (
@@ -1078,7 +1105,7 @@ export const Caixa = () => {
                        <div className="card mb-6" style={{ background: 'rgba(212, 175, 55, 0.08)', border: '2px solid var(--primary-color)', padding: '1.5rem' }}>
                           <div className="d-flex items-center gap-2 mb-3">
                              <Calculator size={18} color="var(--primary-color)"/> 
-                             <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>CÁLCULO DE TROCO</span>
+                             <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>CÃLCULO DE TROCO</span>
                           </div>
                           <div style={{ fontSize: '0.6rem', opacity: 0.5, marginBottom: '5px' }}>VALOR QUE O CLIENTE DEU:</div>
                           <input 
@@ -1128,10 +1155,10 @@ export const Caixa = () => {
               <div className="mb-6 p-4 rounded-lg" style={{ background: 'rgba(212, 175, 55, 0.05)', border: '1px solid rgba(212, 175, 55, 0.1)' }}>
                 <div className="d-flex justify-between mb-2">
                   <span style={{ opacity: 0.6 }}>Cliente:</span>
-                  <span style={{ fontWeight: 700 }}>{selectedPedidoDetail?.mesa_id ? `Mesa ${selectedPedidoDetail?.mesas?.numero}` : 'Balcão'}</span>
+                  <span style={{ fontWeight: 700 }}>{selectedPedidoDetail?.mesa_id ? `Mesa ${selectedPedidoDetail?.mesas?.numero}` : 'BalcÃ£o'}</span>
                 </div>
                 <div className="d-flex justify-between mb-2">
-                  <span style={{ opacity: 0.6 }}>Horário:</span>
+                  <span style={{ opacity: 0.6 }}>HorÃ¡rio:</span>
                   <span>{new Date(selectedPedidoDetail?.finalizado_at || selectedPedidoDetail?.data_hora).toLocaleString()}</span>
                 </div>
                 <div className="d-flex justify-between">
