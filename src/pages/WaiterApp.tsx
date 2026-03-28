@@ -167,12 +167,12 @@ export const Garcom = () => {
 
   const handleExcluirItem = async (itemId: string, item: any) => {
     // 0. Trava de segurança para categorias críticas
-    const categoriasCriticas = ['PETISCOS', 'COQUETEIS', 'COQUITEIS', 'DRINKS', 'BEBIDAS ALCOÓLICAS', 'DOSES'];
+    const categoriasCriticas = ['PETISCO', 'PETISCOS', 'COZINHA', 'COQUETÉIS', 'COQUETEIS', 'COQUITEIS'];
     const categoriaItem = (item.produtos?.categoria || '').toUpperCase();
     const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
 
     if (categoriasCriticas.includes(categoriaItem) && item.status !== 'pendente' && !ehGestor) {
-      alert(`⚠️ BLOQUEADO: Este item (${categoriaItem}) já está em preparo.\n\nApenas Administradores ou o Proprietário podem cancelar este tipo de item após a aceitação da cozinha/bar.`);
+      alert(`⚠️ BLOQUEADO: Este item (${categoriaItem}) já está em preparo.\n\nApenas Administradores ou o Proprietário podem cancelar itens de Cozinha/Bar após a aceitação.`);
       return;
     }
 
@@ -234,7 +234,7 @@ export const Garcom = () => {
     }
 
     // 1. Verificação de categorias críticas em preparo
-    const categoriasCriticas = ['PETISCOS', 'COQUETEIS', 'COQUITEIS', 'DRINKS', 'BEBIDAS ALCOÓLICAS', 'DOSES'];
+    const categoriasCriticas = ['PETISCO', 'PETISCOS', 'COZINHA', 'COQUETÉIS', 'COQUETEIS', 'COQUITEIS'];
     const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
     
     const criticosEmPreparo = mesaItens.filter(i => {
@@ -243,13 +243,18 @@ export const Garcom = () => {
     });
 
     if (criticosEmPreparo.length > 0 && !ehGestor) {
-      alert(`⚠️ BLOQUEIO DE SEGURANÇA:\n\nHá itens críticos em preparação nesta mesa:\n${criticosEmPreparo.map(i => `• ${i.produtos?.nome}`).join('\n')}\n\nGarçons não podem fechar a conta com itens críticos em execução. Solicite a um Administrador para autorizar ou aguarde a entrega.`);
+      alert(`⚠️ BLOQUEIO DE SEGURANÇA:\n\nHá itens de COZINHA ou COQUETÉIS em preparação nesta mesa:\n${criticosEmPreparo.map(i => `• ${i.produtos?.nome}`).join('\n')}\n\nGarçons não podem fechar a conta com itens críticos em execução.`);
       return;
     }
 
-    const pendenciasGerais = mesaItens.filter(i => i.status !== 'entregue' && i.status !== 'finalizado');
-    if (pendenciasGerais.length > 0 && !ehGestor) {
-      alert(`⚠️ PENDÊNCIAS:\n\nNão é possível pedir a conta enquanto houver itens aguardando entrega ou em preparo:\n${pendenciasGerais.map(i => `• ${i.produtos?.nome}`).join('\n')}`);
+    // Pendências gerais agora também respeitam as categorias críticas para não travar bebidas
+    const pendenciasCriticas = mesaItens.filter(i => {
+      const cat = (i.produtos?.categoria || '').toUpperCase();
+      return categoriasCriticas.includes(cat) && i.status !== 'entregue' && i.status !== 'finalizado';
+    });
+    
+    if (pendenciasCriticas.length > 0 && !ehGestor) {
+      alert(`⚠️ PENDÊNCIAS CRÍTICAS:\n\nNão é possível pedir a conta enquanto houver itens de COZINHA ou COQUETÉIS aguardando:\n${pendenciasCriticas.map(i => `• ${i.produtos?.nome}`).join('\n')}`);
       return;
     }
 
