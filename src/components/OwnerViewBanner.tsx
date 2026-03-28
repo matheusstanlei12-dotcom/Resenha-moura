@@ -14,11 +14,12 @@ export const OwnerViewBanner = ({ panelName }: { panelName: string }) => {
 
   return (
     <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
+      position: 'sticky', top: 0, left: 0, right: 0, zIndex: 9999,
       background: 'linear-gradient(90deg, #d4af37, #b8961e)',
-      color: '#000', padding: '8px 1.5rem',
+      color: '#000', padding: '12px 1.5rem',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      boxShadow: '0 2px 12px rgba(212,175,55,0.4)', fontSize: '0.85rem'
+      boxShadow: '0 4px 15px rgba(0,0,0,0.3)', fontSize: '0.85rem',
+      marginBottom: '1rem'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 700 }}>
         <span>👁️</span>
