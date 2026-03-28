@@ -51,6 +51,7 @@ export const Caixa = () => {
   const [checkoutItens, setCheckoutItens] = useState<any[]>([]);
   const [pagamentos, setPagamentos] = useState<Payment[]>([]);
   const [dividirPor, setDividirPor] = useState(1);
+  const [splitPayments, setSplitPayments] = useState<{method: PaymentMethod | null, amount: number}[]>([]);
   const [incluirTaxa, setIncluirTaxa] = useState(true);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [valorRecebido, setValorRecebido] = useState<string>('');
@@ -205,6 +206,7 @@ export const Caixa = () => {
     setValorRecebido('');
     setCustomAmount('');
     setDividirPor(1);
+    setSplitPayments([]);
     setIncluirTaxa(true);
     setSelectedMethod(null);
     
@@ -735,23 +737,117 @@ export const Caixa = () => {
                            </div>
                            <b>R$ {taxaServico.toFixed(2)}</b>
                         </div>
-                        <div className="d-flex justify-between items-center">
-                           <div className="d-flex flex-col">
-                              <span style={{ opacity: 0.6 }}>DIVIDIR CONTA POR:</span>
-                              {dividirPor > 1 && (
-                                <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 800 }}>
-                                  VLR. INDIVIDUAL: R$ {(totalComTaxa / dividirPor).toFixed(2)}
-                                </span>
-                              )}
-                           </div>
-                           <div className="d-flex items-center gap-3">
-                              <button onClick={() => setDividirPor(Math.max(1, dividirPor-1))} className="btn-outline" style={{width: '30px', height: '30px', padding: 0}}>-</button>
-                              <b>{dividirPor}</b>
-                              <button onClick={() => setDividirPor(dividirPor+1)} className="btn-outline" style={{width: '30px', height: '30px', padding: 0}}>+</button>
-                           </div>
-                        </div>
-                     </div>
-                   )}
+                         <div className="d-flex justify-between items-center">
+                            <div className="d-flex flex-col">
+                               <span style={{ opacity: 0.6 }}>DIVIDIR CONTA POR:</span>
+                               {dividirPor > 1 && (
+                                 <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 800 }}>
+                                   VLR. INDIVIDUAL: R$ {(totalComTaxa / dividirPor).toFixed(2)}
+                                 </span>
+                               )}
+                            </div>
+                            <div className="d-flex items-center gap-3">
+                               <button 
+                                 onClick={() => {
+                                   const next = Math.max(1, dividirPor-1);
+                                   setDividirPor(next);
+                                   if (next > 1) {
+                                      const vlr = totalComTaxa / next;
+                                      setSplitPayments(Array(next).fill(0).map(() => ({ method: null, amount: vlr })));
+                                   } else {
+                                      setSplitPayments([]);
+                                   }
+                                 }} 
+                                 className="btn-outline" 
+                                 style={{width: '30px', height: '30px', padding: 0}}
+                               >
+                                 -
+                               </button>
+                               <b>{dividirPor}</b>
+                               <button 
+                                 onClick={() => {
+                                   const next = dividirPor + 1;
+                                   setDividirPor(next);
+                                   const vlr = totalComTaxa / next;
+                                   setSplitPayments(Array(next).fill(0).map(() => ({ method: null, amount: vlr })));
+                                 }} 
+                                 className="btn-outline" 
+                                 style={{width: '30px', height: '30px', padding: 0}}
+                               >
+                                 +
+                               </button>
+                            </div>
+                         </div>
+                      </div>
+                    )}
+                    
+                    {dividirPor > 1 && splitPayments.length > 0 && (
+                      <div className="card mb-4" style={{ padding: '1rem', border: '1px solid var(--primary-color)', background: 'rgba(212, 175, 55, 0.05)' }}>
+                         <h4 className="mb-3" style={{ fontSize: '0.8rem', color: 'var(--primary-color)' }}>DIVISÃO POR PESSOA</h4>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
+                            {splitPayments.map((p, idx) => (
+                              <div key={idx} style={{ paddingBottom: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                 <div className="d-flex justify-between items-center mb-2">
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>PESSOA {idx+1}</span>
+                                    <input 
+                                       type="number" 
+                                       value={p.amount.toFixed(2)} 
+                                       onChange={(e) => {
+                                          const newSplits = [...splitPayments];
+                                          newSplits[idx].amount = parseFloat(e.target.value) || 0;
+                                          setSplitPayments(newSplits);
+                                       }}
+                                       style={{ width: '80px', background: 'transparent', border: 'none', borderBottom: '1px solid #444', color: '#fff', textAlign: 'right', fontSize: '0.8rem', fontWeight: 700 }}
+                                    />
+                                 </div>
+                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                                    {['dinheiro', 'pix', 'debito', 'credito'].map(m => (
+                                      <button 
+                                        key={m}
+                                        onClick={() => {
+                                          const newSplits = [...splitPayments];
+                                          newSplits[idx].method = m as PaymentMethod;
+                                          setSplitPayments(newSplits);
+                                        }}
+                                        style={{ 
+                                          fontSize: '0.55rem', 
+                                          padding: '4px 2px', 
+                                          background: p.method === m ? 'var(--primary-color)' : 'rgba(255,255,255,0.05)',
+                                          color: p.method === m ? '#000' : '#fff',
+                                          border: 'none',
+                                          borderRadius: '4px',
+                                          fontWeight: 800
+                                        }}
+                                      >
+                                        {m.toUpperCase()}
+                                      </button>
+                                    ))}
+                                 </div>
+                              </div>
+                            ))}
+                         </div>
+                         <button 
+                           onClick={() => {
+                             const completed = splitPayments.filter(s => s.method !== null);
+                             if (completed.length === 0) {
+                               alert("Selecione a forma de pagamento de pelo menos uma pessoa!");
+                               return;
+                             }
+                             const newPayments = [...pagamentos];
+                             completed.forEach(s => {
+                               newPayments.push({ method: s.method!, amount: s.amount });
+                             });
+                             setPagamentos(newPayments);
+                             setDividirPor(1);
+                             setSplitPayments([]);
+                           }}
+                           className="btn-primary w-full mt-4" 
+                           style={{ fontSize: '0.7rem' }}
+                         >
+                           ADICIONAR PAGAMENTOS DA DIVISÃO
+                         </button>
+                      </div>
+                    )}
                    <button className="btn-outline w-full p-4" onClick={() => handleImprimir(checkoutItens)}><Printer size={18} /> IMPRIMIR CONFERÊNCIA</button>
                 </div>
 
