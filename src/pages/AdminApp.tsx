@@ -430,7 +430,7 @@ export const Administracao = () => {
                         <input name="nome" placeholder="Ex: Heineken 600ml" required style={{ width: '100%', padding: '0.7rem', background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff', outline: 'none' }} />
                       </div>
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>CATEGORIA</label>
-                        <select name="categoria" style={{ width: '100%', padding: '0.7rem', background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff' }}>
+                        <select name="categoria" className="input-field">
                           <option>PETISCO</option><option>BEBIDAS</option><option>COQUETÉIS</option><option>DESTILADOS (DOSE)</option>
                         </select>
                       </div>

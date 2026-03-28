@@ -498,7 +498,12 @@ export const Dono = () => {
             <input value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="Nome" required className="input-field" />
             <input type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="E-mail" required className="input-field" />
             <input type="password" value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="Senha" required className="input-field" />
-            <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="input-field"><option value="garcom">Garçom</option><option value="caixa">Caixa</option><option value="cozinha">Cozinha</option><option value="admin">Admin</option></select>
+            <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="input-field">
+              <option value="garcom">Garçom</option>
+              <option value="caixa">Caixa</option>
+              <option value="cozinha">Cozinha</option>
+              <option value="admin">Admin</option>
+            </select>
             <button type="submit" className="btn-primary" disabled={isCreatingUser}>{isCreatingUser ? 'Criando...' : 'Criar'}</button>
           </form>
         </div>
@@ -518,7 +523,12 @@ export const Dono = () => {
       <div className="card mb-6">
         <form onSubmit={handleAddProduto} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
           <input name="nome" placeholder="Nome" required className="input-field" />
-          <select name="categoria" className="input-field"><option value="PETISCO">PETISCO</option><option value="BEBIDAS">BEBIDAS</option><option value="COQUETÉIS">COQUETÉIS</option><option value="DESTILADOS (DOSE)">DESTILADOS (DOSE)</option></select>
+          <select name="categoria" className="input-field">
+            <option value="PETISCO">PETISCO</option>
+            <option value="BEBIDAS">BEBIDAS</option>
+            <option value="COQUETÉIS">COQUETÉIS</option>
+            <option value="DESTILADOS (DOSE)">DESTILADOS (DOSE)</option>
+          </select>
           <input name="preco" type="number" step="0.01" placeholder="R$" required className="input-field" />
           <input name="estoque" type="number" placeholder="Estoque" required className="input-field" />
           <button type="submit" className="btn-primary">Adicionar</button>
@@ -757,10 +767,6 @@ export const Dono = () => {
       <main className="main-content">
         <div className="container">{renderContent()}</div>
       </main>
-      <style>{`
-        .input-field { padding: 0.8rem; background: var(--surface-color); border: 1px solid var(--border-color); borderRadius: 8px; color: white; width: 100%; outline: none; }
-        .input-field:focus { border-color: var(--primary-color); }
-      `}</style>
     </div>
   );
 };

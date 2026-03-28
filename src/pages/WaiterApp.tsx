@@ -305,7 +305,8 @@ export const Garcom = () => {
                   <select 
                     value={targetMesaId} 
                     onChange={(e) => setTargetMesaId(e.target.value)}
-                    style={{ width: '100%', padding: '1rem', backgroundColor: '#000', color: 'white', border: '1px solid var(--border-color)', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '1.1rem' }}
+                    className="input-field"
+                    style={{ marginBottom: '1.5rem', fontSize: '1.1rem' }}
                   >
                     <option value="">Selecione uma Mesa Livre...</option>
                     {mesas.filter(m => m.status === 'livre').map(m => (
@@ -366,7 +367,7 @@ export const Garcom = () => {
                    <select 
                      value={activeCategory} 
                      onChange={(e) => setActiveCategory(e.target.value)}
-                     style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--surface-color)', color: 'var(--text-main)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '1rem' }}
+                     className="input-field"
                    >
                      <option value="TODOS">Todas as Categorias</option>
                      {Array.from(new Set(produtos.map(p => p.categoria.toUpperCase()))).map(cat => (
