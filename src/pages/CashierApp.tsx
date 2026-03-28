@@ -54,6 +54,7 @@ export const Caixa = () => {
   const [incluirTaxa, setIncluirTaxa] = useState(true);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [valorRecebido, setValorRecebido] = useState<string>('');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   
   // Fechamento State
   const [fundoTroco, setFundoTroco] = useState<string>('0');
@@ -205,6 +206,7 @@ export const Caixa = () => {
     setCustomAmount('');
     setDividirPor(1);
     setIncluirTaxa(true);
+    setSelectedMethod(null);
     
     // Buscar pedidos da mesa
     const { data: pedidosMesa } = await supabase.from('pedidos')
@@ -240,6 +242,7 @@ export const Caixa = () => {
     setCustomAmount('');
     setDividirPor(1);
     setIncluirTaxa(false); // Balcão geralmente não tem taxa
+    setSelectedMethod(null);
     setIsCheckoutOpen(true);
   };
 
@@ -709,36 +712,91 @@ export const Caixa = () => {
                     </div>
 
                     <div className="mb-6">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                           <button onClick={() => handleAddPayment('dinheiro', totalRestante)} className="btn-success">DINHEIRO</button>
-                           <button onClick={() => handleAddPayment('pix', totalRestante)} className="btn-primary">PIX</button>
-                           <button onClick={() => handleAddPayment('debito', totalRestante)} className="btn-outline">DÉBITO</button>
-                           <button onClick={() => handleAddPayment('credito', totalRestante)} className="btn-outline">CRÉDITO</button>
+                        <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '8px', fontWeight: 800 }}>MÉTODO DE PAGAMENTO</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '1.5rem' }}>
+                           {[
+                             { id: 'dinheiro', label: 'DINHEIRO', color: '#10b981' },
+                             { id: 'pix', label: 'PIX', color: '#d4af37' },
+                             { id: 'debito', label: 'DÉBITO', color: '#fff' },
+                             { id: 'credito', label: 'CRÉDITO', color: '#fff' }
+                           ].map(m => (
+                             <button 
+                                key={m.id}
+                                onClick={() => setSelectedMethod(m.id as PaymentMethod)}
+                                className={selectedMethod === m.id ? 'btn-primary' : 'btn-outline'}
+                                style={{ 
+                                  padding: '1rem', 
+                                  fontSize: '0.8rem', 
+                                  fontWeight: 800,
+                                  borderColor: selectedMethod === m.id ? m.color : 'rgba(255,255,255,0.1)',
+                                  background: selectedMethod === m.id ? m.color : 'transparent',
+                                  color: selectedMethod === m.id ? '#000' : m.color,
+                                  transition: '0.2s'
+                                }}
+                             >
+                               {m.label}
+                             </button>
+                           ))}
                         </div>
-                        <div className="card mt-4" style={{ padding: '1rem', background: '#000' }}>
-                           <input type="number" value={customAmount} onChange={e => setCustomAmount(e.target.value)} placeholder="Valor parcial..." style={{ width: '100%', background: 'transparent', border: '1px solid #333', color: '#fff', padding: '0.5rem', marginBottom: '0.5rem' }} />
-                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '4px' }}>
-                              <button onClick={() => handleAddPayment('dinheiro', Number(customAmount))} style={{ fontSize: '0.6rem' }}>DIN</button>
-                              <button onClick={() => handleAddPayment('pix', Number(customAmount))} style={{ fontSize: '0.6rem' }}>PIX</button>
-                              <button onClick={() => handleAddPayment('debito', Number(customAmount))} style={{ fontSize: '0.6rem' }}>DEB</button>
-                              <button onClick={() => handleAddPayment('credito', Number(customAmount))} style={{ fontSize: '0.6rem' }}>CRE</button>
-                           </div>
+
+                        <div className="card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                           <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '8px' }}>VALOR A PAGAR AGORA (R$)</label>
+                           <input 
+                             type="number" 
+                             value={customAmount} 
+                             onChange={e => setCustomAmount(e.target.value)} 
+                             placeholder={totalRestante.toFixed(2)}
+                             style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid #333', color: '#fff', padding: '0.5rem 0', marginBottom: '1.5rem', fontSize: '2rem', fontWeight: 900, outline: 'none' }} 
+                           />
+                           
+                           <button 
+                             onClick={() => {
+                               if (!selectedMethod) {
+                                  alert("Selecione um método de pagamento primeiro!");
+                                  return;
+                               }
+                               const val = parseFloat(customAmount) || totalRestante;
+                               handleAddPayment(selectedMethod, val);
+                             }}
+                             disabled={!selectedMethod}
+                             className="btn-primary w-full"
+                             style={{ opacity: selectedMethod ? 1 : 0.5 }}
+                           >
+                             ADICIONAR PAGAMENTO
+                           </button>
                         </div>
                     </div>
 
-                    {pagamentos.map((p, i) => (
-                      <div key={i} className="d-flex justify-between p-2 rounded mb-2" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                         <span>{p.method.toUpperCase()}</span>
-                         <b>R$ {p.amount.toFixed(2)}</b>
-                      </div>
-                    ))}
+                    <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem' }}>
+                       <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '8px' }}>PAGAMENTOS RECEBIDOS</label>
+                       {pagamentos.map((p, i) => (
+                         <div key={i} className="d-flex justify-between p-3 rounded-lg mb-2" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: `4px solid ${p.method === 'dinheiro' ? '#10b981' : '#d4af37'}` }}>
+                            <div className="d-flex flex-col">
+                              <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{p.method.toUpperCase()}</span>
+                              <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>Recebido com sucesso</span>
+                            </div>
+                            <b style={{ fontSize: '1.1rem' }}>R$ {p.amount.toFixed(2)}</b>
+                         </div>
+                       ))}
+                       {pagamentos.length === 0 && <div style={{ textAlign: 'center', opacity: 0.3, padding: '1rem', border: '1px dashed #333', borderRadius: '8px' }}>Aguardando pagamento...</div>}
+                    </div>
 
                     <div className="mt-auto pt-6" style={{ borderTop: '1px solid #222' }}>
-                       <div className="d-flex justify-between mb-4">
-                          <span style={{ opacity: 0.6 }}>RESTANTE</span>
-                          <b style={{ fontSize: '1.2rem', color: totalRestante > 0.1 ? 'var(--danger-color)' : 'var(--success-color)' }}>R$ {totalRestante.toFixed(2)}</b>
+                       <div className="d-flex justify-between items-end mb-4">
+                          <div>
+                            <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>RESTANTE A PAGAR</span>
+                            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: totalRestante > 0.1 ? 'var(--danger-color)' : 'var(--success-color)' }}>R$ {totalRestante.toFixed(2)}</div>
+                          </div>
+                          {totalRestante <= 0.1 && <div style={{ color: 'var(--success-color)', fontWeight: 800, fontSize: '0.8rem' }}>PAGO ✓</div>}
                        </div>
-                       <button className="btn-primary w-full py-4" disabled={totalRestante > 0.1} onClick={handleFinalizar}>FINALIZAR VENDA</button>
+                       <button 
+                         className="btn-primary w-full py-4" 
+                         disabled={totalRestante > 0.1} 
+                         onClick={handleFinalizar}
+                         style={{ fontSize: '1.1rem', background: totalRestante <= 0.1 ? 'var(--success-color)' : 'rgba(255,255,255,0.05)', color: totalRestante <= 0.1 ? '#000' : 'rgba(255,255,255,0.1)' }}
+                       >
+                         {totalRestante <= 0.1 ? 'FINALIZAR VENDA' : 'AGUARDANDO SALDO'}
+                       </button>
                     </div>
                 </div>
              </motion.div>
