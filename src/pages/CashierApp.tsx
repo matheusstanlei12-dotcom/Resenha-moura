@@ -351,28 +351,32 @@ export const Caixa = () => {
 
         // 1. Atualizar o pedido mestre com o valor total e pagamento
         const turnoId = localStorage.getItem('turno_id');
+        const updateData: any = { 
+          status: 'finalizado', 
+          forma_pagamento: formaPagamentoStr,
+          total: totalComTaxa,
+          finalizado_at: new Date().toISOString()
+        };
+        if (turnoId) updateData.turno_id = turnoId;
+
         const { error: masterError } = await supabase.from('pedidos')
-          .update({ 
-            status: 'finalizado', 
-            forma_pagamento: formaPagamentoStr,
-            total: totalComTaxa,
-            finalizado_at: new Date().toISOString(),
-            turno_id: turnoId
-          })
+          .update(updateData)
           .eq('id', masterId);
 
         if (masterError) throw masterError;
 
         // 2. Se houver outros pedidos na mesa, fechá-los com total zero para não duplicar no financeiro
         if (otherIds.length > 0) {
+          const bulkUpdateData: any = { 
+            status: 'finalizado', 
+            forma_pagamento: 'AGRUPADO',
+            total: 0,
+            finalizado_at: new Date().toISOString()
+          };
+          if (turnoId) bulkUpdateData.turno_id = turnoId;
+
           await supabase.from('pedidos')
-            .update({ 
-              status: 'finalizado', 
-              forma_pagamento: 'AGRUPADO',
-              total: 0,
-              finalizado_at: new Date().toISOString(),
-              turno_id: turnoId
-            })
+            .update(bulkUpdateData)
             .in('id', otherIds);
         }
 
@@ -380,15 +384,19 @@ export const Caixa = () => {
         await supabase.from('mesas').update({ status: 'livre', precisa_garcom: false }).eq('id', selectedMesa.id);
       } else {
         const turnoId = localStorage.getItem('turno_id');
-        const { data: newPedido, error: pErr } = await supabase.from('pedidos').insert({
+        const insertData: any = {
           mesa_id: null,
           garcom_id: profile?.id,
           status: 'finalizado',
           total: totalCheckout,
           forma_pagamento: formaPagamentoStr,
-          finalizado_at: new Date().toISOString(),
-          turno_id: turnoId
-        }).select().single();
+          finalizado_at: new Date().toISOString()
+        };
+        if (turnoId) insertData.turno_id = turnoId;
+
+        const { data: newPedido, error: pErr } = await supabase.from('pedidos')
+          .insert(insertData)
+          .select().single();
 
         if (pErr) throw pErr;
 
@@ -406,9 +414,9 @@ export const Caixa = () => {
       alert("Venda finalizada com sucesso! 💰");
       setIsCheckoutOpen(false);
       fetchData();
-    } catch (err) {
-      console.error(err);
-      alert("Erro ao finalizar venda.");
+    } catch (err: any) {
+      console.error("ERRO CRITICAL AO FINALIZAR:", err);
+      alert("Erro ao finalizar venda: " + (err.message || "Verifique a conexão ou chame o suporte."));
     }
   };
 
