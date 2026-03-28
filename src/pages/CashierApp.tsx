@@ -658,7 +658,7 @@ export const Caixa = () => {
 
       <AnimatePresence>
         {isCheckoutOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
              <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="card" style={{ width: '100%', maxWidth: '900px', padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 350px' }}>
                 <div style={{ padding: '2.5rem', borderRight: '1px solid #222' }}>
                    <div className="d-flex justify-between items-center mb-8">

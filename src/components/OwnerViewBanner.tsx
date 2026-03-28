@@ -14,7 +14,7 @@ export const OwnerViewBanner = ({ panelName }: { panelName: string }) => {
 
   return (
     <div style={{
-      position: 'sticky', top: 0, left: 0, right: 0, zIndex: 9999,
+      position: 'sticky', top: 0, left: 0, right: 0, zIndex: 100,
       background: 'linear-gradient(90deg, #d4af37, #b8961e)',
       color: '#000', padding: '12px 1.5rem',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
