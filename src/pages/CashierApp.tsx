@@ -128,13 +128,13 @@ export const Caixa = () => {
          }
       }
 
-      // 2. Histórico (Finalizados hoje)
+      // 2. Histórico (Últimas 24 horas para cobrir turnos de madrugada)
       const now = new Date();
-      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
       const { data: historico } = await supabase.from('pedidos')
         .select('*, profiles:garcom_id(full_name), mesas(numero)')
         .eq('status', 'finalizado')
-        .gte('finalizado_at', startOfDay)
+        .gte('finalizado_at', last24h)
         .order('finalizado_at', { ascending: false });
       setHistoricoVendas(historico || []);
 
@@ -301,17 +301,43 @@ export const Caixa = () => {
       const formaPagamentoStr = pagamentos.map(p => `${p.method.toUpperCase()} (R$${p.amount.toFixed(2)})`).join(', ');
 
       if (selectedMesa) {
-        const { error: updateError } = await supabase.from('pedidos')
+        // Buscar IDs dos pedidos que serão fechados
+        const { data: pedidosAtivos } = await supabase.from('pedidos')
+          .select('id')
+          .eq('mesa_id', selectedMesa.id)
+          .neq('status', 'finalizado');
+
+        if (!pedidosAtivos || pedidosAtivos.length === 0) throw new Error("Nenhum pedido ativo encontrado");
+
+        const ids = pedidosAtivos.map(p => p.id);
+        const masterId = ids[0];
+        const otherIds = ids.slice(1);
+
+        // 1. Atualizar o pedido mestre com o valor total e pagamento
+        const { error: masterError } = await supabase.from('pedidos')
           .update({ 
             status: 'finalizado', 
             forma_pagamento: formaPagamentoStr,
             total: totalComTaxa,
             finalizado_at: new Date().toISOString()
           })
-          .eq('mesa_id', selectedMesa.id)
-          .neq('status', 'finalizado');
+          .eq('id', masterId);
 
-        if (updateError) throw updateError;
+        if (masterError) throw masterError;
+
+        // 2. Se houver outros pedidos na mesa, fechá-los com total zero para não duplicar no financeiro
+        if (otherIds.length > 0) {
+          await supabase.from('pedidos')
+            .update({ 
+              status: 'finalizado', 
+              forma_pagamento: 'AGRUPADO',
+              total: 0,
+              finalizado_at: new Date().toISOString()
+            })
+            .in('id', otherIds);
+        }
+
+        // 3. Liberar a mesa
         await supabase.from('mesas').update({ status: 'livre', precisa_garcom: false }).eq('id', selectedMesa.id);
       } else {
         const { data: newPedido, error: pErr } = await supabase.from('pedidos').insert({
