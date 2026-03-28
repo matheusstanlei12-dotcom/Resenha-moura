@@ -655,21 +655,21 @@ export const Caixa = () => {
           )}
         </AnimatePresence>
       </main>
-
       <AnimatePresence>
         {isCheckoutOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="card" style={{ width: '100%', maxWidth: '900px', padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 350px' }}>
-                <div style={{ padding: '2.5rem', borderRight: '1px solid #222' }}>
-                   <div className="d-flex justify-between items-center mb-8">
+             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="card" style={{ width: '100%', maxWidth: '850px', maxHeight: '92vh', padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 320px', alignItems: 'stretch' }}>
+                {/* Coluna Esquerda: Itens e Conferência */}
+                <div style={{ padding: '1.2rem', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                   <div className="d-flex justify-between items-center mb-4">
                       <div>
-                        <h2 style={{ fontSize: '2rem', fontWeight: 900 }}>CONFERÊNCIA</h2>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 900 }}>CONFERÊNCIA</h2>
                         <span style={{ opacity: 0.5 }}>{selectedMesa ? `Mesa ${selectedMesa.numero}` : 'Venda Rápida'}</span>
                       </div>
-                      <button onClick={() => setIsCheckoutOpen(false)} style={{ background: '#222', border: 'none', color: '#fff', padding: '10px', borderRadius: '50%' }}><X size={20}/></button>
+                      <button onClick={() => setIsCheckoutOpen(false)} style={{ background: '#222', border: 'none', color: '#fff', padding: '8px', borderRadius: '50%' }}><X size={18}/></button>
                    </div>
                    
-                   <div style={{ maxHeight: '400px', overflowY: 'auto' }} className="d-flex flex-col gap-2 mb-8">
+                   <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }} className="d-flex flex-col gap-2">
                       {checkoutItens.map((item, i) => (
                         <div key={i} className="d-flex justify-between items-center p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
                            <div className="d-flex items-center gap-3">
@@ -705,15 +705,16 @@ export const Caixa = () => {
                    <button className="btn-outline w-full p-4" onClick={() => handleImprimir(checkoutItens)}><Printer size={18} /> IMPRIMIR CONFERÊNCIA</button>
                 </div>
 
-                <div style={{ background: '#111', padding: '2.5rem', display: 'flex', flexDirection: 'column' }}>
-                    <div className="mb-8">
+                {/* Coluna Direita: Pagamentos */}
+                <div style={{ background: '#111', padding: '1.2rem', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+                    <div className="mb-4">
                        <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>VALOR TOTAL</span>
-                       <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalComTaxa.toFixed(2)}</div>
+                       <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalComTaxa.toFixed(2)}</div>
                     </div>
 
-                    <div className="mb-6">
+                    <div className="mb-4">
                         <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '8px', fontWeight: 800 }}>MÉTODO DE PAGAMENTO</label>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem', marginBottom: '1.5rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', marginBottom: '1rem' }}>
                            {[
                              { id: 'dinheiro', label: 'DINHEIRO', color: '#10b981' },
                              { id: 'pix', label: 'PIX', color: '#d4af37' },
@@ -725,8 +726,8 @@ export const Caixa = () => {
                                 onClick={() => setSelectedMethod(m.id as PaymentMethod)}
                                 className={selectedMethod === m.id ? 'btn-primary' : 'btn-outline'}
                                 style={{ 
-                                  padding: '1rem', 
-                                  fontSize: '0.8rem', 
+                                  padding: '0.5rem', 
+                                  fontSize: '0.7rem', 
                                   fontWeight: 800,
                                   borderColor: selectedMethod === m.id ? m.color : 'rgba(255,255,255,0.1)',
                                   background: selectedMethod === m.id ? m.color : 'transparent',
@@ -739,14 +740,14 @@ export const Caixa = () => {
                            ))}
                         </div>
 
-                        <div className="card" style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                           <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '8px' }}>VALOR A PAGAR AGORA (R$)</label>
+                        <div className="card" style={{ padding: '0.8rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                           <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '4px' }}>VALOR PARCIAL (R$)</label>
                            <input 
                              type="number" 
                              value={customAmount} 
                              onChange={e => setCustomAmount(e.target.value)} 
                              placeholder={totalRestante.toFixed(2)}
-                             style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid #333', color: '#fff', padding: '0.5rem 0', marginBottom: '1.5rem', fontSize: '2rem', fontWeight: 900, outline: 'none' }} 
+                             style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid #333', color: '#fff', padding: '0.2rem 0', marginBottom: '0.8rem', fontSize: '1.5rem', fontWeight: 900, outline: 'none' }} 
                            />
                            
                            <button 
@@ -767,25 +768,24 @@ export const Caixa = () => {
                         </div>
                     </div>
 
-                    <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1.5rem' }}>
+                    <div style={{ flex: 1, overflowY: 'auto', marginBottom: '1rem' }}>
                        <label style={{ fontSize: '0.65rem', opacity: 0.4, display: 'block', marginBottom: '8px' }}>PAGAMENTOS RECEBIDOS</label>
                        {pagamentos.map((p, i) => (
-                         <div key={i} className="d-flex justify-between p-3 rounded-lg mb-2" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: `4px solid ${p.method === 'dinheiro' ? '#10b981' : '#d4af37'}` }}>
+                         <div key={i} className="d-flex justify-between p-2 rounded-lg mb-2" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: `4px solid ${p.method === 'dinheiro' ? '#10b981' : '#d4af37'}` }}>
                             <div className="d-flex flex-col">
-                              <span style={{ fontSize: '0.8rem', fontWeight: 800 }}>{p.method.toUpperCase()}</span>
-                              <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>Recebido com sucesso</span>
+                              <span style={{ fontSize: '0.7rem', fontWeight: 800 }}>{p.method.toUpperCase()}</span>
                             </div>
-                            <b style={{ fontSize: '1.1rem' }}>R$ {p.amount.toFixed(2)}</b>
+                            <b style={{ fontSize: '0.9rem' }}>R$ {p.amount.toFixed(2)}</b>
                          </div>
                        ))}
-                       {pagamentos.length === 0 && <div style={{ textAlign: 'center', opacity: 0.3, padding: '1rem', border: '1px dashed #333', borderRadius: '8px' }}>Aguardando pagamento...</div>}
+                       {pagamentos.length === 0 && <div style={{ textAlign: 'center', opacity: 0.3, padding: '1rem', border: '1px dashed #333', borderRadius: '8px', fontSize: '0.7rem' }}>Aguardando...</div>}
                     </div>
 
-                    <div className="mt-auto pt-6" style={{ borderTop: '1px solid #222' }}>
+                    <div className="mt-auto pt-4" style={{ borderTop: '1px solid #222' }}>
                        <div className="d-flex justify-between items-end mb-4">
                           <div>
-                            <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>RESTANTE A PAGAR</span>
-                            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: totalRestante > 0.1 ? 'var(--danger-color)' : 'var(--success-color)' }}>R$ {totalRestante.toFixed(2)}</div>
+                            <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>RESTANTE</span>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: totalRestante > 0.1 ? 'var(--danger-color)' : 'var(--success-color)' }}>R$ {totalRestante.toFixed(2)}</div>
                           </div>
                           {totalRestante <= 0.1 && <div style={{ color: 'var(--success-color)', fontWeight: 800, fontSize: '0.8rem' }}>PAGO ✓</div>}
                        </div>
@@ -793,9 +793,9 @@ export const Caixa = () => {
                          className="btn-primary w-full py-4" 
                          disabled={totalRestante > 0.1} 
                          onClick={handleFinalizar}
-                         style={{ fontSize: '1.1rem', background: totalRestante <= 0.1 ? 'var(--success-color)' : 'rgba(255,255,255,0.05)', color: totalRestante <= 0.1 ? '#000' : 'rgba(255,255,255,0.1)' }}
+                         style={{ fontSize: '1rem', background: totalRestante <= 0.1 ? 'var(--success-color)' : 'rgba(255,255,255,0.05)', color: totalRestante <= 0.1 ? '#000' : 'rgba(255,255,255,0.1)' }}
                        >
-                         {totalRestante <= 0.1 ? 'FINALIZAR VENDA' : 'AGUARDANDO SALDO'}
+                         {totalRestante <= 0.1 ? 'FINALIZAR VENDA' : 'PAGAMENTO PENDENTE'}
                        </button>
                     </div>
                 </div>
