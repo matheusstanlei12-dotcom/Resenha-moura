@@ -166,10 +166,19 @@ export const Garcom = () => {
 
 
   const handleExcluirItem = async (itemId: string, item: any) => {
+    // 0. Trava de segurança para categorias críticas
+    const categoriasCriticas = ['PETISCOS', 'COQUETEIS', 'COQUITEIS', 'DRINKS', 'BEBIDAS ALCOÓLICAS', 'DOSES'];
+    const categoriaItem = (item.produtos?.categoria || '').toUpperCase();
+    const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
+
+    if (categoriasCriticas.includes(categoriaItem) && item.status !== 'pendente' && !ehGestor) {
+      alert(`⚠️ BLOQUEADO: Este item (${categoriaItem}) já está em preparo.\n\nApenas Administradores ou o Proprietário podem cancelar este tipo de item após a aceitação da cozinha/bar.`);
+      return;
+    }
+
     if(!confirm(`🚨 TEM CERTEZA? \n\nVocê deseja excluir o item:\n"${item.produtos?.nome}"?`)) return;
-
+    
     // 1. Excluir o item
-
     const { error: deleteError } = await supabase.from('itens_pedido').delete().eq('id', itemId);
     if (deleteError) {
       alert("Erro ao excluir item.");
@@ -219,9 +228,23 @@ export const Garcom = () => {
        return p && p.mesa_id === mesaId;
     });
 
-    const temPendencias = mesaItens.some(i => i.status !== 'entregue' && i.status !== 'finalizado');
-    if (temPendencias) {
-      alert("Não é possível pedir a conta enquanto houver itens em preparo ou aguardando entrega!");
+    // 1. Verificação de categorias críticas em preparo
+    const categoriasCriticas = ['PETISCOS', 'COQUETEIS', 'COQUITEIS', 'DRINKS', 'BEBIDAS ALCOÓLICAS', 'DOSES'];
+    const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
+    
+    const temCriticosEmPreparo = mesaItens.some(i => {
+      const cat = (i.produtos?.categoria || '').toUpperCase();
+      return categoriasCriticas.includes(cat) && i.status !== 'entregue' && i.status !== 'finalizado';
+    });
+
+    if (temCriticosEmPreparo && !ehGestor) {
+      alert("⚠️ BLOQUEIO DE SEGURANÇA:\n\nHá Petiscos ou Coquetéis em preparação nesta mesa.\n\nGarçons não podem fechar a conta com itens críticos em execução. Solicite a um Administrador para autorizar ou aguarde a entrega.");
+      return;
+    }
+
+    const temPendenciasGerais = mesaItens.some(i => i.status !== 'entregue' && i.status !== 'finalizado');
+    if (temPendenciasGerais && !ehGestor) {
+      alert("Não é possível pedir a conta enquanto houver itens aguardando entrega ou em preparo!");
       return;
     }
 

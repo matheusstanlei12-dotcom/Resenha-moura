@@ -221,14 +221,16 @@ export const Caixa = () => {
     }
     
     const { data: itens } = await supabase.from('itens_pedido')
-      .select('*, produtos(nome)')
+      .select('*, produtos(nome, categoria)')
       .in('pedido_id', pedidosMesa.map(p => p.id));
     
     setCheckoutItens(itens?.map(i => ({
        id: i.id,
        nome: i.produtos?.nome,
        quantidade: i.quantidade,
-       preco: Number(i.preco_unitario)
+       preco: Number(i.preco_unitario),
+       categoria: i.produtos?.categoria,
+       status: i.status
     })) || []);
     setIsCheckoutOpen(true);
   };
@@ -275,6 +277,21 @@ export const Caixa = () => {
   };
 
   const handleFinalizar = async () => {
+    // 0. Trava de segurança para categorias críticas
+    const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
+    const categoriasCriticas = ['PETISCOS', 'COQUETEIS', 'COQUITEIS', 'DRINKS', 'BEBIDAS ALCOÓLICAS', 'DOSES'];
+    
+    const temCriticosEmPreparo = checkoutItens.some(i => {
+      const cat = (i.categoria || '').toUpperCase();
+      // Se não for entregue nem finalizado, está "em execução"
+      return categoriasCriticas.includes(cat) && i.status !== 'entregue' && i.status !== 'finalizado';
+    });
+
+    if (temCriticosEmPreparo && !ehGestor) {
+      alert("⚠️ BLOQUEIO GESTOR:\n\nHá Petiscos ou Coquetéis em preparação nesta mesa.\n\nApenas Administradores ou o Proprietário podem finalizar a venda com itens críticos em execução.");
+      return;
+    }
+
     if (totalRestante > 0.1) {
       alert("A conta ainda não foi totalmente paga!");
       return;
