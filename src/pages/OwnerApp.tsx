@@ -6,7 +6,7 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, 
   AreaChart, Area
 } from 'recharts';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp, Users as UsersIcon, Package, Utensils, 
   Clock, Star, LogOut, LayoutDashboard,
@@ -56,7 +56,13 @@ export const Dono = () => {
   const [historicoCompleto, setHistoricoCompleto] = useState<any[]>([]);
   const [turnosHistorico, setTurnosHistorico] = useState<any[]>([]);
   const [pedidosAtivos, setPedidosAtivos] = useState<any[]>([]);
+  const [auditoriaExclusoes, setAuditoriaExclusoes] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+
+  // Estados de Auditoria de Exclusão
+  const [itemParaExcluirAtu, setItemParaExcluirAtu] = useState<any>(null);
+  const [motivoExclusaoAtu, setMotivoExclusaoAtu] = useState('');
+  const [isExcluindoAtu, setIsExcluindoAtu] = useState(false);
 
 
   // Modal Novo Colaborador
@@ -177,6 +183,12 @@ export const Dono = () => {
         .select('*, mesas(numero), itens_pedido(*, produtos(nome, categoria))')
         .neq('status', 'finalizado');
       setPedidosAtivos(pAtivos || []);
+
+      const { data: audits } = await supabase.from('auditoria_exclusoes')
+        .select('*')
+        .order('criado_em', { ascending: false })
+        .limit(100);
+      setAuditoriaExclusoes(audits || []);
 
     } catch (err: any) {
       console.error("Fetch error:", err);
@@ -387,25 +399,47 @@ export const Dono = () => {
     } catch (err: any) { alert("Erro: " + err.message); } finally { setIsCreatingUser(false); }
   };
 
-  const handleExcluirItemComanda = async (item: any) => {
-    if (!confirm(`🚨 EXCLUSÃO DE PROPRIETÁRIO\n\nDeseja realmente excluir o item "${item.produtos?.nome}" da Mesa ${item.pedidos?.mesas?.numero}?\n\nEsta ação é irreversível e atualizará o total da conta.`)) return;
+  const handleExcluirItemComanda = async (item: any, motivo: string) => {
+    if (!item.id || !motivo.trim()) return;
 
+    setIsExcluindoAtu(true);
     try {
-      // 1. Excluir o item
+      const pId = item.pedido_id || item.pedidos?.id;
+      if (!pId) throw new Error("ID do pedido não identificado.");
+
+      // 1. Salvar na Auditoria
+      const { error: auditError } = await supabase.from('auditoria_exclusoes').insert({
+        pedido_id: pId,
+        produto_nome: item.produtos?.nome || 'Item',
+        quantidade: item.quantidade,
+        valor_removido: Number(item.preco_unitario) * item.quantidade,
+        motivo: motivo,
+        usuario_nome: profile?.full_name || 'Proprietário',
+        mesa_numero: item.pedidos?.mesas?.numero || 0,
+        turno_id: item.turno_id
+      });
+      if (auditError) throw auditError;
+
+      // 2. Excluir o item principal
       const { error: deleteError } = await supabase.from('itens_pedido').delete().eq('id', item.id);
       if (deleteError) throw deleteError;
 
-      // 2. Atualizar o total do pedido
-      const { data: currentPedido } = await supabase.from('pedidos').select('total').eq('id', item.pedido_id).single();
+      // 3. Atualizar total do pedido
+      const { data: currentPedido } = await supabase.from('pedidos').select('total').eq('id', pId).single();
       if (currentPedido) {
-        const novoTotal = Math.max(0, Number(currentPedido.total) - (Number(item.preco_unitario) * item.quantidade));
-        await supabase.from('pedidos').update({ total: novoTotal }).eq('id', item.pedido_id);
+        const subtotalItem = Number(item.preco_unitario) * item.quantidade;
+        const novoTotal = Math.max(0, Number(currentPedido.total) - subtotalItem);
+        await supabase.from('pedidos').update({ total: novoTotal }).eq('id', pId);
       }
 
-      alert("Item removido com sucesso!");
+      setItemParaExcluirAtu(null);
+      setMotivoExclusaoAtu('');
       fetchData();
+      alert("Exclusão realizada e auditada com sucesso!");
     } catch (err: any) {
-      alert("Erro ao excluir item: " + err.message);
+      alert("Erro ao realizar auditoria: " + err.message);
+    } finally {
+      setIsExcluindoAtu(false);
     }
   };
 
@@ -748,7 +782,11 @@ export const Dono = () => {
                           <td style={{ padding: '12px 10px', fontSize: '0.85rem', opacity: 0.6 }}>R$ {Number(item.preco_unitario).toFixed(2)}</td>
                           <td style={{ padding: '12px 10px', fontWeight: 700 }}>R$ {(Number(item.preco_unitario) * item.quantidade).toFixed(2)}</td>
                           <td style={{ padding: '12px 10px', textAlign: 'right' }}>
-                            <button onClick={() => handleExcluirItemComanda(item)} className="btn-outline" style={{ padding: '6px', color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', width: 'auto' }}>
+                            <button 
+                              onClick={() => setItemParaExcluirAtu({ ...item, pedido_id: pedidoMesa?.id })} 
+                              className="btn-outline" 
+                              style={{ padding: '6px', color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', width: 'auto' }}
+                            >
                               <Trash2 size={16} />
                             </button>
                           </td>
@@ -1079,6 +1117,37 @@ export const Dono = () => {
                                                             </tbody>
                                                         </table>
                                                     </div>
+
+                                                    {/* Auditoria de Exclusões desta O.S. / Turno */}
+                                                    {auditoriaExclusoes.filter(a => a.turno_id === t.id).length > 0 && (
+                                                        <div style={{ marginTop: '1.5rem' }}>
+                                                             <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ef4444', marginBottom: '0.8rem', letterSpacing: '1px' }}>AUDITORIA: ITENS EXCLUÍDOS / CANCELADOS</h4>
+                                                             <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.02)' }}>
+                                                                <table style={{ width: '100%', fontSize: '0.75rem' }}>
+                                                                    <thead>
+                                                                        <tr style={{ background: 'rgba(239,68,68,0.05)', borderBottom: '1px solid rgba(239,68,68,0.1)' }}>
+                                                                            <th style={{ padding: '0.8rem', textAlign: 'left' }}>Item</th>
+                                                                            <th style={{ padding: '0.8rem', textAlign: 'left' }}>Motivo Real</th>
+                                                                            <th style={{ padding: '0.8rem', textAlign: 'left' }}>Autorizado</th>
+                                                                            <th style={{ padding: '0.8rem', textAlign: 'right' }}>Vazamento</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {auditoriaExclusoes.filter(a => a.turno_id === t.id).map(audit => (
+                                                                            <tr key={audit.id} style={{ borderBottom: '1px solid rgba(239,68,68,0.05)' }}>
+                                                                                <td style={{ padding: '0.8rem' }}>{audit.quantidade}x {audit.produto_nome} (Mesa {audit.mesa_numero})</td>
+                                                                                <td style={{ padding: '0.8rem' }}>
+                                                                                    <div style={{ fontStyle: 'italic', color: '#fff', opacity: 0.9 }}>"{audit.motivo}"</div>
+                                                                                </td>
+                                                                                <td style={{ padding: '0.8rem' }}>{audit.usuario_nome}</td>
+                                                                                <td style={{ padding: '0.8rem', textAlign: 'right', fontWeight: 700, color: '#ef4444' }}>- R$ {Number(audit.valor_removido).toFixed(2)}</td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                             </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
@@ -1158,6 +1227,48 @@ export const Dono = () => {
       <main className="main-content">
         <div className="container">{renderContent()}</div>
       </main>
+
+      {/* MODAL MANTATÓRIO: MOTIVO DA EXCLUSÃO (DONO) */}
+      <AnimatePresence>
+        {itemParaExcluirAtu && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: '#101010', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem', boxShadow: '0 25px 50px -12px rgba(212,175,55,0.2)' }}>
+              
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ width: '60px', height: '60px', background: 'rgba(212,175,55,0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--primary-color)' }}>
+                  <Trash2 size={30} />
+                </div>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', margin: 0 }}>Motivo da Exclusão</h2>
+                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
+                  <b>PROPRIETÁRIO:</b> Removendo {itemParaExcluirAtu.quantidade}x {itemParaExcluirAtu.produtos?.nome}.
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--primary-color)', letterSpacing: '1px', display: 'block', marginBottom: '10px' }}>JUSTIFICATIVA EXIGIDA</label>
+                <textarea 
+                  value={motivoExclusaoAtu}
+                  onChange={e => setMotivoExclusaoAtu(e.target.value)}
+                  placeholder="Explique o motivo real do cancelamento..."
+                  style={{ width: '100%', height: '100px', background: '#000', border: '1px solid #333', borderRadius: '12px', padding: '1rem', color: '#fff', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button onClick={() => { setItemParaExcluirAtu(null); setMotivoExclusaoAtu(''); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 800, cursor: 'pointer' }}>CANCELAR</button>
+                <button 
+                  disabled={!motivoExclusaoAtu.trim() || isExcluindoAtu}
+                  onClick={() => handleExcluirItemComanda(itemParaExcluirAtu, motivoExclusaoAtu)}
+                  style={{ background: 'var(--primary-color)', color: '#000', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: motivoExclusaoAtu.trim() ? 1 : 0.4 }}
+                >
+                  {isExcluindoAtu ? 'PROCESSANDO...' : 'CONFIRMAR'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

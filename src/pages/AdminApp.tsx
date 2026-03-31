@@ -71,6 +71,9 @@ export const Administracao = () => {
   const [stockSearch, setStockSearch] = useState('');
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [expandedProduto, setExpandedProduto] = useState<string | null>(null);
+  const [itemParaExcluir, setItemParaExcluir] = useState<any>(null); // Ponto de auditoria
+  const [motivoExclusao, setMotivoExclusao] = useState('');
+  const [isExcluindo, setIsExcluindo] = useState(false);
 
   const fetchData = async () => {
     const [pRes, mRes, uRes, pedRes, avRes, itemsEntRes] = await Promise.all([
@@ -279,43 +282,47 @@ export const Administracao = () => {
     }
   };
 
-  const handleExcluirItemComanda = async (item: any) => {
-    // Validações básicas de ID
-    if (!item.id) {
-      alert("Erro: ID do item não encontrado.");
-      return;
-    }
+  const handleExcluirItemComanda = async (item: any, motivo: string) => {
+    if (!item.id || !motivo.trim()) return;
 
-    const mesaNum = item.pedidos?.mesas?.numero || '---';
-    const prodNome = item.produtos?.nome || 'Item';
-
-    if (!confirm(`🚨 EXCLUSÃO ADMINISTRATIVA\n\nDeseja realmente excluir o item "${prodNome}" da Mesa ${mesaNum}?\n\nEsta ação é irreversível e o total da conta será recalculado.`)) return;
-
+    setIsExcluindo(true);
     try {
-      // 1. Identificar o ID do pedido
       const pId = item.pedido_id || item.pedidos?.id;
       if (!pId) throw new Error("ID do pedido não identificado.");
 
-      // 2. Excluir o item do banco
+      // 1. Salvar na Auditoria
+      const { error: auditError } = await supabase.from('auditoria_exclusoes').insert({
+        pedido_id: pId,
+        produto_nome: item.produtos?.nome || 'Item',
+        quantidade: item.quantidade,
+        valor_removido: Number(item.preco_unitario) * item.quantidade,
+        motivo: motivo,
+        usuario_nome: profile?.full_name || 'Administrador',
+        mesa_numero: item.pedidos?.mesas?.numero || 0,
+        turno_id: item.turno_id // Fallback se disponível
+      });
+      if (auditError) throw auditError;
+
+      // 2. Excluir o item
       const { error: deleteError } = await supabase.from('itens_pedido').delete().eq('id', item.id);
       if (deleteError) throw deleteError;
 
-      // 3. Buscar o pedido atual para recalcular o total
-      const { data: currentPedido, error: fetchError } = await supabase.from('pedidos').select('total').eq('id', pId).single();
-      if (fetchError) throw fetchError;
-
+      // 3. Atualizar o total
+      const { data: currentPedido } = await supabase.from('pedidos').select('total').eq('id', pId).single();
       if (currentPedido) {
-        const subtotalItem = Number(item.preco_unitario || 0) * Number(item.quantidade || 0);
+        const subtotalItem = Number(item.preco_unitario) * item.quantidade;
         const novoTotal = Math.max(0, Number(currentPedido.total) - subtotalItem);
-        
         await supabase.from('pedidos').update({ total: novoTotal }).eq('id', pId);
       }
 
-      alert("Item removido e conta atualizada!");
-      fetchData(); // Atualiza a interface
+      setItemParaExcluir(null);
+      setMotivoExclusao('');
+      fetchData();
+      alert("Exclusão auditada e realizada com sucesso!");
     } catch (err: any) {
-      alert("Falha na exclusão: " + (err.message || 'Erro desconhecido'));
-      console.error("Erro ao excluir:", err);
+      alert("Erro na auditoria: " + err.message);
+    } finally {
+      setIsExcluindo(false);
     }
   };
 
@@ -797,7 +804,12 @@ export const Administracao = () => {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                 <div style={{ fontWeight: 800 }}>R$ {(Number(it.preco_unitario) * it.quantidade).toFixed(2)}</div>
                                 <button 
-                                  onClick={(e) => { e.stopPropagation(); it.pedidos = { mesas: { numero: selectedMesaComanda.numero } }; handleExcluirItemComanda(it); }}
+                                  type="button"
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    const itParaExcluirObj = { ...it, pedido_id: pedido?.id, pedidos: { mesas: { numero: selectedMesaComanda.numero } } };
+                                    setItemParaExcluir(itParaExcluirObj); 
+                                  }}
                                   style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
                                   <Trash2 size={16} />
@@ -876,13 +888,13 @@ export const Administracao = () => {
                                   onClick={(e) => { 
                                     e.preventDefault();
                                     e.stopPropagation(); 
-                                    // Injetamos explicitamente o ID do pedido e o número da mesa para a função de exclusão
-                                    const itemParaExcluir = { 
+                                    // Em vez de chamar a exclusão direta, abrimos o modal de motivo
+                                    const itemParaExcluirObj = { 
                                       ...it, 
                                       pedido_id: pedido.id,
                                       pedidos: { id: pedido.id, mesas: { numero: selectedMesaComanda.numero } } 
                                     };
-                                    handleExcluirItemComanda(itemParaExcluir); 
+                                    setItemParaExcluir(itemParaExcluirObj); 
                                   }}
                                   style={{ 
                                     background: 'rgba(239,68,68,0.15)', 
@@ -924,6 +936,48 @@ export const Administracao = () => {
                  </button>
               </div>
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* MODAL MANTATÓRIO: MOTIVO DA EXCLUSÃO */}
+      <AnimatePresence>
+        {itemParaExcluir && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} 
+              style={{ background: '#101010', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem', boxShadow: '0 25px 50px -12px rgba(239,68,68,0.2)' }}>
+              
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ width: '60px', height: '60px', background: 'rgba(239,68,68,0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#ef4444' }}>
+                  <Trash2 size={30} />
+                </div>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', margin: 0 }}>Motivo da Exclusão</h2>
+                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
+                  Você está removendo: <b>{itemParaExcluir.quantidade}x {itemParaExcluir.produtos?.nome}</b> da Mesa {itemParaExcluir.pedidos?.mesas?.numero}.
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ fontSize: '0.7rem', fontWeight: 800, color: '#ef4444', letterSpacing: '1px', display: 'block', marginBottom: '10px' }}>JUSTIFICATIVA OBRIGATÓRIA</label>
+                <textarea 
+                  value={motivoExclusao}
+                  onChange={e => setMotivoExclusao(e.target.value)}
+                  placeholder="Explique o motivo real (ex: Erro no lançamento, cliente desistiu...)"
+                  style={{ width: '100%', height: '100px', background: '#000', border: '1px solid #333', borderRadius: '12px', padding: '1rem', color: '#fff', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <button onClick={() => { setItemParaExcluir(null); setMotivoExclusao(''); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 800, cursor: 'pointer' }}>CANCELAR</button>
+                <button 
+                  disabled={!motivoExclusao.trim() || isExcluindo}
+                  onClick={() => handleExcluirItemComanda(itemParaExcluir, motivoExclusao)}
+                  style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: motivoExclusao.trim() ? 1 : 0.4 }}
+                >
+                  {isExcluindo ? 'AGUARDE...' : 'CONFIRMAR'}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
