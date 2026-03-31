@@ -429,8 +429,9 @@ export const Administracao = () => {
                 </h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.8rem' }}>
                   {mesas.map(m => {
-                    const color = m.status === 'livre' ? '#10b981' : m.status === 'aguardando conta' ? '#d4af37' : '#ef4444';
-                    const isOccupied = m.status !== 'livre';
+                    const statusLower = (m.status || '').toLowerCase();
+                    const color = statusLower === 'livre' ? '#10b981' : statusLower === 'aguardando conta' ? '#d4af37' : '#ef4444';
+                    const isOccupied = statusLower !== 'livre';
                     return (
                       <motion.div key={m.id} 
                         whileHover={isOccupied ? { scale: 1.05, filter: 'brightness(1.2)' } : {}}
@@ -884,6 +885,74 @@ export const Administracao = () => {
         </AnimatePresence>
 
       </main>
+
+      {/* MODAL DETALHES COMANDA (DASHBOARD CLICK) - MOVEMOS PARA FORA DO MAIN PARA EVITAR PROBLEMAS DE Z-INDEX */}
+      <AnimatePresence>
+        {selectedMesaComanda && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setSelectedMesaComanda(null)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} 
+              onClick={e => e.stopPropagation()}
+              style={{ background: '#101010', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '20px', width: '100%', maxWidth: '450px', overflow: 'hidden', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.7)' }}>
+              
+              <div style={{ padding: '1.5rem', background: '#d4af37', color: '#000', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.3rem', fontWeight: 900, margin: 0 }}>MESA {selectedMesaComanda.numero}</h2>
+                  <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.8, letterSpacing: '1px' }}>Consumo em Tempo Real</div>
+                </div>
+                <button onClick={() => setSelectedMesaComanda(null)} style={{ background: 'rgba(0,0,0,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div style={{ padding: '1.5rem', maxHeight: '65vh', overflowY: 'auto' }}>
+                {(() => {
+                  const pedido = pedidosAtivos.find(p => p.mesa_id === selectedMesaComanda.id);
+                  const items = pedido?.itens_pedido || [];
+                  
+                  if (items.length === 0) return (
+                    <div style={{ textAlign: 'center', padding: '3rem 1rem', opacity: 0.5 }}>
+                      <FileText size={40} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
+                      <p>Nenhum item lançado nesta mesa.</p>
+                    </div>
+                  );
+
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+                      {items.map((it: any) => (
+                         <div key={it.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 700, fontSize: '1rem', color: '#fff' }}>{it.quantidade}x {it.produtos?.nome}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: it.status === 'pronto' ? '#10b981' : '#f59e0b' }} />
+                                <div style={{ fontSize: '0.7rem', color: '#d4af37', fontWeight: 700, textTransform: 'uppercase' }}>{it.status}</div>
+                              </div>
+                            </div>
+                            <div style={{ fontWeight: 800, color: '#fff', fontSize: '1rem' }}>R$ {(Number(it.preco_unitario) * it.quantidade).toFixed(2)}</div>
+                         </div>
+                      ))}
+                      <div style={{ marginTop: '1rem', padding: '1.2rem', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid rgba(212,175,55,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontSize: '0.7rem', opacity: 0.5, fontWeight: 700 }}>VALOR TOTAL</div>
+                          <div style={{ fontWeight: 800 }}>SUBTOTAL ACUMULADO</div>
+                        </div>
+                        <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#d4af37' }}>R$ {Number(pedido?.total || 0).toFixed(2)}</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                 <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginBottom: '1.2rem' }}>Auditando mesa em modo de visualização rápida.</p>
+                 <button onClick={() => setSelectedMesaComanda(null)} style={{ background: '#d4af37', color: '#000', border: 'none', padding: '1rem', borderRadius: '12px', fontWeight: 800, cursor: 'pointer', width: '100%', boxShadow: '0 10px 20px -5px rgba(212,175,55,0.3)' }}>
+                   ENTENDIDO, FECHAR
+                 </button>
+              </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
