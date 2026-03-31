@@ -848,7 +848,15 @@ export const Administracao = () => {
                                 <div style={{ fontSize: '0.7rem', color: '#d4af37', fontWeight: 700, textTransform: 'uppercase' }}>{it.status}</div>
                               </div>
                             </div>
-                            <div style={{ fontWeight: 800, color: '#fff', fontSize: '1rem' }}>R$ {(Number(it.preco_unitario) * it.quantidade).toFixed(2)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                              <div style={{ fontWeight: 800, color: '#fff', fontSize: '1rem' }}>R$ {(Number(it.preco_unitario) * it.quantidade).toFixed(2)}</div>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); it.pedidos = { mesas: { numero: selectedMesaComanda.numero } }; handleExcluirItemComanda(it); }}
+                                style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
                          </div>
                       ))}
                       <div style={{ marginTop: '1rem', padding: '1.2rem', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid rgba(212,175,55,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
