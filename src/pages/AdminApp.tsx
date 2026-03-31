@@ -860,7 +860,15 @@ export const Administracao = () => {
                                 <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{it.quantidade}x {it.produtos?.nome}</div>
                                 <div style={{ fontSize: '0.7rem', color: '#d4af37', fontWeight: 600 }}>{it.status.toUpperCase()}</div>
                               </div>
-                              <div style={{ fontWeight: 800 }}>R$ {(Number(it.preco_unitario) * it.quantidade).toFixed(2)}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ fontWeight: 800 }}>R$ {(Number(it.preco_unitario) * it.quantidade).toFixed(2)}</div>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); it.pedidos = { mesas: { numero: selectedMesaComanda.numero } }; handleExcluirItemComanda(it); }}
+                                  style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
                            </div>
                         ))}
                         <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid rgba(212,175,55,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
