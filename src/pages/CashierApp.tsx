@@ -143,17 +143,34 @@ export const Caixa = () => {
            data_hora: f.params.data_hora
          }));
 
-         const COQUITEIS_COZINHA = [
+         const CATS_COZINHA = [
+           'PETISCO', 'PETISCOS', 'LANCHES', 'LANCHE', 'PORÇÕES', 'PORCOES', 
+           'PORÇÃO', 'PORCAO', 'COZINHA', 'PRATOS', 'PRATO', 'REFEIÇÕES', 
+           'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER'
+         ];
+         const CATS_BAR = [
+           'COQUETÉIS', 'COQUITEIS', 'COQUETEIS', 'DRINKS', 'DRINK', 'DOSES', 'DOSE', 'GIN', 'CAIPIRINHA', 'BATIDAS'
+         ];
+         const NAMES_BAR_FALLBACK = [
            "caipirinha cachaça", "caipivodka smirnoff", "caipivodka absolut",
            "gin tônica tanqueray", "gin tanqueray com red bull", "dry martini",
            "campari", "aperol"
          ];
+
          const filtered = formattedWithExtra.filter((item: any) => {
-           const cat = item.categoria?.toUpperCase();
-           if (cat === 'PETISCO') return true;
-           const nome = item.produto_nome?.trim().toLowerCase();
-           return COQUITEIS_COZINHA.includes(nome);
+           const cat = (item.categoria || '').toUpperCase();
+           const nome = (item.produto_nome || '').trim().toLowerCase();
+           
+           // Cozinha
+           if (CATS_COZINHA.includes(cat)) return true;
+           
+           // Bar
+           if (CATS_BAR.includes(cat)) return true;
+           if (NAMES_BAR_FALLBACK.includes(nome)) return true;
+           
+           return false;
          });
+
          // Ordenar por data_hora ASC (Antigos primeiro)
          filtered.sort((a: any, b: any) => new Date(a.data_hora).getTime() - new Date(b.data_hora).getTime());
          setCozinhaItems(filtered);

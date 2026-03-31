@@ -70,33 +70,43 @@ export const Producao = () => {
       if (!error) fetchActiveItems();
   };
 
-  const COQUITEIS_COZINHA = [
-    "caipirinha cachaça",
-    "caipivodka smirnoff",
-    "caipivodka absolut",
-    "gin tônica tanqueray",
-    "gin tanqueray com red bull",
-    "dry martini",
-    "campari",
-    "aperol"
+  const CATS_COZINHA = [
+    'PETISCO', 'PETISCOS', 'LANCHES', 'LANCHE', 'PORÇÕES', 'PORCOES', 
+    'PORÇÃO', 'PORCAO', 'COZINHA', 'PRATOS', 'PRATO', 'REFEIÇÕES', 
+    'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER'
+  ];
+  const CATS_BAR = [
+    'COQUETÉIS', 'COQUITEIS', 'COQUETEIS', 'DRINKS', 'DRINK', 'DOSES', 'DOSE', 'GIN', 'CAIPIRINHA', 'BATIDAS'
+  ];
+  const NAMES_BAR_FALLBACK = [
+    "caipirinha cachaça", "caipivodka smirnoff", "caipivodka absolut",
+    "gin tônica tanqueray", "gin tanqueray com red bull", "dry martini",
+    "campari", "aperol"
   ];
 
   const visibleItems = items.filter(item => {
-    const cat = item.categoria?.toUpperCase();
-    if (filter === 'cozinha') return cat === 'PETISCO';
+    const cat = (item.categoria || '').toUpperCase();
+    const nome = (item.produto_nome || '').trim().toLowerCase();
+
+    if (filter === 'cozinha') {
+      return CATS_COZINHA.includes(cat);
+    }
     if (filter === 'bar') {
-      const nome = item.produto_nome?.trim().toLowerCase();
-      return COQUITEIS_COZINHA.includes(nome);
+      return CATS_BAR.includes(cat) || NAMES_BAR_FALLBACK.includes(nome);
     }
     return false;
   });
 
-  const pendentesCozinha = items.filter(i => i.status === 'pendente' && i.categoria?.toUpperCase() === 'PETISCO').length;
+  const pendentesCozinha = items.filter(i => {
+    const cat = (i.categoria || '').toUpperCase();
+    return i.status === 'pendente' && CATS_COZINHA.includes(cat);
+  }).length;
   
   const pendentesBar = items.filter(i => {
+    const cat = (i.categoria || '').toUpperCase();
+    const nome = (i.produto_nome || '').trim().toLowerCase();
     const isPendente = i.status === 'pendente';
-    const nome = i.produto_nome?.trim().toLowerCase();
-    return isPendente && COQUITEIS_COZINHA.includes(nome);
+    return isPendente && (CATS_BAR.includes(cat) || NAMES_BAR_FALLBACK.includes(nome));
   }).length;
 
 
