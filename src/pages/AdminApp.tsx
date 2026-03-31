@@ -273,28 +273,49 @@ export const Administracao = () => {
   };
 
   const handleDeleteMesa = async (id: string) => {
-    if (confirm('Excluir esta mesa?')) { await supabase.from('mesas').delete().eq('id', id); fetchData(); }
+    if (confirm('Excluir esta mesa?')) { 
+      await supabase.from('mesas').delete().eq('id', id); 
+      fetchData(); 
+    }
   };
 
   const handleExcluirItemComanda = async (item: any) => {
-    if (!confirm(`🚨 EXCLUSÃO ADMINISTRATIVA\n\nDeseja realmente excluir o item "${item.produtos?.nome}" da Mesa ${item.pedidos?.mesas?.numero}?\n\nEsta ação é irreversível e atualizará o total da conta.`)) return;
+    // Validações básicas de ID
+    if (!item.id) {
+      alert("Erro: ID do item não encontrado.");
+      return;
+    }
+
+    const mesaNum = item.pedidos?.mesas?.numero || '---';
+    const prodNome = item.produtos?.nome || 'Item';
+
+    if (!confirm(`🚨 EXCLUSÃO ADMINISTRATIVA\n\nDeseja realmente excluir o item "${prodNome}" da Mesa ${mesaNum}?\n\nEsta ação é irreversível e o total da conta será recalculado.`)) return;
 
     try {
-      // 1. Excluir o item
+      // 1. Identificar o ID do pedido
+      const pId = item.pedido_id || item.pedidos?.id;
+      if (!pId) throw new Error("ID do pedido não identificado.");
+
+      // 2. Excluir o item do banco
       const { error: deleteError } = await supabase.from('itens_pedido').delete().eq('id', item.id);
       if (deleteError) throw deleteError;
 
-      // 2. Atualizar o total do pedido
-      const { data: currentPedido } = await supabase.from('pedidos').select('total').eq('id', item.pedido_id).single();
+      // 3. Buscar o pedido atual para recalcular o total
+      const { data: currentPedido, error: fetchError } = await supabase.from('pedidos').select('total').eq('id', pId).single();
+      if (fetchError) throw fetchError;
+
       if (currentPedido) {
-        const novoTotal = Math.max(0, Number(currentPedido.total) - (Number(item.preco_unitario) * item.quantidade));
-        await supabase.from('pedidos').update({ total: novoTotal }).eq('id', item.pedido_id);
+        const subtotalItem = Number(item.preco_unitario || 0) * Number(item.quantidade || 0);
+        const novoTotal = Math.max(0, Number(currentPedido.total) - subtotalItem);
+        
+        await supabase.from('pedidos').update({ total: novoTotal }).eq('id', pId);
       }
 
-      alert("Item removido com sucesso!");
-      fetchData();
+      alert("Item removido e conta atualizada!");
+      fetchData(); // Atualiza a interface
     } catch (err: any) {
-      alert("Erro ao excluir item: " + err.message);
+      alert("Falha na exclusão: " + (err.message || 'Erro desconhecido'));
+      console.error("Erro ao excluir:", err);
     }
   };
 
@@ -855,7 +876,12 @@ export const Administracao = () => {
                                   onClick={(e) => { 
                                     e.preventDefault();
                                     e.stopPropagation(); 
-                                    const itemParaExcluir = { ...it, pedidos: { mesas: { numero: selectedMesaComanda.numero } } };
+                                    // Injetamos explicitamente o ID do pedido e o número da mesa para a função de exclusão
+                                    const itemParaExcluir = { 
+                                      ...it, 
+                                      pedido_id: pedido.id,
+                                      pedidos: { id: pedido.id, mesas: { numero: selectedMesaComanda.numero } } 
+                                    };
                                     handleExcluirItemComanda(itemParaExcluir); 
                                   }}
                                   style={{ 
