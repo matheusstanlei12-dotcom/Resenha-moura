@@ -146,10 +146,12 @@ export const Caixa = () => {
          const CATS_COZINHA = [
            'PETISCO', 'PETISCOS', 'LANCHES', 'LANCHE', 'PORÇÕES', 'PORCOES', 
            'PORÇÃO', 'PORCAO', 'COZINHA', 'PRATOS', 'PRATO', 'REFEIÇÕES', 
-           'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER'
+           'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER',
+           'BEBIDAS', 'BEBIDA', 'CHOPP', 'CERVEJA'
          ];
          const CATS_BAR = [
-           'COQUETÉIS', 'COQUITEIS', 'COQUETEIS', 'DRINKS', 'DRINK', 'DOSES', 'DOSE', 'GIN', 'CAIPIRINHA', 'BATIDAS'
+           'COQUETÉIS', 'COQUITEIS', 'COQUETEIS', 'DRINKS', 'DRINK', 
+           'DOSES', 'DOSE', 'GIN', 'CAIPIRINHA', 'BATIDAS', 'DESTILADOS (DOSE)', 'DESTILADOS'
          ];
          const NAMES_BAR_FALLBACK = [
            "caipirinha cachaça", "caipivodka smirnoff", "caipivodka absolut",
@@ -600,7 +602,9 @@ export const Caixa = () => {
   return (
     <div className="layout-container" style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
       <aside className="sidebar" style={{ width: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.5rem 0' }}>
-         <div style={{ marginBottom: '3rem' }}><div style={{ width: '40px', height: '40px', background: 'var(--primary-color)', borderRadius: '12px' }}></div></div>
+         <div style={{ marginBottom: '3rem' }}>
+           <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
+         </div>
          <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', opacity: isCaixaAberto ? 1 : 0.3, pointerEvents: isCaixaAberto ? 'auto' : 'none' }}>
             <button onClick={() => setActiveTab('mesas')} style={{ background: 'none', border: 'none', color: activeTab === 'mesas' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer', position: 'relative' }}>
               <Store size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>MESAS</span>
@@ -633,6 +637,7 @@ export const Caixa = () => {
            </div>
         </header>
 
+        
         <AnimatePresence mode="wait">
           {isCaixaAberto ? (
             <>
@@ -696,46 +701,73 @@ export const Caixa = () => {
                 </motion.div>
               )}
 
+              {activeTab === 'cozinha' && (
+                <motion.div key="cozinha" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                      {cozinhaItems.map(item => (
+                        <div key={item.id} className="card" style={{ borderLeft: '6px solid var(--danger-color)', padding: '1.2rem' }}>
+                           <div className="d-flex justify-between items-center mb-3">
+                              <span style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--primary-color)' }}>MESA {item.mesa}</span>
+                              <span style={{ fontSize: '0.65rem', opacity: 0.5 }}>{new Date(item.data_hora).toLocaleTimeString()}</span>
+                           </div>
+                           <div style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.5rem' }}>{item.quantidade}x {item.produto_nome}</div>
+                           <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '1rem', textTransform: 'uppercase' }}>CATEGORIA: {item.categoria}</div>
+                           <div className="d-flex gap-2">
+                              <button className="btn-success w-full" style={{ padding: '0.5rem', fontSize: '0.75rem' }} onClick={() => handleStatusChangeCozinha(item.id)}>CONCLUIR PREPARO</button>
+                              <button className="btn-outline" style={{ padding: '0.5rem' }} onClick={() => handleImprimirCozinha(item)}><Printer size={16}/></button>
+                           </div>
+                        </div>
+                      ))}
+                      {cozinhaItems.length === 0 && (
+                        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem', opacity: 0.3 }}>
+                           <Utensils size={64} style={{ margin: '0 auto 1rem' }} />
+                           <p>Nenhum pedido de produção pendente.</p>
+                        </div>
+                      )}
+                   </div>
+                </motion.div>
+              )}
+
               {activeTab === 'historico' && (
                 <motion.div key="historico" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                     <div className="card" style={{ padding: '1rem' }}>PIX: R$ {paymentTotals.pix.toFixed(2)}</div>
-                     <div className="card" style={{ padding: '1rem' }}>DINHEIRO: R$ {paymentTotals.dinheiro.toFixed(2)}</div>
-                     <div className="card" style={{ padding: '1rem' }}>DÉBITO: R$ {paymentTotals.debito.toFixed(2)}</div>
-                     <div className="card" style={{ padding: '1rem' }}>CRÉDITO: R$ {paymentTotals.credito.toFixed(2)}</div>
+                      <div className="card" style={{ padding: '1rem' }}>PIX: R$ {paymentTotals.pix.toFixed(2)}</div>
+                      <div className="card" style={{ padding: '1rem' }}>DINHEIRO: R$ {paymentTotals.dinheiro.toFixed(2)}</div>
+                      <div className="card" style={{ padding: '1rem' }}>DÉBITO: R$ {paymentTotals.debito.toFixed(2)}</div>
+                      <div className="card" style={{ padding: '1rem' }}>CRÉDITO: R$ {paymentTotals.credito.toFixed(2)}</div>
                    </div>
                    <div className="card" style={{ padding: 0 }}>
                       <table style={{ width: '100%' }}>
-                       <thead>
-                         <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
-                           <th style={{ padding: '1rem', textAlign: 'left' }}>Mesa</th>
-                           <th style={{ padding: '1rem', textAlign: 'left' }}>Pagamento</th>
-                           <th style={{ padding: '1rem', textAlign: 'right' }}>Total</th>
-                         </tr>
-                       </thead>
-                       <tbody>
-                         {historicoVendas.map(v => (
-                           <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} onClick={() => handleVerDetalhes(v)}>
-                             <td style={{ padding: '1rem' }}>{v.mesa_id ? `Mesa ${v.mesas?.numero}` : 'Balcão'}</td>
-                             <td style={{ padding: '1rem', fontSize: '0.7rem' }}>{v.forma_pagamento}</td>
-                             <td style={{ padding: '1rem', textAlign: 'right' }}>R$ {Number(v.total).toFixed(2)}</td>
-                           </tr>
-                         ))}
-                       </tbody>
-                    </table>
+                        <thead>
+                          <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
+                            <th style={{ padding: '1rem', textAlign: 'left' }}>Mesa</th>
+                            <th style={{ padding: '1rem', textAlign: 'left' }}>Pagamento</th>
+                            <th style={{ padding: '1rem', textAlign: 'right' }}>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {historicoVendas.map(v => (
+                            <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} onClick={() => handleVerDetalhes(v)}>
+                              <td style={{ padding: '1rem' }}>{v.mesa_id ? "Mesa " + v.mesas?.numero : 'Balcão'}</td>
+                              <td style={{ padding: '1rem', fontSize: '0.7rem' }}>{v.forma_pagamento}</td>
+                              <td style={{ padding: '1rem', textAlign: 'right' }}>R$ {Number(v.total).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                     </table>
                    </div>
                 </motion.div>
               )}
 
               {activeTab === 'fechamento' && (
-                 <motion.div key="fechamento" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                   <FechamentoCaixa
-                     historicoVendas={historicoVendas}
-                     paymentTotals={paymentTotals}
-                     onRefresh={fetchData}
-                     onClose={() => setIsCaixaAberto(false)}
-                   />
-                 </motion.div>
+                <motion.div key="fechamento" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <FechamentoCaixa
+                    historicoVendas={historicoVendas}
+                    paymentTotals={paymentTotals}
+                    onRefresh={fetchData}
+                    onClose={() => setIsCaixaAberto(false)}
+                  />
+                </motion.div>
               )}
             </>
           ) : (

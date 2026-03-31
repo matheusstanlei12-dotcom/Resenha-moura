@@ -73,10 +73,12 @@ export const Producao = () => {
   const CATS_COZINHA = [
     'PETISCO', 'PETISCOS', 'LANCHES', 'LANCHE', 'PORÇÕES', 'PORCOES', 
     'PORÇÃO', 'PORCAO', 'COZINHA', 'PRATOS', 'PRATO', 'REFEIÇÕES', 
-    'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER'
+    'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER',
+    'BEBIDAS', 'BEBIDA', 'CHOPP', 'CERVEJA'
   ];
   const CATS_BAR = [
-    'COQUETÉIS', 'COQUITEIS', 'COQUETEIS', 'DRINKS', 'DRINK', 'DOSES', 'DOSE', 'GIN', 'CAIPIRINHA', 'BATIDAS'
+    'COQUETÉIS', 'COQUITEIS', 'COQUETEIS', 'DRINKS', 'DRINK', 
+    'DOSES', 'DOSE', 'GIN', 'CAIPIRINHA', 'BATIDAS', 'DESTILADOS (DOSE)', 'DESTILADOS'
   ];
   const NAMES_BAR_FALLBACK = [
     "caipirinha cachaça", "caipivodka smirnoff", "caipivodka absolut",
@@ -141,7 +143,7 @@ export const Producao = () => {
         try {
           new Notification("🚨 NOVO PEDIDO!", {
             body: "O pedido precisa ser aceito.",
-            icon: "/favicon.svg",
+            icon: "/logo.png",
             vibrate: [500, 200, 500]
           } as any);
         } catch (err) {
@@ -167,7 +169,10 @@ export const Producao = () => {
     <div className="container animate-fade-in" style={{ paddingBottom: '8rem' }}>
       <OwnerViewBanner panelName="Cozinha / Bar" />
       <header className="d-flex justify-between items-center" style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-        <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Produção (KDS)</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
+          <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Produção (KDS)</h2>
+        </div>
         <div className="d-flex gap-3">
           <Link to="/" className="btn-outline" style={{ width: 'auto', padding: '0.5rem 1rem' }}>Voltar</Link>
           <button 

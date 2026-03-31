@@ -90,6 +90,7 @@ export const LoginPage = () => {
         }}
       >
         <div className="text-center mb-8">
+          <img src="/logo.png" alt="Logo Resenha do Moura" style={{ width: '120px', height: '120px', objectFit: 'contain', marginBottom: '1rem', borderRadius: '50%', border: '2px solid var(--primary-color)', padding: '5px', backgroundColor: 'rgba(0,0,0,0.3)' }} />
           <h1 style={{ color: 'var(--primary-color)', fontSize: '1.75rem', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>Acesso Restrito</h1>
           <p style={{ color: '#ccc' }}>Área Privada - Resenha do Moura</p>
         </div>

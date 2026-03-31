@@ -249,6 +249,13 @@ export const Administracao = () => {
     setProdutos(produtos.map(p => p.id === id ? { ...p, estoque: newValue } : p));
   };
 
+  const handleUpdatePreco = async (id: string, value: string) => {
+    const newPreco = parseFloat(value.replace(',', '.'));
+    if (isNaN(newPreco) || newPreco < 0) return;
+    await supabase.from('produtos').update({ preco: newPreco }).eq('id', id);
+    setProdutos(produtos.map(p => p.id === id ? { ...p, preco: newPreco } : p));
+  };
+
   const handleAddProduto = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -400,7 +407,10 @@ export const Administracao = () => {
       <aside style={{ width: '240px', flexShrink: 0, background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', padding: '1.5rem 1rem', overflowY: 'auto' }}>
 
         <div style={{ marginBottom: '2.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#d4af37', letterSpacing: '1px' }}>RESENHA DO MOURA</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
+            <img src="/logo.png" alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'contain', border: '1px solid #d4af37' }} />
+            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#d4af37', letterSpacing: '1px' }}>RESENHA DO MOURA</div>
+          </div>
 
           <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginTop: '2px' }}>ADMINISTRAÇÃO</div>
           <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
@@ -576,7 +586,17 @@ export const Administracao = () => {
                         >
                           <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{p.nome}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#d4af37', fontWeight: 600 }}>R$ {Number(p.preco).toFixed(2)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                              <span style={{ fontSize: '0.7rem', color: '#d4af37', fontWeight: 600 }}>R$</span>
+                              <input 
+                                type="number" 
+                                step="0.01" 
+                                defaultValue={p.preco} 
+                                onBlur={(e) => handleUpdatePreco(p.id, e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleUpdatePreco(p.id, (e.target as HTMLInputElement).value)}
+                                style={{ width: '70px', padding: '2px 4px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '4px', color: '#fff', fontSize: '0.8rem', fontWeight: 700, outline: 'none' }}
+                              />
+                            </div>
                           </div>
                           <StockBar value={p.estoque} />
                           <span style={{ color: stockColor, fontWeight: 800, fontSize: '0.85rem', minWidth: '50px', textAlign: 'center' }}>

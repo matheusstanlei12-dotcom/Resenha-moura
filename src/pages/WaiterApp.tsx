@@ -120,7 +120,7 @@ export const Garcom = () => {
         try {
           new Notification("🚨 ATENÇÃO!", {
             body: precisaGarcom ? "Mesa chamando atendimento!" : "Pedido pronto no balcão!",
-            icon: "/favicon.svg",
+            icon: "/logo.png",
             vibrate: [500, 200, 500]
           } as any);
         } catch (err) {
@@ -330,7 +330,10 @@ export const Garcom = () => {
          <OwnerViewBanner panelName="Garçom" />
          <header className="d-flex justify-between items-center mb-6">
            <button onClick={() => { setSelectedMesa(null); setShowAddMenu(false); clearCart(); }} className="btn-outline" style={{ display: 'inline', width: 'auto', padding: '0.4rem 0.8rem' }}>&larr; Voltar</button>
-           <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Mesa {selectedMesa.numero}</h2>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+             <img src="/logo.png" alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
+             <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Mesa {selectedMesa.numero}</h2>
+           </div>
            <span style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '12px', background: `${getStatusColor(selectedMesa.status)}33`, color: getStatusColor(selectedMesa.status), fontWeight: 'bold', textTransform: 'uppercase' }}>
              {selectedMesa.status}
            </span>
@@ -500,7 +503,8 @@ export const Garcom = () => {
     <div className="container animate-fade-in" style={{ paddingBottom: '2rem' }}>
       <OwnerViewBanner panelName="Garçom" />
       <header className="d-flex justify-between items-center" style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-        <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
           <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Painel do Garçom</h2>
         </div>
         <div className="d-flex items-center gap-4">

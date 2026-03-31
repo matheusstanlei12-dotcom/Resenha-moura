@@ -1180,8 +1180,9 @@ export const Dono = () => {
   return (
     <div className="layout-container">
       <aside className="sidebar">
-        <div className="sidebar-logo">
-          <h2 style={{ color: 'var(--primary-color)', margin: 0, fontSize: '1.4rem' }}>Resenha do Moura</h2>
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1.5rem 1rem' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
+          <h2 style={{ color: 'var(--primary-color)', margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Resenha do Moura</h2>
         </div>
         <nav className="sidebar-nav">
 
