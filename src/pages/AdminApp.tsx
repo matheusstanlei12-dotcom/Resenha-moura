@@ -320,7 +320,8 @@ export const Administracao = () => {
       fetchData();
       alert("Exclusão auditada e realizada com sucesso!");
     } catch (err: any) {
-      alert("Erro na auditoria: " + err.message);
+      console.error("ERRO CRÍTICO NA EXCLUSÃO:", err);
+      alert("⚠️ FALHA NA EXCLUSÃO:\n\n" + (err.message || 'Erro desconhecido no banco de dados. Verifique se a tabela de auditoria existe.'));
     } finally {
       setIsExcluindo(false);
     }
@@ -971,11 +972,16 @@ export const Administracao = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <button onClick={() => { setItemParaExcluir(null); setMotivoExclusao(''); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 800, cursor: 'pointer' }}>CANCELAR</button>
                 <button 
+                  type="button"
                   disabled={!motivoExclusao.trim() || isExcluindo}
-                  onClick={() => handleExcluirItemComanda(itemParaExcluir, motivoExclusao)}
-                  style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: motivoExclusao.trim() ? 1 : 0.4 }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleExcluirItemComanda(itemParaExcluir, motivoExclusao);
+                  }}
+                  style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: (motivoExclusao.trim() && !isExcluindo) ? 1 : 0.4 }}
                 >
-                  {isExcluindo ? 'AGUARDE...' : 'CONFIRMAR'}
+                  {isExcluindo ? 'PROCESSANDO...' : 'CONFIRMAR'}
                 </button>
               </div>
             </motion.div>

@@ -437,7 +437,8 @@ export const Dono = () => {
       fetchData();
       alert("Exclusão realizada e auditada com sucesso!");
     } catch (err: any) {
-      alert("Erro ao realizar auditoria: " + err.message);
+      console.error("ERRO CRÍTICO NA EXCLUSÃO (DONO):", err);
+      alert("⚠️ FALHA NA EXCLUSÃO:\n\n" + (err.message || 'Erro desconhecido. Verifique se a tabela de auditoria foi criada.'));
     } finally {
       setIsExcluindoAtu(false);
     }
@@ -1258,9 +1259,14 @@ export const Dono = () => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <button onClick={() => { setItemParaExcluirAtu(null); setMotivoExclusaoAtu(''); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 800, cursor: 'pointer' }}>CANCELAR</button>
                 <button 
+                  type="button"
                   disabled={!motivoExclusaoAtu.trim() || isExcluindoAtu}
-                  onClick={() => handleExcluirItemComanda(itemParaExcluirAtu, motivoExclusaoAtu)}
-                  style={{ background: 'var(--primary-color)', color: '#000', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: motivoExclusaoAtu.trim() ? 1 : 0.4 }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleExcluirItemComanda(itemParaExcluirAtu, motivoExclusaoAtu);
+                  }}
+                  style={{ background: 'var(--primary-color)', color: '#000', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: (motivoExclusaoAtu.trim() && !isExcluindoAtu) ? 1 : 0.4 }}
                 >
                   {isExcluindoAtu ? 'PROCESSANDO...' : 'CONFIRMAR'}
                 </button>
