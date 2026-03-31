@@ -55,7 +55,6 @@ export const Dono = () => {
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [historicoCompleto, setHistoricoCompleto] = useState<any[]>([]);
   const [turnosHistorico, setTurnosHistorico] = useState<any[]>([]);
-  const [itensComanda, setItensComanda] = useState<any[]>([]);
   const [pedidosAtivos, setPedidosAtivos] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -174,13 +173,9 @@ export const Dono = () => {
         })).sort((a,b) => Number(b.minutos) - Number(a.minutos)).slice(0, 10));
       }
 
-      const { data: allItens } = await supabase.from('itens_pedido')
-        .select('*, produtos(nome, categoria), pedidos(id, status, mesas(numero))')
-        .neq('status', 'finalizado')
-        .order('created_at', { ascending: false });
-      setItensComanda(allItens || []);
-
-      const { data: pAtivos } = await supabase.from('pedidos').select('*, mesas(numero)').neq('status', 'finalizado');
+      const { data: pAtivos } = await supabase.from('pedidos')
+        .select('*, mesas(numero), itens_pedido(*, produtos(nome, categoria))')
+        .neq('status', 'finalizado');
       setPedidosAtivos(pAtivos || []);
 
     } catch (err: any) {
@@ -702,8 +697,9 @@ export const Dono = () => {
       ) : (
         <div className="d-flex flex-col gap-8">
           {mesas.filter(m => m.status !== 'livre').map(mesa => {
-            const itemsMesa = itensComanda.filter(i => i.pedidos?.mesas?.numero === mesa.numero);
-            const totalMesa = itemsMesa.reduce((acc, i) => acc + (Number(i.preco_unitario) * i.quantidade), 0);
+            const pedidoMesa = pedidosAtivos.find(p => p.mesa_id === mesa.id);
+            const itemsMesa = pedidoMesa?.itens_pedido || [];
+            const totalMesa = Number(pedidoMesa?.total || 0);
 
             return (
               <div key={mesa.id} className="card" style={{ padding: '0', borderLeft: '4px solid var(--primary-color)' }}>

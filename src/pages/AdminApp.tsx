@@ -63,7 +63,7 @@ export const Administracao = () => {
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [pedidosAtivos, setPedidosAtivos] = useState<any[]>([]);
   const [itensEntregues, setItensEntregues] = useState<any[]>([]);
-  const [itensComanda, setItensComanda] = useState<any[]>([]);
+  const [selectedMesaComanda, setSelectedMesaComanda] = useState<any>(null);
   const [historicoVendas, setHistoricoVendas] = useState<any[]>([]);
 
 
@@ -77,14 +77,10 @@ export const Administracao = () => {
       supabase.from('produtos').select('*').order('categoria'),
       supabase.from('mesas').select('*').order('numero'),
       supabase.from('profiles').select('*').not('role', 'eq', 'dono').order('role', { ascending: true }),
-      supabase.from('pedidos').select('*, mesas(numero)').neq('status', 'finalizado'),
+      supabase.from('pedidos').select('*, mesas(numero), itens_pedido(*, produtos(nome, categoria))').neq('status', 'finalizado'),
       supabase.from('avaliacoes').select('*').order('created_at', { ascending: false }),
       supabase.from('itens_pedido').select('*, produtos(nome), pedidos(id, mesas(numero))').eq('status', 'entregue')
     ]);
-    const { data: allItens } = await supabase.from('itens_pedido')
-      .select('*, produtos(nome, categoria), pedidos(id, status, mesas(numero))')
-      .neq('status', 'finalizado')
-      .order('created_at', { ascending: false });
 
     setProdutos(pRes.data || []);
     setMesas(mRes.data || []);
@@ -92,7 +88,6 @@ export const Administracao = () => {
     setPedidosAtivos(pedRes.data || []);
     setAvaliacoes(avRes.data || []);
     setItensEntregues(itemsEntRes.data || []);
-    setItensComanda(allItens || []);
 
     // Histórico (Últimas 24 horas)
     const now = new Date();
@@ -435,13 +430,26 @@ export const Administracao = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.8rem' }}>
                   {mesas.map(m => {
                     const color = m.status === 'livre' ? '#10b981' : m.status === 'aguardando conta' ? '#d4af37' : '#ef4444';
+                    const isOccupied = m.status !== 'livre';
                     return (
-                      <div key={m.id} style={{ background: `${color}11`, border: `1px solid ${color}33`, borderRadius: '10px', padding: '1rem', textAlign: 'center' }}>
+                      <motion.div key={m.id} 
+                        whileHover={isOccupied ? { scale: 1.05, filter: 'brightness(1.2)' } : {}}
+                        onClick={() => isOccupied && setSelectedMesaComanda(m)}
+                        style={{ 
+                          background: `${color}11`, 
+                          border: `1px solid ${color}33`, 
+                          borderRadius: '10px', 
+                          padding: '1rem', 
+                          textAlign: 'center',
+                          cursor: isOccupied ? 'pointer' : 'default',
+                          transition: 'all 0.2s'
+                        }}
+                      >
                         <div style={{ fontSize: '1.5rem', fontWeight: 900, color }}>{m.numero}</div>
                         <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', color, fontWeight: 700, marginTop: '4px' }}>
                           {m.status === 'livre' ? 'Livre' : m.status === 'aguardando conta' ? 'Conta' : 'Ocup.'}
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -733,8 +741,9 @@ export const Administracao = () => {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                   {mesas.filter(m => m.status !== 'livre').map(mesa => {
-                    const itemsMesa = itensComanda.filter(i => i.pedidos?.mesas?.numero === mesa.numero);
-                    const totalMesa = itemsMesa.reduce((acc, i) => acc + (Number(i.preco_unitario) * i.quantidade), 0);
+                    const pedidoMesa = pedidosAtivos.find(p => p.mesa_id === mesa.id);
+                    const itemsMesa = pedidoMesa?.itens_pedido || [];
+                    const totalMesa = Number(pedidoMesa?.total || 0);
                     
                     return (
                       <div key={mesa.id} className="card" style={{ padding: '0', borderLeft: '6px solid #d4af37' }}>
@@ -814,6 +823,63 @@ export const Administracao = () => {
                 onRefresh={fetchData}
               />
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* MODAL DETALHES COMANDA (DASHBOARD CLICK) */}
+        <AnimatePresence>
+          {selectedMesaComanda && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }} onClick={() => setSelectedMesaComanda(null)}>
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} 
+                onClick={e => e.stopPropagation()}
+                style={{ background: '#111', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', width: '100%', maxWidth: '500px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+                
+                <div style={{ padding: '1.5rem', background: '#d4af37', color: '#000', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.2rem', fontWeight: 900, margin: 0 }}>MESA {selectedMesaComanda.numero}</h2>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.8 }}>Relatório Rápido</span>
+                  </div>
+                  <button onClick={() => setSelectedMesaComanda(null)} style={{ background: 'rgba(0,0,0,0.1)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div style={{ padding: '1.5rem', maxHeight: '60vh', overflowY: 'auto' }}>
+                  {(() => {
+                    const pedido = pedidosAtivos.find(p => p.mesa_id === selectedMesaComanda.id);
+                    const items = pedido?.itens_pedido || [];
+                    
+                    if (items.length === 0) return <p style={{ textAlign: 'center', opacity: 0.5, padding: '2rem' }}>Nenhum item lançado nesta mesa.</p>;
+
+                    return (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {items.map((it: any) => (
+                           <div key={it.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.8rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{it.quantidade}x {it.produtos?.nome}</div>
+                                <div style={{ fontSize: '0.7rem', color: '#d4af37', fontWeight: 600 }}>{it.status.toUpperCase()}</div>
+                              </div>
+                              <div style={{ fontWeight: 800 }}>R$ {(Number(it.preco_unitario) * it.quantidade).toFixed(2)}</div>
+                           </div>
+                        ))}
+                        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '2px solid rgba(212,175,55,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontWeight: 800 }}>TOTAL DA MESA</span>
+                          <span style={{ fontSize: '1.4rem', fontWeight: 900, color: '#d4af37' }}>R$ {Number(pedido?.total || 0).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
+                   <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginBottom: '1rem' }}>Para exclusões ou auditoria completa, use a aba "Comandas".</p>
+                   <button onClick={() => setSelectedMesaComanda(null)} style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', padding: '0.8rem 2.5rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', width: '100%' }}>
+                     FECHAR VISUALIZAÇÃO
+                   </button>
+                </div>
+
+              </motion.div>
+            </div>
           )}
         </AnimatePresence>
 
