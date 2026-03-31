@@ -24,8 +24,11 @@ CREATE TABLE IF NOT EXISTS public.mesas (
 CREATE TABLE IF NOT EXISTS public.pedidos (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     mesa_id UUID REFERENCES public.mesas(id) ON DELETE CASCADE,
+    garcom_id UUID REFERENCES public.profiles(id),
+    turno_id UUID REFERENCES public.turnos_caixa(id),
     cliente_nome TEXT,
     data_hora TIMESTAMPTZ DEFAULT NOW(),
+    finalizado_at TIMESTAMPTZ,
     status TEXT NOT NULL CHECK (status IN ('novo', 'em preparo', 'pronto', 'entregue', 'finalizado')) DEFAULT 'novo',
     total NUMERIC(10,2) DEFAULT 0.00,
     forma_pagamento TEXT

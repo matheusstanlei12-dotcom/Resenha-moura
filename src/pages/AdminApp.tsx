@@ -12,7 +12,7 @@ import {
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
 import { FechamentoCaixa } from '../components/FechamentoCaixa';
 
-type AdminTab = 'dashboard' | 'estoque' | 'mesas' | 'equipe' | 'avaliacoes' | 'entregues' | 'fechamento';
+type AdminTab = 'dashboard' | 'estoque' | 'mesas' | 'equipe' | 'avaliacoes' | 'entregues' | 'comandas' | 'fechamento';
 
 
 const ROLE_LABELS: Record<string, string> = {
@@ -63,6 +63,7 @@ export const Administracao = () => {
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [pedidosAtivos, setPedidosAtivos] = useState<any[]>([]);
   const [itensEntregues, setItensEntregues] = useState<any[]>([]);
+  const [itensComanda, setItensComanda] = useState<any[]>([]);
   const [historicoVendas, setHistoricoVendas] = useState<any[]>([]);
 
 
@@ -80,12 +81,18 @@ export const Administracao = () => {
       supabase.from('avaliacoes').select('*').order('created_at', { ascending: false }),
       supabase.from('itens_pedido').select('*, produtos(nome), pedidos(id, mesas(numero))').eq('status', 'entregue')
     ]);
+    const { data: allItens } = await supabase.from('itens_pedido')
+      .select('*, produtos(nome, categoria), pedidos(id, status, mesas(numero))')
+      .neq('status', 'finalizado')
+      .order('created_at', { ascending: false });
+
     setProdutos(pRes.data || []);
     setMesas(mRes.data || []);
     setUsuarios(uRes.data || []);
     setPedidosAtivos(pedRes.data || []);
     setAvaliacoes(avRes.data || []);
     setItensEntregues(itemsEntRes.data || []);
+    setItensComanda(allItens || []);
 
     // Histórico (Últimas 24 horas)
     const now = new Date();
@@ -274,6 +281,28 @@ export const Administracao = () => {
     if (confirm('Excluir esta mesa?')) { await supabase.from('mesas').delete().eq('id', id); fetchData(); }
   };
 
+  const handleExcluirItemComanda = async (item: any) => {
+    if (!confirm(`🚨 EXCLUSÃO ADMINISTRATIVA\n\nDeseja realmente excluir o item "${item.produtos?.nome}" da Mesa ${item.pedidos?.mesas?.numero}?\n\nEsta ação é irreversível e atualizará o total da conta.`)) return;
+
+    try {
+      // 1. Excluir o item
+      const { error: deleteError } = await supabase.from('itens_pedido').delete().eq('id', item.id);
+      if (deleteError) throw deleteError;
+
+      // 2. Atualizar o total do pedido
+      const { data: currentPedido } = await supabase.from('pedidos').select('total').eq('id', item.pedido_id).single();
+      if (currentPedido) {
+        const novoTotal = Math.max(0, Number(currentPedido.total) - (Number(item.preco_unitario) * item.quantidade));
+        await supabase.from('pedidos').update({ total: novoTotal }).eq('id', item.pedido_id);
+      }
+
+      alert("Item removido com sucesso!");
+      fetchData();
+    } catch (err: any) {
+      alert("Erro ao excluir item: " + err.message);
+    }
+  };
+
   // --- Computed ---
   const mesasOcupadas = mesas.filter(m => m.status !== 'livre').length;
   const itensCriticos = produtos.filter(p => p.estoque < 10).length;
@@ -364,6 +393,7 @@ export const Administracao = () => {
 
 
           <SideItem id="entregues" icon={<CheckCircle size={18}/>} label="Pedidos Entregues" />
+          <SideItem id="comandas" icon={<FileText size={18}/>} label="Comandas por Mesa" />
           <SideItem id="fechamento" icon={<Lock size={18}/>} label="Fluxo de Caixa" />
         </nav>
 
@@ -689,33 +719,89 @@ export const Administracao = () => {
             </motion.div>
           )}
 
-          {/* === PEDIDOS ENTREGUES === */}
-          {activeTab === 'entregues' && (
-            <motion.div key="ent" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '0.3rem' }}>Pedidos Entregues</h1>
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', marginBottom: '2rem' }}>{itensEntregues.length} itens entregues</p>
+          {/* === COMANDAS POR MESA === */}
+          {activeTab === 'comandas' && (
+            <motion.div key="comandas" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 900, marginBottom: '0.3rem' }}>Comandas por Mesa</h1>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem', marginBottom: '2rem' }}>Auditando itens ativos em todas as mesas</p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {itensEntregues.map(item => (
-                  <motion.div key={item.id} className="card" style={{ padding: '1rem', borderLeft: '4px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#10b981' }}>
-                        Mesa {item.pedidos?.mesas?.numero || '?'}
+              {mesas.filter(m => m.status !== 'livre').length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '5rem', opacity: 0.5 }}>
+                  <Utensils size={60} style={{ margin: '0 auto 1.5rem', opacity: 0.2 }} />
+                  <h3>Nenhuma mesa ocupada no momento.</h3>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  {mesas.filter(m => m.status !== 'livre').map(mesa => {
+                    const itemsMesa = itensComanda.filter(i => i.pedidos?.mesas?.numero === mesa.numero);
+                    const totalMesa = itemsMesa.reduce((acc, i) => acc + (Number(i.preco_unitario) * i.quantidade), 0);
+                    
+                    return (
+                      <div key={mesa.id} className="card" style={{ padding: '0', borderLeft: '6px solid #d4af37' }}>
+                        <div style={{ padding: '1.2rem', background: 'rgba(212,175,55,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div style={{ width: '45px', height: '45px', borderRadius: '10px', background: '#d4af37', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: '1.2rem' }}>
+                              {mesa.numero}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>Mesa {mesa.numero}</div>
+                              <div style={{ fontSize: '0.7rem', opacity: 0.6, textTransform: 'uppercase' }}>Status: {mesa.status}</div>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right', flex: 1 }}>
+                            <div style={{ fontSize: '0.7rem', opacity: 0.5 }}>SUBTOTAL DA MESA</div>
+                            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#d4af37' }}>R$ {totalMesa.toFixed(2)}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '1rem' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ fontSize: '0.65rem', opacity: 0.4, textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left' }}>
+                                <th style={{ padding: '10px' }}>Qtd</th>
+                                <th style={{ padding: '10px' }}>Produto</th>
+                                <th style={{ padding: '10px' }}>Status</th>
+                                <th style={{ padding: '10px' }}>Unitário</th>
+                                <th style={{ padding: '10px' }}>Total</th>
+                                <th style={{ padding: '10px', textAlign: 'right' }}>Ação</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {itemsMesa.map(item => (
+                                <tr key={item.id} style={{ borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+                                  <td style={{ padding: '12px 10px', fontWeight: 800 }}>{item.quantidade}x</td>
+                                  <td style={{ padding: '12px 10px' }}>{item.produtos?.nome}</td>
+                                  <td style={{ padding: '12px 10px' }}>
+                                    <span style={{ 
+                                      fontSize: '0.65rem', padding: '3px 8px', borderRadius: '4px', fontWeight: 700, 
+                                      background: item.status === 'pronto' ? 'rgba(16,185,129,0.15)' : item.status === 'em preparo' ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)',
+                                      color: item.status === 'pronto' ? '#10b981' : item.status === 'em preparo' ? '#f59e0b' : 'inherit'
+                                    }}>
+                                      {item.status.toUpperCase()}
+                                    </span>
+                                  </td>
+                                  <td style={{ padding: '12px 10px', fontSize: '0.85rem', opacity: 0.6 }}>R$ {Number(item.preco_unitario).toFixed(2)}</td>
+                                  <td style={{ padding: '12px 10px', fontWeight: 700 }}>R$ {(Number(item.preco_unitario) * item.quantidade).toFixed(2)}</td>
+                                  <td style={{ padding: '12px 10px', textAlign: 'right' }}>
+                                    <button onClick={() => handleExcluirItemComanda(item)} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}>
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                              {itemsMesa.length === 0 && (
+                                <tr>
+                                  <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', opacity: 0.3 }}>Nenhum item lançado nesta mesa.</td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                      <div style={{ fontSize: '1rem', fontWeight: 600 }}>{item.quantidade}x {item.produtos?.nome}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Status</div>
-                      <div style={{ color: '#10b981', fontWeight: 800, fontSize: '0.85rem' }}>ENTREGUE</div>
-                    </div>
-                  </motion.div>
-                ))}
-                {itensEntregues.length === 0 && (
-                  <div style={{ textAlign: 'center', padding: '4rem', color: 'rgba(255,255,255,0.2)' }}>
-                    <p>Nenhum item entregue ainda.</p>
-                  </div>
-                )}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </motion.div>
           )}
 

@@ -166,10 +166,15 @@ export const Garcom = () => {
 
 
   const handleExcluirItem = async (itemId: string, item: any) => {
-    // 0. Trava de segurança para categorias críticas
+    // 0. Trava de segurança e permissões
     const categoriasCriticas = ['PETISCO', 'PETISCOS', 'COZINHA', 'COQUETÉIS', 'COQUETEIS', 'COQUITEIS'];
     const categoriaItem = (item.produtos?.categoria || '').toUpperCase();
     const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
+
+    if (item.status === 'pronto' && !ehGestor) {
+      alert(`⚠️ BLOQUEADO: Este item já está PRONTO no balcão.\n\nApenas Administradores ou o Proprietário podem cancelar pedidos finalizados pela cozinha.`);
+      return;
+    }
 
     if (categoriasCriticas.includes(categoriaItem) && item.status !== 'pendente' && !ehGestor) {
       alert(`⚠️ BLOQUEADO: Este item (${categoriaItem}) já está em preparo.\n\nApenas Administradores ou o Proprietário podem cancelar itens de Cozinha/Bar após a aceitação.`);
@@ -451,7 +456,7 @@ export const Garcom = () => {
                            {itensPedido.filter(i => i.pedido_id === pedido.id).map(item => (
                              <div key={item.id} className="d-flex justify-between items-center" style={{ fontSize: '1.1rem', padding: '0.8rem 0', borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
                                 <span style={{ color: 'var(--text-main)', fontWeight: 600 }}>{item.quantidade}x {item.produtos?.nome}</span>
-                                {item.status === 'pendente' && (
+                                {(item.status === 'pendente' || (profile?.role === 'dono' || profile?.role === 'admin')) && item.status !== 'finalizado' && (
                                    <button onClick={() => handleExcluirItem(item.id, item)} style={{ background: 'rgba(220, 53, 69, 0.1)', border: '1px solid var(--danger-color)', color: 'var(--danger-color)', cursor: 'pointer', padding: '0.6rem 0.8rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.9rem', fontWeight: 'bold' }}>
                                       <Trash2 size={14} /> Apagar
                                    </button>

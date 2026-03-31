@@ -23,6 +23,11 @@ CREATE TABLE IF NOT EXISTS public.movimentacoes_caixa (
     criado_em TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 3. Relacionar Pedidos com Turnos
+ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS garcom_id UUID REFERENCES public.profiles(id);
+ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS turno_id UUID REFERENCES public.turnos_caixa(id);
+ALTER TABLE public.pedidos ADD COLUMN IF NOT EXISTS finalizado_at TIMESTAMPTZ;
+
 -- Habilitar RLS
 ALTER TABLE public.turnos_caixa ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.movimentacoes_caixa ENABLE ROW LEVEL SECURITY;
@@ -39,3 +44,6 @@ CREATE POLICY "Acesso Total Movimentacoes" ON public.movimentacoes_caixa FOR ALL
 -- Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE public.turnos_caixa;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.movimentacoes_caixa;
+
+-- Recarregar cache do esquema
+NOTIFY pgrst, 'reload schema';

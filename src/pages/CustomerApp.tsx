@@ -87,7 +87,7 @@ export const CustomerApp = () => {
     if (!mesaNum) return;
     const { error } = await supabase.rpc('chamar_garcom', { p_numero: parseInt(mesaNum) });
     if (!error) {
-      showToast('🛎️ Garçom chamado! Ele está a caminho.', 'success');
+      showToast('🛎️ Garçom chamado! Aguarde ele está a caminho.', 'success');
     } else {
       showToast('Erro ao chamar garçom. Tente novamente.', 'error');
     }

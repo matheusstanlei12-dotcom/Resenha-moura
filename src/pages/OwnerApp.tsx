@@ -12,11 +12,11 @@ import {
   Clock, Star, LogOut, LayoutDashboard,
   PieChart as PieIcon, LayoutGrid,
   QrCode, Banknote, CreditCard, Lock, History as HistoryIcon,
-  ChevronDown, ChevronUp, Folder, FileText
+  ChevronDown, ChevronUp, Folder, FileText, Trash2
 } from 'lucide-react';
 import { FechamentoCaixa } from '../components/FechamentoCaixa';
 
-type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 'caixa';
+type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 'comandas' | 'caixa';
 
 
 const COLORS = ['#d4af37', '#eab308', '#f59e0b', '#10b981', '#3b82f6'];
@@ -55,6 +55,8 @@ export const Dono = () => {
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [historicoCompleto, setHistoricoCompleto] = useState<any[]>([]);
   const [turnosHistorico, setTurnosHistorico] = useState<any[]>([]);
+  const [itensComanda, setItensComanda] = useState<any[]>([]);
+  const [pedidosAtivos, setPedidosAtivos] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
 
@@ -171,6 +173,15 @@ export const Dono = () => {
           name: t.name, minutos: (t.total / t.count).toFixed(1)
         })).sort((a,b) => Number(b.minutos) - Number(a.minutos)).slice(0, 10));
       }
+
+      const { data: allItens } = await supabase.from('itens_pedido')
+        .select('*, produtos(nome, categoria), pedidos(id, status, mesas(numero))')
+        .neq('status', 'finalizado')
+        .order('created_at', { ascending: false });
+      setItensComanda(allItens || []);
+
+      const { data: pAtivos } = await supabase.from('pedidos').select('*, mesas(numero)').neq('status', 'finalizado');
+      setPedidosAtivos(pAtivos || []);
 
     } catch (err: any) {
       console.error("Fetch error:", err);
@@ -379,6 +390,28 @@ export const Dono = () => {
       if (rpcError || (rpcData && rpcData.error)) throw new Error(rpcError?.message || rpcData.error);
       setShowNewUser(false); setNewUserName(''); setNewUserEmail(''); setNewUserPassword(''); fetchData();
     } catch (err: any) { alert("Erro: " + err.message); } finally { setIsCreatingUser(false); }
+  };
+
+  const handleExcluirItemComanda = async (item: any) => {
+    if (!confirm(`🚨 EXCLUSÃO DE PROPRIETÁRIO\n\nDeseja realmente excluir o item "${item.produtos?.nome}" da Mesa ${item.pedidos?.mesas?.numero}?\n\nEsta ação é irreversível e atualizará o total da conta.`)) return;
+
+    try {
+      // 1. Excluir o item
+      const { error: deleteError } = await supabase.from('itens_pedido').delete().eq('id', item.id);
+      if (deleteError) throw deleteError;
+
+      // 2. Atualizar o total do pedido
+      const { data: currentPedido } = await supabase.from('pedidos').select('total').eq('id', item.pedido_id).single();
+      if (currentPedido) {
+        const novoTotal = Math.max(0, Number(currentPedido.total) - (Number(item.preco_unitario) * item.quantidade));
+        await supabase.from('pedidos').update({ total: novoTotal }).eq('id', item.pedido_id);
+      }
+
+      alert("Item removido com sucesso!");
+      fetchData();
+    } catch (err: any) {
+      alert("Erro ao excluir item: " + err.message);
+    }
   };
 
 
@@ -655,6 +688,92 @@ export const Dono = () => {
       </div>
     );
   };
+
+  const renderComandas = () => (
+    <div className="animate-fade-in">
+      <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.5rem' }}>Comandas por Mesa</h2>
+      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Visualização detalhada de todos os itens lançados em mesas abertas.</p>
+
+      {mesas.filter(m => m.status !== 'livre').length === 0 ? (
+        <div className="card text-center" style={{ padding: '5rem' }}>
+          <Utensils size={48} color="var(--text-muted)" style={{ margin: '0 auto 1.5rem', opacity: 0.3 }} />
+          <h3 className="text-muted">Nenhuma mesa ocupada no momento.</h3>
+        </div>
+      ) : (
+        <div className="d-flex flex-col gap-8">
+          {mesas.filter(m => m.status !== 'livre').map(mesa => {
+            const itemsMesa = itensComanda.filter(i => i.pedidos?.mesas?.numero === mesa.numero);
+            const totalMesa = itemsMesa.reduce((acc, i) => acc + (Number(i.preco_unitario) * i.quantidade), 0);
+
+            return (
+              <div key={mesa.id} className="card" style={{ padding: '0', borderLeft: '4px solid var(--primary-color)' }}>
+                <div style={{ padding: '1.5rem', background: 'rgba(212,175,55,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)' }}>
+                  <div className="d-flex items-center gap-4">
+                    <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: '1.3rem' }}>
+                      {mesa.numero}
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0 }}>Mesa {mesa.numero}</h3>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary-color)' }}>Status: {mesa.status}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>SUBTOTAL ATUAL</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalMesa.toFixed(2)}</div>
+                  </div>
+                </div>
+
+                <div style={{ padding: '1rem' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ padding: '12px 10px' }}>Qtd</th>
+                        <th style={{ padding: '12px 10px' }}>Produto</th>
+                        <th style={{ padding: '12px 10px' }}>Status</th>
+                        <th style={{ padding: '12px 10px' }}>Valor</th>
+                        <th style={{ padding: '12px 10px' }}>Total</th>
+                        <th style={{ padding: '12px 10px', textAlign: 'right' }}>Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {itemsMesa.map(item => (
+                        <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                          <td style={{ padding: '12px 10px', fontWeight: 800 }}>{item.quantidade}x</td>
+                          <td style={{ padding: '12px 10px' }}>{item.produtos?.nome}</td>
+                          <td style={{ padding: '12px 10px' }}>
+                            <span style={{ 
+                              fontSize: '0.65rem', padding: '4px 10px', borderRadius: '20px', fontWeight: 800, 
+                              background: item.status === 'pronto' ? 'rgba(16,185,129,0.1)' : item.status === 'em preparo' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
+                              color: item.status === 'pronto' ? 'var(--success-color)' : item.status === 'em preparo' ? 'var(--warning-color)' : 'var(--text-muted)'
+                            }}>
+                              {item.status.toUpperCase()}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px 10px', fontSize: '0.85rem', opacity: 0.6 }}>R$ {Number(item.preco_unitario).toFixed(2)}</td>
+                          <td style={{ padding: '12px 10px', fontWeight: 700 }}>R$ {(Number(item.preco_unitario) * item.quantidade).toFixed(2)}</td>
+                          <td style={{ padding: '12px 10px', textAlign: 'right' }}>
+                            <button onClick={() => handleExcluirItemComanda(item)} className="btn-outline" style={{ padding: '6px', color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', width: 'auto' }}>
+                              <Trash2 size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {itemsMesa.length === 0 && (
+                        <tr>
+                          <td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum item lançado nesta mesa.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
 
   const renderRendimentos = () => {
     const totalBruto = historicoCompleto.reduce((acc, p) => acc + Number(p.total), 0);
@@ -985,6 +1104,7 @@ export const Dono = () => {
       case 'usuarios': return renderUsuarios();
       case 'produtos': return renderProdutos();
       case 'mesas': return renderMesas();
+      case 'comandas': return renderComandas();
       case 'avaliacoes': return renderAvaliacoes();
       case 'caixa': return renderCaixa();
       default: return renderDashboard();
@@ -1002,6 +1122,7 @@ export const Dono = () => {
           <SidebarItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={20}/>} label="Radar" onClick={() => setActiveTab('dashboard')} />
           <SidebarItem active={activeTab === 'produtos'} icon={<Package size={20}/>} label="Estoque" onClick={() => setActiveTab('produtos')} />
           <SidebarItem active={activeTab === 'mesas'} icon={<LayoutGrid size={20}/>} label="Mesas" onClick={() => setActiveTab('mesas')} />
+          <SidebarItem active={activeTab === 'comandas'} icon={<FileText size={20}/>} label="Comandas" onClick={() => setActiveTab('comandas')} />
           <SidebarItem active={activeTab === 'usuarios'} icon={<UsersIcon size={20}/>} label="Equipe" onClick={() => setActiveTab('usuarios')} />
           <SidebarItem active={activeTab === 'avaliacoes'} icon={<Star size={20}/>} label="Avaliações" onClick={() => setActiveTab('avaliacoes')} />
 
