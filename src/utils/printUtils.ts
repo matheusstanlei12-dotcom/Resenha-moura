@@ -25,7 +25,8 @@ export const silentPrint = (htmlContent: string) => {
           position: absolute; left: 0; top: 0; width: 80mm; 
           font-family: Arial, Helvetica, sans-serif !important; 
           background: #fff;
-          font-size: 14px; padding: 5mm; 
+          font-size: 14px; padding: 5mm;
+          font-weight: 700 !important;
         }
         #global-print-area h1, #global-print-area h2, #global-print-area h3, #global-print-area h4 { 
           margin: 0 0 5px 0; padding: 0; text-align: center; font-weight: 900 !important; color: #000 !important;
