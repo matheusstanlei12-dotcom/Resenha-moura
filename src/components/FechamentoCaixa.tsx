@@ -8,6 +8,7 @@ import {
   FileText, X, ChevronDown, ChevronUp, Eye
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { printFechamentoZ } from '../utils/printUtils';
 
 interface FechamentoCaixaProps {
   historicoVendas: any[];
@@ -166,90 +167,23 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
   };
 
   const handleGerarRelatorio = () => {
-    import('jspdf').then(({ default: jsPDF }) => {
-      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [80, 260] });
-      let y = 8;
-
-      // Cabeçalho
-      doc.setFontSize(13); doc.setFont('helvetica', 'bold');
-      doc.text('RESENHA DO MOURA', 40, y, { align: 'center' }); y += 5;
-      doc.setFontSize(6); doc.setFont('helvetica', 'normal');
-      doc.text('CNPJ: 42.418.207/0001-20', 40, y, { align: 'center' }); y += 4;
-      doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-      doc.text(`O.S. Nº: ${osNumber || '---'}`, 40, y, { align: 'center' }); y += 4;
-      doc.text('LEITURA-Z / FECHAMENTO DE CAIXA', 40, y, { align: 'center' }); y += 4;
-      doc.line(5, y, 75, y); y += 5;
-
-      // Info turno
-      doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-      doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, 5, y);
-      doc.text(`HORA: ${new Date().toLocaleTimeString('pt-BR')}`, 75, y, { align: 'right' }); y += 4;
-      doc.text(`TURNO INÍCIO: ${new Date(turnoInicio).toLocaleTimeString('pt-BR')}`, 5, y); y += 4;
-      doc.text(`OPERADOR(A): ${profile?.full_name?.toUpperCase() || 'CAIXA'}`, 5, y); y += 5;
-      doc.line(5, y, 75, y); y += 4;
-
-      // Vendas por modalidade
-      doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-      doc.text('VENDAS POR MODALIDADE:', 5, y); y += 5;
-      doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-
-      const linhas = [
-        ['DINHEIRO', paymentTotals.dinheiro, pedidosPorMetodo.dinheiro.length],
-        ['PIX', paymentTotals.pix, pedidosPorMetodo.pix.length],
-        ['CARTÃO DÉBITO', paymentTotals.debito, pedidosPorMetodo.debito.length],
-        ['CARTÃO CRÉDITO', paymentTotals.credito, pedidosPorMetodo.credito.length],
-      ];
-
-      linhas.forEach(([label, val, qtd]) => {
-        doc.text(`${label} (${qtd} pdos):`, 5, y);
-        doc.text(`R$ ${(val as number).toFixed(2)}`, 75, y, { align: 'right' }); y += 4;
-      });
-
-      y += 2; doc.line(5, y, 75, y); y += 4;
-      doc.setFontSize(9); doc.setFont('helvetica', 'bold');
-      doc.text('TOTAL GERAL:', 5, y);
-      doc.text(`R$ ${totalVendas.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-      doc.text(`Nº DE VENDAS: ${vendasFinalizadas.length}`, 5, y);
-      doc.text(`TKT MÉDIO: R$ ${ticketMedio.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.line(5, y, 75, y); y += 4;
-
-      // Movimentações
-      if (movimentacoes.length > 0) {
-        doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-        doc.text('MOVIMENTAÇÕES:', 5, y); y += 5;
-        doc.setFontSize(6); doc.setFont('helvetica', 'normal');
-        movimentacoes.forEach(m => {
-          doc.text(`[${m.hora}] ${m.tipo.toUpperCase()}: ${m.motivo}`, 5, y);
-          doc.text(`R$ ${m.valor.toFixed(2)}`, 75, y, { align: 'right' }); y += 4;
-        });
-        y += 2; doc.line(5, y, 75, y); y += 4;
-      }
-
-      // Conferência de gaveta
-      doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-      doc.text('CONFERÊNCIA DE GAVETA:', 5, y); y += 5;
-      doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-      doc.text(`Fundo de Troco:`, 5, y); doc.text(`R$ ${parseFloat(fundoTroco).toFixed(2)}`, 75, y, { align: 'right' }); y += 4;
-      doc.text(`(+) Entradas Dinheiro:`, 5, y); doc.text(`R$ ${paymentTotals.dinheiro.toFixed(2)}`, 75, y, { align: 'right' }); y += 4;
-      if (totalSuprimentos > 0) { doc.text(`(+) Suprimentos:`, 5, y); doc.text(`R$ ${totalSuprimentos.toFixed(2)}`, 75, y, { align: 'right' }); y += 4; }
-      if (totalSangrias > 0) { doc.text(`(-) Sangrias:`, 5, y); doc.text(`R$ ${totalSangrias.toFixed(2)}`, 75, y, { align: 'right' }); y += 4; }
-      doc.line(5, y, 75, y); y += 3;
-      doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-      doc.text('ESPERADO:', 5, y); doc.text(`R$ ${dinheiroEsperado.toFixed(2)}`, 75, y, { align: 'right' }); y += 4;
-      doc.text('DECLARADO:', 5, y); doc.text(`R$ ${dinheiroDeclarado.toFixed(2)}`, 75, y, { align: 'right' }); y += 5;
-      doc.line(5, y, 75, y); y += 4;
-
-      const status = diferenca === 0 ? 'CONFERE ✓' : diferenca > 0 ? `SOBRA: R$ ${diferenca.toFixed(2)}` : `QUEBRA: R$ ${Math.abs(diferenca).toFixed(2)}`;
-      doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text(status, 40, y, { align: 'center' }); y += 10;
-      doc.line(5, y, 75, y); y += 5;
-      doc.setFontSize(6); doc.setFont('helvetica', 'italic');
-      doc.text('Documento gerado automaticamente pelo sistema.', 40, y, { align: 'center' }); y += 4;
-      doc.text('Resenha do Moura - Gastronomia & Entretenimento', 40, y, { align: 'center' });
-
-      doc.save(`FechamentoZ_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}_${Date.now()}.pdf`);
-    });
+    printFechamentoZ(
+      osNumber || '---',
+      profile?.full_name || 'CAIXA',
+      turnoInicio,
+      paymentTotals,
+      pedidosPorMetodo,
+      totalVendas,
+      vendasFinalizadas.length,
+      ticketMedio,
+      movimentacoes,
+      parseFloat(fundoTroco || '0'),
+      totalSangrias,
+      totalSuprimentos,
+      dinheiroEsperado,
+      dinheiroDeclarado,
+      diferenca
+    );
   };
 
   const handleFechamento = async () => {

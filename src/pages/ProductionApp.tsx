@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut } from 'lucide-react';
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
+import { printPetiscoTicket } from '../utils/printUtils';
 
 // Helper view based on DB
 interface KDSItem {
@@ -57,6 +58,48 @@ export const Producao = () => {
     const interval = setInterval(fetchActiveItems, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // Monitor de Auto-Impressão para Petiscos
+  useEffect(() => {
+    const checkAndPrint = async () => {
+      const stored = localStorage.getItem('printed_petiscos');
+      const printedIds = stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+      let hasNewToPrint = false;
+
+      const unprinted = items.filter(i => 
+        i.status === 'pendente' && 
+        (i.categoria?.toUpperCase() === 'PETISCO' || i.categoria?.toUpperCase() === 'PETISCOS') &&
+        !printedIds.has(i.id)
+      );
+
+      if (unprinted.length > 0) {
+        // Agrupar por pedido para não sair 1 papel por item
+        const byPedido = new Map<string, KDSItem[]>();
+        unprinted.forEach(item => {
+          hasNewToPrint = true;
+          printedIds.add(item.id);
+          if (!byPedido.has(item.pedido_id)) byPedido.set(item.pedido_id, []);
+          byPedido.get(item.pedido_id)!.push(item);
+        });
+
+        if (hasNewToPrint) {
+          localStorage.setItem('printed_petiscos', JSON.stringify(Array.from(printedIds)));
+          
+          // Print cada grupo
+          byPedido.forEach((itensDoPedido, pedidoId) => {
+            const mesa = itensDoPedido[0].mesa.toString();
+            const payloadItens = itensDoPedido.map(i => ({ qtd: i.quantidade, nome: i.produto_nome }));
+            // Dispara a impressão invisível
+            printPetiscoTicket(mesa, 'Atendimento', [pedidoId], payloadItens);
+          });
+        }
+      }
+    };
+
+    if (items.length > 0) {
+      checkAndPrint();
+    }
+  }, [items]);
 
   const handleStatusChange = async (itemId: string) => {
       // Vai direto para pronto (Aceite automático)
