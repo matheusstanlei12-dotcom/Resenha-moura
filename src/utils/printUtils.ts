@@ -25,7 +25,7 @@ export const silentPrint = (htmlContent: string) => {
           position: absolute; left: 0; top: 0; width: 80mm; 
           font-family: Arial, Helvetica, sans-serif !important; 
           background: #fff;
-          font-size: 14px; padding: 5mm 5mm 30mm 5mm; 
+          font-size: 14px; padding: 5mm; 
         }
         #global-print-area h1, #global-print-area h2, #global-print-area h3, #global-print-area h4 { 
           margin: 0 0 5px 0; padding: 0; text-align: center; font-weight: 900 !important; color: #000 !important;
@@ -284,7 +284,7 @@ export const printContaMesa = (
     </div>
     
     <div class="divider"></div>
-    <div class="text-center" style="font-size: 11px; font-weight: bold; margin: 8px 0;">
+    <div class="text-center" style="font-size: 11px; font-weight: bold; margin: 3px 0 5px 0;">
       Obrigado pela preferência!<br/>
       Volte sempre! ★
     </div>
