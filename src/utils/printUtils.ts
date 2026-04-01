@@ -290,7 +290,7 @@ export const printContaMesa = (
     </div>
     
     <!-- Espaço da guilhotina -->
-    <div style="height: 30px;"></div>
+    <div style="height: 80px;"></div>
   `;
 
   silentPrint(html);
