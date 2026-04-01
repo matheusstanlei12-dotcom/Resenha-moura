@@ -14,26 +14,35 @@ export const silentPrint = (htmlContent: string) => {
       @media print {
         @page { margin: 0; }
         body * { visibility: hidden; }
-        #global-print-area, #global-print-area * { visibility: visible; }
+        #global-print-area, #global-print-area * { 
+          visibility: visible; 
+          color: #000 !important; 
+          -webkit-print-color-adjust: exact !important; 
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
         #global-print-area { 
           position: absolute; left: 0; top: 0; width: 80mm; 
-          font-family: 'Courier New', Courier, monospace; color: #000; background: #fff;
+          font-family: Arial, Helvetica, sans-serif !important; 
+          background: #fff;
           font-size: 14px; padding: 5mm; 
         }
-        #global-print-area h1, #global-print-area h2, #global-print-area h3, #global-print-area h4 { margin: 0 0 5px 0; padding: 0; text-align: center; font-weight: bold; }
-        #global-print-area h1 { font-size: 20px; }
-        #global-print-area h2 { font-size: 18px; }
+        #global-print-area h1, #global-print-area h2, #global-print-area h3, #global-print-area h4 { 
+          margin: 0 0 5px 0; padding: 0; text-align: center; font-weight: 900 !important; color: #000 !important;
+        }
+        #global-print-area h1 { font-size: 20px; text-transform: uppercase; }
+        #global-print-area h2 { font-size: 18px; text-transform: uppercase; }
         #global-print-area .divider { border-top: 1px dashed #000; margin: 8px 0; }
         #global-print-area .flex-between { display: flex; justify-content: space-between; align-items: flex-start; }
         #global-print-area .text-center { text-align: center; }
         #global-print-area .text-right { text-align: right; }
-        #global-print-area .bold { font-weight: bold; }
+        #global-print-area .bold { font-weight: 900 !important; }
         #global-print-area .mb-5 { margin-bottom: 5px; }
         #global-print-area .mb-10 { margin-bottom: 10px; }
         #global-print-area .table { width: 100%; border-collapse: collapse; }
         #global-print-area .table th, #global-print-area .table td { text-align: left; vertical-align: top; padding: 2px 0; }
         #global-print-area .table th.right, #global-print-area .table td.right { text-align: right; }
-        #global-print-area .item-row { display: flex; margin-bottom: 4px; font-weight: bold; font-size: 16px; }
+        #global-print-area .item-row { display: flex; margin-bottom: 4px; font-weight: 800; font-size: 16px; }
         #global-print-area .item-qtd { min-width: 30px; }
       }
     `;
@@ -228,8 +237,8 @@ export const printContaMesa = (
 
   const html = `
     <h2>RESENHA DO MOURA</h2>
-    <div class="text-center" style="font-size:10px;">Gastronomia & Entretenimento</div>
-    <div class="text-center mb-5" style="font-size:8px;">CNPJ: 42.418.207/0001-20</div>
+    <div class="text-center bold" style="font-size:12px;">★AQUI A RESENHA É DE VERDADE★</div>
+    <div class="text-center mb-5" style="font-size:8px; margin-top:2px;">CNPJ: 42.418.207/0001-20</div>
     <div class="divider"></div>
     <div class="flex-between" style="font-size:11px;">
       <span>Data: ${date}</span>
