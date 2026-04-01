@@ -66,9 +66,16 @@ export const Producao = () => {
       const printedIds = stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
       let hasNewToPrint = false;
 
+      const CATEGORIAS_IMPRESSAO = [
+        'PETISCO', 'PETISCOS', 'LANCHES', 'LANCHE', 'PORÇÕES', 'PORCOES', 
+        'PORÇÃO', 'PORCAO', 'COZINHA', 'PRATOS', 'PRATO', 'REFEIÇÕES', 
+        'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER',
+        'COMIDA', 'COMIDAS', 'CHURRASCO'
+      ];
+
       const unprinted = items.filter(i => 
         i.status === 'pendente' && 
-        (i.categoria?.toUpperCase() === 'PETISCO' || i.categoria?.toUpperCase() === 'PETISCOS') &&
+        CATEGORIAS_IMPRESSAO.includes((i.categoria || '').toUpperCase()) &&
         !printedIds.has(i.id)
       );
 

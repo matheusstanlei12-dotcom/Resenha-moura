@@ -1,68 +1,50 @@
 export const silentPrint = (htmlContent: string) => {
-  let iframe = document.getElementById('print-iframe') as HTMLIFrameElement;
-  if (!iframe) {
-    iframe = document.createElement('iframe');
-    iframe.id = 'print-iframe';
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = 'none';
-    document.body.appendChild(iframe);
-  }
+  let printArea = document.getElementById('global-print-area');
+  
+  if (!printArea) {
+    printArea = document.createElement('div');
+    printArea.id = 'global-print-area';
+    document.body.appendChild(printArea);
 
-  const doc = iframe.contentWindow?.document;
-  if (doc) {
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <style>
-            @page { margin: 0; }
-            body { 
-              font-family: 'Courier New', Courier, monospace; 
-              width: 80mm; /* Tamanho padrão de bobina térmica, mas funciona como uma faixinha na A4 */
-              margin: 0; 
-              padding: 5mm; 
-              color: #000; 
-              background: #fff; 
-              font-size: 14px; 
-            }
-            * { box-sizing: border-box; }
-            h1, h2, h3, h4 { margin: 0 0 5px 0; padding: 0; text-align: center; font-weight: bold; }
-            h1 { font-size: 20px; }
-            h2 { font-size: 18px; }
-            .divider { border-top: 1px dashed #000; margin: 8px 0; }
-            .flex-between { display: flex; justify-content: space-between; align-items: flex-start; }
-            .text-center { text-align: center; }
-            .text-right { text-align: right; }
-            .bold { font-weight: bold; }
-            .mb-5 { margin-bottom: 5px; }
-            .mb-10 { margin-bottom: 10px; }
-            .table { width: 100%; border-collapse: collapse; }
-            .table th, .table td { text-align: left; vertical-align: top; padding: 2px 0; }
-            .table th.right, .table td.right { text-align: right; }
-            .item-row { display: flex; margin-bottom: 4px; font-weight: bold; font-size: 16px; }
-            .item-qtd { min-width: 30px; }
-          </style>
-        </head>
-        <body>
-          ${htmlContent}
-        </body>
-      </html>
-    `);
-    doc.close();
-
-    // Aguarda carregar o conteúdo (como fontes/imagens se tivesse) para disparar
-    setTimeout(() => {
-      if (iframe.contentWindow) {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media screen {
+        #global-print-area { display: none !important; }
       }
-    }, 500);
+      @media print {
+        @page { margin: 0; }
+        body * { visibility: hidden; }
+        #global-print-area, #global-print-area * { visibility: visible; }
+        #global-print-area { 
+          position: absolute; left: 0; top: 0; width: 80mm; 
+          font-family: 'Courier New', Courier, monospace; color: #000; background: #fff;
+          font-size: 14px; padding: 5mm; 
+        }
+        #global-print-area h1, #global-print-area h2, #global-print-area h3, #global-print-area h4 { margin: 0 0 5px 0; padding: 0; text-align: center; font-weight: bold; }
+        #global-print-area h1 { font-size: 20px; }
+        #global-print-area h2 { font-size: 18px; }
+        #global-print-area .divider { border-top: 1px dashed #000; margin: 8px 0; }
+        #global-print-area .flex-between { display: flex; justify-content: space-between; align-items: flex-start; }
+        #global-print-area .text-center { text-align: center; }
+        #global-print-area .text-right { text-align: right; }
+        #global-print-area .bold { font-weight: bold; }
+        #global-print-area .mb-5 { margin-bottom: 5px; }
+        #global-print-area .mb-10 { margin-bottom: 10px; }
+        #global-print-area .table { width: 100%; border-collapse: collapse; }
+        #global-print-area .table th, #global-print-area .table td { text-align: left; vertical-align: top; padding: 2px 0; }
+        #global-print-area .table th.right, #global-print-area .table td.right { text-align: right; }
+        #global-print-area .item-row { display: flex; margin-bottom: 4px; font-weight: bold; font-size: 16px; }
+        #global-print-area .item-qtd { min-width: 30px; }
+      }
+    `;
+    document.head.appendChild(style);
   }
+
+  printArea.innerHTML = htmlContent;
+
+  setTimeout(() => {
+    window.print();
+  }, 100);
 };
 
 export const printPetiscoTicket = (mesa: string, garcom: string, pedidosIds: string[], itens: Array<{ qtd: number, nome: string }>) => {
@@ -226,6 +208,79 @@ export const printFechamentoZ = (
     </div>
     
     <!-- Espaço extra para cortar o papel corretamente -->
+    <div style="height: 30px;"></div>
+  `;
+
+  silentPrint(html);
+};
+
+export const printContaMesa = (
+  mesaNumero: string | null,
+  itens: Array<{ nome: string; quantidade: number; preco: number }>,
+  incluirTaxa: boolean
+) => {
+  const subtotal = itens.reduce((acc, i) => acc + i.preco * i.quantidade, 0);
+  const taxa = mesaNumero ? subtotal * 0.1 : 0;
+  const total = subtotal + (mesaNumero && incluirTaxa ? taxa : 0);
+  
+  const date = new Date().toLocaleDateString('pt-BR');
+  const time = new Date().toLocaleTimeString('pt-BR');
+
+  const html = `
+    <h2>RESENHA DO MOURA</h2>
+    <div class="text-center" style="font-size:10px;">Gastronomia & Entretenimento</div>
+    <div class="text-center mb-5" style="font-size:8px;">CNPJ: 42.418.207/0001-20</div>
+    <div class="divider"></div>
+    <div class="flex-between" style="font-size:11px;">
+      <span>Data: ${date}</span>
+      <span>Hora: ${time}</span>
+    </div>
+    <div class="bold mb-5" style="font-size: 14px; text-align: center;">
+      ${mesaNumero ? `MESA: ${mesaNumero}` : 'VENDA DE BALCÃO'}
+    </div>
+    <div class="divider"></div>
+    
+    <table class="table" style="font-size: 11px;">
+      <tr>
+        <th style="width: 15%">QTD</th>
+        <th style="width: 55%">ITEM</th>
+        <th style="width: 30%" class="right">TOTAL</th>
+      </tr>
+      ${itens.map(item => `
+        <tr>
+          <td>${item.quantidade}x</td>
+          <td>${item.nome.substring(0, 20)}</td>
+          <td class="right">${(item.preco * item.quantidade).toFixed(2)}</td>
+        </tr>
+      `).join('')}
+    </table>
+    
+    <div class="divider"></div>
+    <table class="table" style="font-size: 11px;">
+      <tr>
+        <td>SUBTOTAL:</td>
+        <td class="right">${subtotal.toFixed(2)}</td>
+      </tr>
+      ${mesaNumero && incluirTaxa && taxa > 0 ? `
+      <tr>
+        <td>TAXA SERV (10%):</td>
+        <td class="right">${taxa.toFixed(2)}</td>
+      </tr>
+      ` : ''}
+    </table>
+    
+    <div class="flex-between bold" style="font-size: 16px; margin-top: 5px;">
+      <span>TOTAL:</span>
+      <span>R$ ${total.toFixed(2)}</span>
+    </div>
+    
+    <div class="divider"></div>
+    <div class="text-center" style="font-size: 10px; margin-top: 15px;">
+      Obrigado pela preferência!<br/>
+      Volte sempre!
+    </div>
+    
+    <!-- Espaço da guilhotina -->
     <div style="height: 30px;"></div>
   `;
 

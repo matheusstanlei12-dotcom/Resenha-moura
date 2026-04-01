@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
 import { FechamentoCaixa } from '../components/FechamentoCaixa';
 import { AberturaCaixa } from '../components/AberturaCaixa';
+import { printContaMesa } from '../utils/printUtils';
 
 type TabType = 'mesas' | 'balcao' | 'historico' | 'cozinha' | 'fechamento';
 type PaymentMethod = 'dinheiro' | 'pix' | 'cartao' | 'debito' | 'credito';
@@ -484,49 +485,11 @@ export const Caixa = () => {
   };
 
   const handleImprimir = (itens: any[]) => {
-    import('jspdf').then(({ default: jsPDF }) => {
-      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [80, 160] });
-      const subtotal = itens.reduce((acc, i) => acc + (i.preco * i.quantidade), 0);
-      const taxa = selectedMesa ? subtotal * 0.1 : 0;
-      const total = subtotal + (selectedMesa && incluirTaxa ? taxa : 0);
-
-      doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-      doc.text('RESENHA DO MOURA', 40, 10, { align: 'center' });
-      doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-      doc.text('Gastronomia & Entretenimento', 40, 14, { align: 'center' });
-      doc.setFontSize(6);
-      doc.text('CNPJ: 42.418.207/0001-20', 40, 17, { align: 'center' });
-      doc.line(5, 20, 75, 20);
-      doc.setFontSize(8);
-      doc.text(`DATA: ${new Date().toLocaleDateString('pt-BR')}`, 5, 24);
-      doc.text(`HORA: ${new Date().toLocaleTimeString('pt-BR')}`, 75, 24, { align: 'right' });
-      doc.setFont('helvetica', 'bold');
-      doc.text(selectedMesa ? `MESA: ${selectedMesa.numero}` : 'VENDA DE BALCÃO', 5, 28);
-      doc.line(5, 30, 75, 30);
-      doc.setFontSize(7); doc.setFont('helvetica', 'bold');
-      doc.text('QTD', 5, 34); doc.text('ITENS', 15, 34); doc.text('TOTAL', 75, 34, { align: 'right' });
-      doc.line(5, 36, 75, 36);
-      let y = 40;
-      doc.setFont('helvetica', 'normal');
-      itens.forEach(item => {
-        doc.text(item.quantidade.toString(), 5, y);
-        doc.text(item.nome.substring(0, 28), 15, y);
-        doc.text(`${(item.preco * item.quantidade).toFixed(2)}`, 75, y, { align: 'right' });
-        y += 4;
-      });
-      doc.line(5, y, 75, y); y += 5;
-      doc.setFontSize(8);
-      doc.text('SUBTOTAL:', 45, y, { align: 'right' }); doc.text(`${subtotal.toFixed(2)}`, 75, y, { align: 'right' });
-      if (taxa > 0 && incluirTaxa) {
-        y += 4; doc.text('TAXA SERV (10%):', 45, y, { align: 'right' }); doc.text(`${taxa.toFixed(2)}`, 75, y, { align: 'right' });
-      }
-      y += 6; doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text('TOTAL:', 45, y, { align: 'right' }); doc.text(`R$ ${total.toFixed(2)}`, 75, y, { align: 'right' });
-      y += 12;
-      doc.setFontSize(7); doc.setFont('helvetica', 'italic');
-      doc.text('Obrigado pela preferência!', 40, y, { align: 'center' });
-      doc.save(`Recibo_Resenha_${Date.now()}.pdf`);
-    });
+    printContaMesa(
+      selectedMesa ? selectedMesa.numero.toString() : null,
+      itens.map(i => ({ nome: i.nome, quantidade: i.quantidade, preco: i.preco })),
+      incluirTaxa
+    );
   };
 
   const paymentTotals = useMemo(() => {
