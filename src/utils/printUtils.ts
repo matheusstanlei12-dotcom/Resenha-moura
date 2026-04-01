@@ -12,7 +12,7 @@ export const silentPrint = (htmlContent: string) => {
         #global-print-area { display: none !important; }
       }
       @media print {
-        @page { margin: 0; }
+        @page { size: 72mm auto; margin: 0 !important; }
         body * { visibility: hidden; }
         #global-print-area, #global-print-area * { 
           visibility: visible; 
@@ -284,13 +284,12 @@ export const printContaMesa = (
     </div>
     
     <div class="divider"></div>
-    <div class="text-center" style="font-size: 10px; margin-top: 15px;">
+    <br/><br/><br/>
+    <div class="text-center" style="font-size: 10px; margin-top: 5px;">
       Obrigado pela preferência!<br/>
       Volte sempre!
     </div>
-    
-    <!-- Espaço da guilhotina -->
-    <div style="height: 20mm; display: block;"></div>
+    <br/><br/><br/><br/><br/><br/>
   `;
 
   silentPrint(html);
