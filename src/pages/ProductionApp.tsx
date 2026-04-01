@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut } from 'lucide-react';
+import { LogOut, Printer } from 'lucide-react';
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
 import { printPetiscoTicket } from '../utils/printUtils';
 
@@ -314,6 +314,19 @@ export const Producao = () => {
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Sessão: {item.categoria}</p>
               
               <div className="d-flex gap-2">
+                <button 
+                  className="btn-outline" 
+                  style={{ padding: '0.5rem 0.8rem', flexShrink: 0 }}
+                  title="Reimprimir comanda"
+                  onClick={() => printPetiscoTicket(
+                    item.mesa.toString(),
+                    'Cozinha',
+                    [item.pedido_id],
+                    [{ qtd: item.quantidade, nome: item.produto_nome }]
+                  )}
+                >
+                  <Printer size={18} />
+                </button>
                 <button className="btn-success w-full" style={{ padding: '0.5rem' }} onClick={() => handleStatusChange(item.id)}>Marcar Pronto</button>
               </div>
             </div>
