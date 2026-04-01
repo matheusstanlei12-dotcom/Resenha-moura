@@ -1,6 +1,9 @@
-export const silentPrint = (htmlContent: string) => {
+// Fila de impressão para evitar sobreposição de pedidos
+const printQueue: string[] = [];
+let isPrinting = false;
+
+const initPrintArea = () => {
   let printArea = document.getElementById('global-print-area');
-  
   if (!printArea) {
     printArea = document.createElement('div');
     printArea.id = 'global-print-area';
@@ -49,12 +52,34 @@ export const silentPrint = (htmlContent: string) => {
     `;
     document.head.appendChild(style);
   }
+  return printArea;
+};
 
+const processQueue = () => {
+  if (isPrinting || printQueue.length === 0) return;
+
+  isPrinting = true;
+  const htmlContent = printQueue.shift()!;
+  const printArea = initPrintArea();
   printArea.innerHTML = htmlContent;
+
+  // Listener para detectar quando a impressão terminou
+  const onAfterPrint = () => {
+    window.removeEventListener('afterprint', onAfterPrint);
+    isPrinting = false;
+    // Esperar 500ms antes do próximo para a impressora processar
+    setTimeout(() => processQueue(), 500);
+  };
+  window.addEventListener('afterprint', onAfterPrint);
 
   setTimeout(() => {
     window.print();
-  }, 100);
+  }, 200);
+};
+
+export const silentPrint = (htmlContent: string) => {
+  printQueue.push(htmlContent);
+  processQueue();
 };
 
 export const printPetiscoTicket = (mesa: string, garcom: string, pedidosIds: string[], itens: Array<{ qtd: number, nome: string }>) => {
