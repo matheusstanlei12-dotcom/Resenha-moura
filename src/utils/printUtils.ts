@@ -284,12 +284,11 @@ export const printContaMesa = (
     </div>
     
     <div class="divider"></div>
-    <br/><br/><br/>
-    <div class="text-center" style="font-size: 10px; margin-top: 5px;">
+    <div class="text-center" style="font-size: 11px; font-weight: bold; margin: 8px 0;">
       Obrigado pela preferência!<br/>
-      Volte sempre!
+      Volte sempre! ★
     </div>
-    <br/><br/><br/><br/><br/><br/>
+    <div class="divider"></div>
   `;
 
   silentPrint(html);
