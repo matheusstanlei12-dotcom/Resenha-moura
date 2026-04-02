@@ -72,6 +72,13 @@ export const Dono = () => {
   const [newUserPassword, setNewUserPassword] = useState('');
   const [newUserRole, setNewUserRole] = useState('garcom');
   const [isCreatingUser, setIsCreatingUser] = useState(false);
+  
+  // Estados para troca de senha e remoção
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState<any>(null);
+  const [newPasswordForUser, setNewPasswordForUser] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+
 
   const fetchData = async () => {
     try {
@@ -81,7 +88,8 @@ export const Dono = () => {
       const { count } = await supabase.from('pedidos').select('id', { count: 'exact' }).neq('status', 'finalizado');
       setPedidosAtivosCount(count || 0);
 
-      const { data: profiles, error: e3 } = await supabase.from('profiles').select('*').not('role', 'eq', 'dono').order('role', { ascending: true });
+      // Buscar todos os perfis, inclusive o dono
+      const { data: profiles, error: e3 } = await supabase.from('profiles').select('*').order('role', { ascending: true });
       if (e3 && e3.message.includes('permission denied')) setError("Sem permissão para ver equipe.");
       setUsuarios(profiles || []);
 
@@ -399,6 +407,47 @@ export const Dono = () => {
     } catch (err: any) { alert("Erro: " + err.message); } finally { setIsCreatingUser(false); }
   };
 
+  const handleDeleteUser = async (user: any) => {
+    if (user.role === 'dono' && usuarios.filter(u => u.role === 'dono').length <= 1) {
+      alert("Não é possível remover o único proprietário do sistema!");
+      return;
+    }
+
+    if (confirm(`Tem certeza que deseja remover permanentemente o acesso de ${user.full_name}?`)) {
+      try {
+        const { data, error } = await supabase.rpc('delete_user_admin', { user_id: user.id });
+        if (error || (data && data.error)) throw new Error(error?.message || data.error);
+        alert("Usuário removido com sucesso!");
+        fetchData();
+      } catch (err: any) {
+        alert("Erro ao remover: " + err.message);
+      }
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!selectedUserForPassword || !newPasswordForUser) return;
+    setIsUpdatingPassword(true);
+    try {
+      const { data, error } = await supabase.rpc('update_user_password_admin', {
+        user_id: selectedUserForPassword.id,
+        new_password: newPasswordForUser
+      });
+      
+      if (error || (data && data.error)) throw new Error(error?.message || data.error);
+      
+      alert(`Senha de ${selectedUserForPassword.full_name} alterada com sucesso!`);
+      setIsPasswordModalOpen(false);
+      setNewPasswordForUser('');
+      setSelectedUserForPassword(null);
+    } catch (err: any) {
+      alert("Erro ao alterar senha: " + err.message);
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+
   const handleExcluirItemComanda = async (item: any, motivo: string) => {
     if (!item.id || !motivo.trim()) return;
 
@@ -599,7 +648,19 @@ export const Dono = () => {
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem' }}>Nome</th><th style={{ padding: '1rem' }}>Função</th><th style={{ padding: '1rem' }}>Ações</th></tr></thead>
-          <tbody>{usuarios.map(u => (<tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}><td style={{ padding: '1rem' }}>{u.full_name}</td><td style={{ padding: '1rem' }}>{u.role.toUpperCase()}</td><td style={{ padding: '1rem' }}><button style={{ color: 'var(--danger-color)' }}>Remover</button></td></tr>))}</tbody>
+          <tbody>{usuarios.map(u => (
+            <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              <td style={{ padding: '1rem' }}>{u.full_name}</td>
+              <td style={{ padding: '1rem' }}>{u.role.toUpperCase()}</td>
+              <td style={{ padding: '1rem' }}>
+                <div className="d-flex gap-2">
+                  <button onClick={() => { setSelectedUserForPassword(u); setIsPasswordModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Senha</button>
+                  <button onClick={() => handleDeleteUser(u)} className="btn-outline" style={{ color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Remover</button>
+                </div>
+              </td>
+            </tr>
+          ))}</tbody>
+
         </table>
       </div>
     </div>
@@ -1223,6 +1284,39 @@ export const Dono = () => {
       <main className="main-content">
         <div className="container">{renderContent()}</div>
       </main>
+
+      {/* Modal de Alteração de Senha */}
+      <AnimatePresence>
+        {isPasswordModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem' }}>Alterar Senha</h2>
+              <p style={{ fontSize: '0.85rem', opacity: 0.6, marginBottom: '1.5rem' }}>Defina uma nova senha para <b>{selectedUserForPassword?.full_name}</b>.</p>
+              
+              <div className="mb-6">
+                <label className="label-field">NOVA SENHA</label>
+                <input 
+                  type="password" 
+                  value={newPasswordForUser} 
+                  onChange={e => setNewPasswordForUser(e.target.value)} 
+                  placeholder="Mínimo 6 caracteres" 
+                  className="input-field"
+                  autoFocus
+                />
+              </div>
+
+              <div className="d-flex gap-3">
+                <button onClick={() => { setIsPasswordModalOpen(false); setNewPasswordForUser(''); }} className="btn-outline">Cancelar</button>
+                <button onClick={handleUpdatePassword} className="btn-primary" disabled={isUpdatingPassword || newPasswordForUser.length < 6}>
+                  {isUpdatingPassword ? 'Salvando...' : 'Salvar Senha'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
 
       {/* MODAL MANTATÓRIO: MOTIVO DA EXCLUSÃO (DONO) */}
       <AnimatePresence>
