@@ -19,6 +19,7 @@ export const Garcom = () => {
   const [selectedMesa, setSelectedMesa] = useState<any | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>('TODOS');
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [targetMesaId, setTargetMesaId] = useState<string>('');
@@ -250,7 +251,7 @@ export const Garcom = () => {
       <div className="container" style={{ paddingBottom: '10rem' }}>
          <OwnerViewBanner panelName="Garçom" />
          <header className="d-flex justify-between items-center mb-6">
-           <button onClick={() => { setSelectedMesa(null); setShowAddMenu(false); clearCart(); }} className="btn-outline" style={{ width: 'auto', padding: '0.4rem 0.8rem' }}>&larr; Voltar</button>
+           <button onClick={() => { setSelectedMesa(null); setShowAddMenu(false); clearCart(); setSearchTerm(''); }} className="btn-outline" style={{ width: 'auto', padding: '0.4rem 0.8rem' }}>&larr; Voltar</button>
            <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Mesa {selectedMesa.numero}</h2>
            <span style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '12px', background: `${getStatusColor(selectedMesa.status)}33`, color: getStatusColor(selectedMesa.status), fontWeight: 'bold' }}>
              {selectedMesa.status}
@@ -309,14 +310,27 @@ export const Garcom = () => {
                    </div>
                  )}
                  <div style={{ padding: '1rem' }}>
-                   <select value={activeCategory} onChange={(e) => setActiveCategory(e.target.value)} className="input-field mb-4">
-                     <option value="TODOS">Categorias</option>
+                   <div className="mb-4">
+                     <input 
+                       type="text" 
+                       placeholder="🔍 Pesquisar item..." 
+                       value={searchTerm} 
+                       onChange={(e) => setSearchTerm(e.target.value)} 
+                       className="input-field"
+                       style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '10px' }}
+                     />
+                   </div>
+                   <select value={activeCategory} onChange={(e) => { setActiveCategory(e.target.value); setSearchTerm(''); }} className="input-field mb-4" style={{ borderRadius: '10px' }}>
+                     <option value="TODOS">Todas Categorias</option>
                      {Array.from(new Set(produtos.map(p => p.categoria.toUpperCase()))).map(cat => (
                        <option key={cat as string} value={cat as string}>{cat}</option>
                      ))}
                    </select>
                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                     {produtos.filter(p => activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory).map(p => (
+                     {produtos.filter(p => 
+                        (activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory) &&
+                        (p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+                     ).map(p => (
                         <div key={p.id} onClick={() => p.estoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
                           <div style={{fontSize: '0.8rem', fontWeight: 600}}>{p.nome}</div>
                           <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem' }}>R$ {p.preco.toFixed(2)}</div>
