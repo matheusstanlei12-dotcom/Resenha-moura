@@ -37,7 +37,7 @@ export const Caixa = () => {
   const [cozinhaItems, setCozinhaItems] = useState<any[]>([]);
   const [printedItemIds, setPrintedItemIds] = useState<string[]>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [autoPrintKds, setAutoPrintKds] = useState(true);
+  const [autoPrintKds, setAutoPrintKds] = useState(false);
   const [selectedPedidoDetail, setSelectedPedidoDetail] = useState<any>(null);
   const [itemsPedidoDetail, setItemsPedidoDetail] = useState<any[]>([]);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);

@@ -387,7 +387,7 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
           />
         </div>
 
-        {dinheiroGaveta !== '' && (
+        {dinheiroGaveta !== '' && isGestor && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
             style={{ padding: '1rem', borderRadius: '12px', textAlign: 'center', background: gavetaConferida ? 'rgba(16,185,129,0.1)' : diferenca > 0 ? 'rgba(212,175,55,0.1)' : 'rgba(244,63,94,0.1)', border: `1px solid ${gavetaConferida ? 'rgba(16,185,129,0.3)' : diferenca > 0 ? 'rgba(212,175,55,0.3)' : 'rgba(244,63,94,0.3)'}` }}>
             {gavetaConferida ? (
