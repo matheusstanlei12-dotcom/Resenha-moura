@@ -111,6 +111,35 @@ select option {
   animation: spin 1s linear infinite;
 }
 
+/* Novas Classes Utilitárias de Responsividade */
+@media (max-width: 768px) {
+  .mobile-hide { display: none !important; }
+  .flex-col-mobile { flex-direction: column !important; }
+  .w-full-mobile { width: 100% !important; }
+}
+@media (min-width: 769px) {
+  .desktop-hide { display: none !important; }
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -167,27 +196,49 @@ h1, h2, h3, h4 { color: #fff; margin-bottom: 0.5rem; font-weight: 700; }
 }
 
 @media (max-width: 768px) {
-  .layout-container { flex-direction: column; }
+  .layout-container { flex-direction: column-reverse; height: 100vh; overflow: hidden; }
   .sidebar { 
     width: 100%; 
-    height: auto; 
-    position: sticky; 
-    top: 0;
-    padding: 0.75rem; 
+    height: 70px; 
+    position: fixed; 
+    bottom: 0;
+    left: 0;
+    padding: 0; 
     flex-direction: row; 
     align-items: center;
-    justify-content: space-between;
-    overflow-x: auto; 
+    justify-content: center;
+    overflow-x: hidden; 
     border-right: none; 
-    border-bottom: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color);
+    z-index: 9999;
   }
   .sidebar-nav { 
     flex-direction: row; 
-    gap: 0.25rem;
-    overflow-x: auto;
+    gap: 0;
+    width: 100%;
+    justify-content: space-around;
+    height: 100%;
   }
-  .sidebar-item { padding: 0.5rem 0.75rem; white-space: nowrap; font-size: 0.85rem; }
+  .sidebar-item { 
+    flex-direction: column; 
+    gap: 4px; 
+    padding: 8px 0; 
+    font-size: 0.65rem; 
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0;
+    height: 100%;
+  }
+  .sidebar-item span { text-align: center; font-weight: 800; }
+  .sidebar-item svg { width: 20px; height: 20px; }
   .sidebar-logo { display: none; }
+  
+  .main-content { 
+    padding: 1.25rem; 
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+  }
 }
 
 .animate-fade-in { animation: fadeIn 0.3s ease-in-out forwards; }

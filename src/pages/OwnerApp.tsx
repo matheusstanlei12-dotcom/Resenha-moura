@@ -562,7 +562,7 @@ export const Dono = () => {
           <p className="text-muted">Painel VIP - Controle Total do Estabelecimento.</p>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+      <div className="stat-grid mb-6">
         <KPIItem title="Receita Bruta" value={`R$ ${faturamento.toFixed(2).replace('.', ',')}`} icon={<TrendingUp color="#d4af37" />} color="#d4af37" trend="+12%" />
         <KPIItem title="Equipe Resenha" value={usuarios.length.toString()} icon={<UsersIcon color="#10b981" />} color="#10b981" trend="Membros" />
         <KPIItem title="Pedidos Ativos" value={pedidosAtivosCount.toString()} icon={<Utensils color="#3b82f6" />} color="#3b82f6" trend="Cozinha" />
@@ -570,7 +570,7 @@ export const Dono = () => {
       </div>
       
       <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fff' }}>Receita por Forma de Pagamento</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+      <div className="stat-grid mb-10">
         <KPIItem title="PIX" value={`R$ ${paymentTotals.pix.toFixed(2).replace('.', ',')}`} icon={<QrCode color="#10b981" />} color="#10b981" trend="Digital" />
         <KPIItem title="DINHEIRO" value={`R$ ${paymentTotals.dinheiro.toFixed(2).replace('.', ',')}`} icon={<Banknote color="#f59e0b" />} color="#f59e0b" trend="Cédulas" />
         <KPIItem title="DÉBITO" value={`R$ ${paymentTotals.debito.toFixed(2).replace('.', ',')}`} icon={<CreditCard color="#3b82f6" />} color="#3b82f6" trend="Cartão" />
@@ -578,7 +578,7 @@ export const Dono = () => {
         {paymentTotals.outrosCartoes > 0 && <KPIItem title="CARTÕES ANTIGOS" value={`R$ ${paymentTotals.outrosCartoes.toFixed(2).replace('.', ',')}`} icon={<CreditCard color="#888" />} color="#888" trend="Legado" />}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
         <div className="card" style={{ padding: '1.5rem', gridColumn: '1 / -1' }}>
            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>Vendas Diárias (Últimos 7 dias)</h3>
            <div style={{ height: '250px' }}>

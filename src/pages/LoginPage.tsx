@@ -78,7 +78,7 @@ export const LoginPage = () => {
       <div 
         className="card" 
         style={{ 
-          width: '100%', 
+          width: '90%', 
           maxWidth: '400px', 
           padding: '2.5rem', 
           zIndex: 1, 

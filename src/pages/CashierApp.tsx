@@ -545,8 +545,8 @@ export const Caixa = () => {
   if (loading) return <div className="layout-container d-flex justify-center items-center" style={{height: '100vh', background: '#000', color: 'var(--primary-color)'}}>CARREGANDO CAIXA RESENHA...</div>;
 
   return (
-    <div className="layout-container" style={{ minHeight: '100vh', background: '#0a0a0a', color: '#fff' }}>
-      <aside className="sidebar" style={{ width: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1.5rem 0' }}>
+    <div className="layout-container" style={{ background: '#0a0a0a', color: '#fff' }}>
+      <aside className="sidebar" style={{ width: '100px' }}>
          <div style={{ marginBottom: '3rem' }}>
            <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
          </div>
@@ -568,7 +568,7 @@ export const Caixa = () => {
          <button onClick={() => signOut()} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}><LogOut size={28}/></button>
       </aside>
 
-      <main className="main-content" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+      <main className="main-content">
         <OwnerViewBanner panelName="Caixa" />
         <header className="d-flex justify-between items-center mb-6">
            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>
@@ -604,7 +604,8 @@ export const Caixa = () => {
               )}
 
               {activeTab === 'balcao' && (
-                <motion.div key="balcao" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '1.5rem', height: 'calc(100vh - 180px)' }}>
+                <motion.div key="balcao" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+                  style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 768 ? '1fr 350px' : '1fr', gap: '1.5rem', height: 'auto' }}>
                     <div className="d-flex flex-col gap-3">
                        <div style={{ position: 'relative' }}>
                           <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.4 }} />
@@ -692,7 +693,7 @@ export const Caixa = () => {
       <AnimatePresence>
         {isCheckoutOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', zIndex: 10000 }}>
-             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="card" style={{ width: '100vw', height: '100vh', maxWidth: 'none', maxHeight: 'none', borderRadius: 0, padding: 0, overflow: 'hidden', display: 'grid', gridTemplateColumns: '1fr 380px', alignItems: 'stretch' }}>
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="card" style={{ width: '100vw', height: '100vh', maxWidth: 'none', maxHeight: 'none', borderRadius: 0, padding: 0, overflowY: 'auto', display: 'grid', gridTemplateColumns: window.innerWidth > 992 ? '1fr 380px' : '1fr', alignItems: 'stretch' }}>
                 {/* Coluna Esquerda: Itens e Conferência */}
                 <div style={{ padding: '1.2rem', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                    <div className="d-flex justify-between items-center mb-4">

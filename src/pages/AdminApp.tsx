@@ -402,23 +402,23 @@ export const Administracao = () => {
   );
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#060608', color: '#fff', overflow: 'hidden' }}>
+    <div className="layout-container" style={{ background: '#060608', color: '#fff' }}>
       {/* SIDEBAR */}
-      <aside style={{ width: '240px', flexShrink: 0, background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', padding: '1.5rem 1rem', overflowY: 'auto' }}>
+      <aside className="sidebar" style={{ width: '240px' }}>
 
         <div style={{ marginBottom: '2.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1rem' }}>
             <img src="/logo.png" alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'contain', border: '1px solid #d4af37' }} />
-            <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#d4af37', letterSpacing: '1px' }}>RESENHA DO MOURA</div>
+            <div className="mobile-hide" style={{ fontSize: '1.1rem', fontWeight: 900, color: '#d4af37', letterSpacing: '1px' }}>RESENHA DO MOURA</div>
           </div>
 
-          <div style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginTop: '2px' }}>ADMINISTRAÇÃO</div>
-          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
+          <div className="mobile-hide" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginTop: '2px' }}>ADMINISTRAÇÃO</div>
+          <div className="mobile-hide" style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
             {profile?.full_name}
           </div>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 }}>
+        <nav className="sidebar-nav">
           <SideItem id="dashboard" icon={<BarChart2 size={18}/>} label="Dashboard" />
           <SideItem id="estoque" icon={<Package size={18}/>} label="Estoque" />
           <SideItem id="mesas" icon={<LayoutGrid size={18}/>} label="Mesas" />
@@ -431,17 +431,15 @@ export const Administracao = () => {
         </nav>
 
 
-        <button onClick={() => signOut()} style={{
-          display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px',
-          borderRadius: '10px', border: 'none', cursor: 'pointer',
-          background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontWeight: 600, fontSize: '0.85rem', width: '100%'
+        <button onClick={() => signOut()} className="sidebar-item" style={{
+          background: 'rgba(239,68,68,0.08)', color: '#ef4444', marginTop: 'auto'
         }}>
-          <LogOut size={16}/> Sair
+          <LogOut size={16}/> <span className="mobile-hide">Sair</span>
         </button>
       </aside>
 
       {/* MAIN */}
-      <main style={{ flex: 1, overflowY: 'auto', padding: '2rem' }}>
+      <main className="main-content">
         <OwnerViewBanner panelName="Administrador" />
         <AnimatePresence mode="wait">
           {/* === DASHBOARD === */}
@@ -452,7 +450,7 @@ export const Administracao = () => {
                 Visão geral das operações em tempo real — {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div className="stat-grid mb-8">
                 <StatCard icon={<LayoutGrid size={22} color="#3b82f6"/>} label="Mesas Ocupadas" value={`${mesasOcupadas}/${mesas.length}`} sub={`${mesas.filter(m => m.status === 'aguardando conta').length} aguardando conta`} color="#3b82f6" />
                 <StatCard icon={<AlertTriangle size={22} color="#f59e0b"/>} label="Estoque Crítico" value={itensCriticos} sub={itensEsgotados > 0 ? `${itensEsgotados} esgotados` : 'Nenhum esgotado'} color="#f59e0b" />
                 <StatCard icon={<ShoppingBag size={22} color="#10b981"/>} label="Pedidos Ativos" value={pedidosAtivos.length} sub="Mesas atendidas agora" color="#10b981" />

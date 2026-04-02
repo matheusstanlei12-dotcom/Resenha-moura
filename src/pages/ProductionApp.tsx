@@ -172,26 +172,28 @@ export const Producao = () => {
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '8rem' }}>
       <OwnerViewBanner panelName="Cozinha / Bar" />
-      <header className="d-flex justify-between items-center" style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+      <header className="d-flex justify-between items-center flex-col-mobile" style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
           <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Produção (KDS)</h2>
         </div>
-        <div className="d-flex gap-3">
-          <Link to="/" className="btn-outline" style={{ width: 'auto', padding: '0.5rem 1rem' }}>Voltar</Link>
+        <div className="d-flex gap-3 w-full-mobile">
+          <Link to="/" className="btn-outline" style={{ flex: 1, textAlign: 'center', padding: '0.5rem 1rem' }}>Voltar</Link>
           <button 
             onClick={() => signOut()} 
             style={{ 
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '0.5rem',
               color: 'var(--danger-color)',
-              background: 'none',
-              border: 'none',
-              padding: '0.5rem',
+              background: 'rgba(239, 63, 94, 0.1)',
+              borderRadius: '8px',
+              padding: '0.5rem 1rem',
               fontSize: '1rem',
               fontWeight: 600,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              flex: 1
             }}
           >
             <LogOut size={20} />
@@ -210,16 +212,17 @@ export const Producao = () => {
         </div>
       )}
 
-      <div className="d-flex gap-4" style={{ marginBottom: '2rem' }}>
+      <div className="d-flex gap-4 flex-col-mobile" style={{ marginBottom: '2rem' }}>
         <button 
-          className="btn-outline" 
+          className="btn-outline w-full-mobile" 
           style={{ 
             position: 'relative',
             backgroundColor: filter === 'cozinha' ? 'var(--primary-color)' : 'transparent', 
             color: filter === 'cozinha' ? '#000' : 'var(--primary-color)',
             padding: '1rem 2rem',
             fontSize: '1.1rem',
-            fontWeight: 700
+            fontWeight: 700,
+            flex: 1
           }}
           onClick={() => setFilter('cozinha')}
         >
@@ -231,14 +234,15 @@ export const Producao = () => {
           )}
         </button>
         <button 
-          className="btn-outline" 
+          className="btn-outline w-full-mobile" 
           style={{ 
             position: 'relative',
             backgroundColor: filter === 'bar' ? 'var(--primary-color)' : 'transparent', 
             color: filter === 'bar' ? '#000' : 'var(--primary-color)',
             padding: '1rem 2rem',
             fontSize: '1.1rem',
-            fontWeight: 700
+            fontWeight: 700,
+            flex: 1
           }}
           onClick={() => setFilter('bar')}
         >
