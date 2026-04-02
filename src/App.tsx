@@ -77,7 +77,7 @@ export default function App() {
           <Route path="/c/:qr_code/*" element={<CustomerApp />} />
           
           {/* Protected Routes for Staff */}
-          <Route path="/garcom" element={<ProtectedRoute allowedRoles={['garcom']}><Garcom /></ProtectedRoute>} />
+          <Route path="/garcom" element={<ProtectedRoute allowedRoles={['garcom', 'admin', 'dono', 'caixa']}><Garcom /></ProtectedRoute>} />
           <Route path="/producao" element={<ProtectedRoute allowedRoles={['cozinha']}><Producao /></ProtectedRoute>} />
           <Route path="/caixa" element={<ProtectedRoute allowedRoles={['caixa', 'garcom']}><Caixa /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><Administracao /></ProtectedRoute>} />
