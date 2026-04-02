@@ -241,33 +241,8 @@ export const Garcom = () => {
 
   if (loading) return <div className="container text-center" style={{padding: '5rem'}}><p>Carregando...</p></div>;
 
-  // VISÃO DO CAIXA INTEGRADA
-  if (activeView === 'caixa') {
-    return (
-      <div className="container" style={{ minHeight: '100vh', padding: 0 }}>
-        <header className="d-flex justify-between items-center mb-4 p-4" style={{ background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid var(--border-color)' }}>
-          <div className="d-flex gap-4">
-            <button 
-              onClick={() => setActiveView('atendimento')}
-              style={{ padding: '8px 20px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid #333', fontWeight: 600, cursor: 'pointer' }}
-            >
-              🏠 Atendimento
-            </button>
-            <button 
-              style={{ padding: '8px 20px', borderRadius: '10px', background: 'var(--primary-color)', color: '#000', border: 'none', fontWeight: 800 }}
-            >
-              📊 Caixa
-            </button>
-          </div>
-          <button onClick={() => signOut()} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}><LogOut size={24}/></button>
-        </header>
-        <Caixa isEmbedded={true} />
-      </div>
-    );
-  }
-
-  // VISÃO DA MESA ESPECÍFICA
-  if (selectedMesa) {
+  // VISÃO DA MESA ESPECÍFICA (Ainda dentro do Atendimento)
+  if (selectedMesa && activeView === 'atendimento') {
     const mesaPedidos = pedidos.filter(p => p.mesa_id === selectedMesa.id);
     const totalGasto = mesaPedidos.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
 
@@ -378,7 +353,7 @@ export const Garcom = () => {
     );
   }
 
-  // VISÃO GERAL DE MESAS
+  // ESTRUTURA PRINCIPAL (Mesas ou Caixa)
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '2rem' }}>
       <OwnerViewBanner panelName="Garçom" />
@@ -400,26 +375,32 @@ export const Garcom = () => {
         <button onClick={() => signOut()} style={{ color: 'var(--danger-color)', background: 'none', border: 'none', cursor: 'pointer' }}><LogOut size={24} /></button>
       </header>
 
-      {!monitoringActive && (
-        <div className="card mb-6 text-center" style={{background: 'rgba(212,175,55,0.1)', border: '1px solid var(--primary-color)'}}>
-           <p className="mb-4">Ative os alertas para receber notificações de chamados e pedidos prontos.</p>
-           <button onClick={startMonitoring} className="btn-primary" style={{width: 'auto', padding: '8px 20px'}}>Ativar Alertas 🔔</button>
-        </div>
-      )}
+      {activeView === 'atendimento' ? (
+        <>
+          {!monitoringActive && (
+            <div className="card mb-6 text-center" style={{background: 'rgba(212,175,55,0.1)', border: '1px solid var(--primary-color)'}}>
+               <p className="mb-4">Ative os alertas para receber notificações de chamados e pedidos prontos.</p>
+               <button onClick={startMonitoring} className="btn-primary" style={{width: 'auto', padding: '8px 20px'}}>Ativar Alertas 🔔</button>
+            </div>
+          )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem' }}>
-        {mesas.map(mesa => (
-          <div key={mesa.id} onClick={() => setSelectedMesa(mesa)} className="card text-center" style={{ borderTop: `4px solid ${getStatusColor(mesa.status)}`, cursor: 'pointer' }}>
-            <h2 style={{ fontSize: '2.5rem', margin: '0.5rem 0' }}>{mesa.numero}</h2>
-            <span style={{fontSize: '0.7rem', fontWeight: 700, opacity: 0.7, textTransform: 'uppercase'}}>{mesa.status}</span>
-            {mesa.precisa_garcom && (
-               <div className="mt-4">
-                  <button onClick={(e) => { e.stopPropagation(); handleAtenderChamado(mesa.id); }} className="btn-danger p-2" style={{fontSize: '0.7rem', animation: 'pulse 1s infinite'}}>ATENDER CHAMADO</button>
-               </div>
-            )}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem' }}>
+            {mesas.map(mesa => (
+              <div key={mesa.id} onClick={() => setSelectedMesa(mesa)} className="card text-center" style={{ borderTop: `4px solid ${getStatusColor(mesa.status)}`, cursor: 'pointer' }}>
+                <h2 style={{ fontSize: '2.5rem', margin: '0.5rem 0' }}>{mesa.numero}</h2>
+                <span style={{fontSize: '0.7rem', fontWeight: 700, opacity: 0.7, textTransform: 'uppercase'}}>{mesa.status}</span>
+                {mesa.precisa_garcom && (
+                   <div className="mt-4">
+                      <button onClick={(e) => { e.stopPropagation(); handleAtenderChamado(mesa.id); }} className="btn-danger p-2" style={{fontSize: '0.7rem', animation: 'pulse 1s infinite'}}>ATENDER CHAMADO</button>
+                   </div>
+                )}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      ) : (
+        <Caixa isEmbedded={true} />
+      )}
     </div>
   );
 };
