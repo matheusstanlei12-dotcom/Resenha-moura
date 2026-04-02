@@ -484,6 +484,9 @@ export const Garcom = () => {
           <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Painel do Garçom</h2>
         </div>
         <div className="d-flex items-center gap-4">
+          <Link to="/caixa" className="btn-outline" style={{ fontSize: '0.8rem', padding: '6px 12px', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>
+            📊 Ir para o Caixa
+          </Link>
           <div className="d-flex gap-2 text-muted" style={{ fontSize: '0.85rem' }}>
             <span style={{ color: 'var(--success-color)' }}>Livre ({countLivre})</span>
             <span style={{ color: 'var(--danger-color)' }}>Ocupada ({countOcupada})</span>

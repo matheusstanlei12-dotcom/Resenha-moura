@@ -79,7 +79,7 @@ export default function App() {
           {/* Protected Routes for Staff */}
           <Route path="/garcom" element={<ProtectedRoute allowedRoles={['garcom']}><Garcom /></ProtectedRoute>} />
           <Route path="/producao" element={<ProtectedRoute allowedRoles={['cozinha']}><Producao /></ProtectedRoute>} />
-          <Route path="/caixa" element={<ProtectedRoute allowedRoles={['caixa']}><Caixa /></ProtectedRoute>} />
+          <Route path="/caixa" element={<ProtectedRoute allowedRoles={['caixa', 'garcom']}><Caixa /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><Administracao /></ProtectedRoute>} />
           <Route path="/dono" element={<ProtectedRoute allowedRoles={['dono']}><Dono /></ProtectedRoute>} />
         </Routes>

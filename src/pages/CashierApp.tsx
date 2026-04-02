@@ -562,6 +562,11 @@ export const Caixa = () => {
            </h1>
            <div className="d-flex items-center gap-4">
               <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>LOGADO COMO: <b style={{color: '#fff'}}>{profile?.full_name?.toUpperCase()}</b></span>
+              {profile?.role === 'garcom' && (
+                <Link to="/garcom" className="btn-outline" style={{ fontSize: '0.7rem', borderColor: 'var(--success-color)', color: 'var(--success-color)' }}>
+                  🏃 Painel Garçom
+                </Link>
+              )}
               <Link to="/" className="btn-outline" style={{ fontSize: '0.7rem' }}>PAINEL GERAL</Link>
            </div>
         </header>
