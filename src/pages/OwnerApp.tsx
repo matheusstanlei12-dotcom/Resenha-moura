@@ -812,8 +812,7 @@ export const Dono = () => {
 
   const renderRendimentos = () => {
     const totalBruto = historicoCompleto.reduce((acc, p) => acc + Number(p.total), 0);
-    const totalTaxa = historicoCompleto.reduce((acc, p) => p.mesa_id ? acc + (Number(p.total) / 11) : acc, 0);
-    const totalLiquido = totalBruto - totalTaxa;
+    const totalLiquido = totalBruto;
 
     const handleImprimirRendimentos = () => {
        import('jspdf').then(({ default: jsPDF }) => {
@@ -822,22 +821,19 @@ export const Dono = () => {
 
           doc.setFontSize(12); doc.text(`Data: ${new Date().toLocaleDateString()}`, 10, 25);
           doc.text('--- RESUMO FINANCEIRO ---', 10, 35);
-          doc.text(`Total Bruto Geral: R$ ${totalBruto.toFixed(2)}`, 10, 45);
-          doc.text(`Total Consumo (Pedidos): R$ ${totalLiquido.toFixed(2)}`, 10, 52);
-          doc.text(`Total Taxa de Serviço: R$ ${totalTaxa.toFixed(2)}`, 10, 59);
-          doc.line(10, 65, 200, 65); doc.text('LISTA DE PEDIDOS', 10, 75);
+          doc.text(`Total Faturamento: R$ ${totalBruto.toFixed(2)}`, 10, 45);
+          doc.text(`Total Pedidos: R$ ${totalLiquido.toFixed(2)}`, 10, 52);
+          doc.line(10, 60, 200, 60); doc.text('LISTA DE PEDIDOS', 10, 70);
           
-          let y = 85; doc.setFontSize(10);
-          doc.text('ID', 10, y); doc.text('TIPO', 40, y); doc.text('TAXA', 80, y); doc.text('PEDIDO', 120, y); doc.text('TOTAL', 160, y);
+          let y = 80; doc.setFontSize(10);
+          doc.text('ID', 10, y); doc.text('TIPO', 60, y); doc.text('VALOR', 120, y); doc.text('TOTAL', 160, y);
           doc.line(10, y+2, 200, y+2); y += 8;
 
+
           historicoCompleto.forEach(v => {
-             const taxa = v.mesa_id ? (Number(v.total) / 11) : 0;
-             const liquido = Number(v.total) - taxa;
              doc.text(v.id.split('-')[0].toUpperCase(), 10, y);
-             doc.text(v.mesa_id ? `Mesa ${v.mesas?.numero}` : 'Balcão', 40, y);
-             doc.text(`R$ ${taxa.toFixed(2)}`, 80, y);
-             doc.text(`R$ ${liquido.toFixed(2)}`, 120, y);
+             doc.text(v.mesa_id ? `Mesa ${v.mesas?.numero}` : 'Balcão', 60, y);
+             doc.text(`R$ ${Number(v.total).toFixed(2)}`, 120, y);
              doc.text(`R$ ${Number(v.total).toFixed(2)}`, 160, y);
              y += 6; if (y > 270) { doc.addPage(); y = 20; }
           });
@@ -852,29 +848,27 @@ export const Dono = () => {
            <button className="btn-primary" onClick={handleImprimirRendimentos} style={{ width: 'auto' }}>📄 Baixar PDF Rendimentos</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
-           <KPIItem title="Faturamento Bruto" value={`R$ ${totalBruto.toFixed(2)}`} icon={<TrendingUp color="#d4af37" />} color="#d4af37" trend="Total" />
-           <KPIItem title="Consumo (Pedidos)" value={`R$ ${totalLiquido.toFixed(2)}`} icon={<Package color="#10b981" />} color="#10b981" trend="Líquido" />
-           <KPIItem title="Taxa de Serviço (10%)" value={`R$ ${totalTaxa.toFixed(2)}`} icon={<Star color="#3b82f6" />} color="#3b82f6" trend="Garçom" />
+           <KPIItem title="Faturamento Total" value={`R$ ${totalBruto.toFixed(2)}`} icon={<TrendingUp color="#d4af37" />} color="#d4af37" trend="Total" />
+           <KPIItem title="Consumo Real" value={`R$ ${totalLiquido.toFixed(2)}`} icon={<Package color="#10b981" />} color="#10b981" trend="Vendas" />
+
         </div>
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <tr><th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.7rem' }}>ID</th><th style={{ padding: '1rem', textAlign: 'left' }}>TIPO</th><th style={{ padding: '1rem', textAlign: 'left' }}>CONSUMO</th><th style={{ padding: '1rem', textAlign: 'left' }}>TAXA SERV.</th><th style={{ padding: '1rem', textAlign: 'right' }}>TOTAL</th></tr>
+                <tr><th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.7rem' }}>ID</th><th style={{ padding: '1rem', textAlign: 'left' }}>TIPO</th><th style={{ padding: '1rem', textAlign: 'left' }}>CONSUMO</th><th style={{ padding: '1rem', textAlign: 'right' }}>TOTAL</th></tr>
               </thead>
               <tbody>
                 {historicoCompleto.map(v => {
-                   const taxa = v.mesa_id ? (Number(v.total || 0) / 11) : 0;
-                   const consumo = Number(v.total || 0) - taxa;
-                   const displayId = v.id ? v.id.split('-')[0].toUpperCase() : '---';
-                   return (
-                     <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                       <td style={{ padding: '1rem', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'monospace' }}>#{displayId}</td>
-                       <td style={{ padding: '1rem' }}>{v.mesa_id ? <span style={{ color: 'var(--primary-color)', fontWeight: 700 }}>MESA {v.mesas?.numero}</span> : <span style={{ color: 'var(--success-color)', fontWeight: 700 }}>BALCÃO</span>}</td>
-                       <td style={{ padding: '1rem' }}>R$ {consumo.toFixed(2)}</td>
-                       <td style={{ padding: '1rem', color: v.mesa_id ? '#d4af37' : 'inherit' }}>{v.mesa_id ? `R$ ${taxa.toFixed(2)}` : '---'}</td>
-                       <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800 }}>R$ {Number(v.total || 0).toFixed(2)}</td>
-                     </tr>
-                   );
+                    const consumo = Number(v.total || 0);
+                    const displayId = v.id ? v.id.split('-')[0].toUpperCase() : '---';
+                    return (
+                      <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td style={{ padding: '1rem', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'monospace' }}>#{displayId}</td>
+                        <td style={{ padding: '1rem' }}>{v.mesa_id ? <span style={{ color: 'var(--primary-color)', fontWeight: 700 }}>MESA {v.mesas?.numero}</span> : <span style={{ color: 'var(--success-color)', fontWeight: 700 }}>BALCÃO</span>}</td>
+                        <td style={{ padding: '1rem' }}>R$ {consumo.toFixed(2)}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 800 }}>R$ {Number(v.total || 0).toFixed(2)}</td>
+                      </tr>
+                    );
                 })}
               </tbody>
            </table>
@@ -1047,7 +1041,7 @@ export const Dono = () => {
                                     const statusColor = Math.abs(diferenca) < 0.1 ? '#10b981' : diferenca > 0 ? '#d4af37' : '#ef4444';
                                     
                                     const totalOS = t.pedidos?.reduce((acc: number, p: any) => acc + Number(p.total), 0) || 0;
-                                    const totalTaxas = t.pedidos?.filter((p: any) => p.mesa_id).reduce((acc: number, p: any) => acc + (Number(p.total) / 11), 0) || 0;
+                                    const totalTaxas = 0;
 
                                     return (
                                         <div key={t.id} style={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', overflow: 'hidden' }}>
@@ -1081,8 +1075,8 @@ export const Dono = () => {
                                                             <div style={{ fontWeight: 800, color: 'var(--primary-color)' }}>R$ {totalOS.toFixed(2)}</div>
                                                         </div>
                                                         <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>TAXAS (10%)</div>
-                                                            <div style={{ fontWeight: 800, color: '#a78bfa' }}>R$ {totalTaxas.toFixed(2)}</div>
+                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>PEDIDOS (TOTAL)</div>
+                                                            <div style={{ fontWeight: 800, color: '#a78bfa' }}>R$ {totalOS.toFixed(2)}</div>
                                                         </div>
                                                         <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
                                                             <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>FUNDO DE TROCO</div>

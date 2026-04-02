@@ -82,7 +82,7 @@ export const Caixa = () => {
   const [pagamentos, setPagamentos] = useState<Payment[]>([]);
   const [dividirPor, setDividirPor] = useState(1);
   const [splitPayments, setSplitPayments] = useState<{method: PaymentMethod | null, amount: number}[]>([]);
-  const [incluirTaxa, setIncluirTaxa] = useState(true);
+  const [incluirTaxa, setIncluirTaxa] = useState(false);
   const [customAmount, setCustomAmount] = useState<string>('');
   const [valorRecebido, setValorRecebido] = useState<string>('');
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
@@ -251,7 +251,7 @@ export const Caixa = () => {
     setCustomAmount('');
     setDividirPor(1);
     setSplitPayments([]);
-    setIncluirTaxa(true);
+    setIncluirTaxa(false);
     setSelectedMethod(null);
     
     // Buscar pedidos da mesa
@@ -298,9 +298,9 @@ export const Caixa = () => {
     return checkoutItens.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
   }, [checkoutItens]);
 
-  // Taxa de serviço opcional
-  const taxaServico = (selectedMesa && incluirTaxa) ? totalCheckout * 0.1 : 0;
-  const totalComTaxa = totalCheckout + taxaServico;
+  // Taxa de serviço removida
+  const taxaServico = 0;
+  const totalComTaxa = totalCheckout;
   const totalPago = pagamentos.reduce((acc, p) => acc + Number(p.amount), 0);
   const totalRestante = Math.max(0, totalComTaxa - totalPago);
   const valorIndividual = dividirPor > 1 ? totalComTaxa / dividirPor : totalComTaxa;
@@ -717,15 +717,6 @@ export const Caixa = () => {
 
                    {selectedMesa && (
                      <div className="card mb-4" style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)' }}>
-                        <div className="d-flex justify-between items-center mb-4">
-                           <div className="d-flex items-center gap-2">
-                             <div onClick={() => setIncluirTaxa(!incluirTaxa)} style={{ width: '40px', height: '20px', background: incluirTaxa ? 'var(--success-color)' : '#333', borderRadius: '10px', position: 'relative', cursor: 'pointer' }}>
-                                <div style={{ position: 'absolute', top: '2px', left: incluirTaxa ? '22px' : '2px', width: '16px', height: '16px', background: '#fff', borderRadius: '50%', transition: '0.2s' }}></div>
-                             </div>
-                             <span style={{ fontSize: '0.8rem' }}>TAXA DE SERVIÇO (10%)</span>
-                           </div>
-                           <b>R$ {taxaServico.toFixed(2)}</b>
-                        </div>
                          <div className="d-flex justify-between items-center">
                             <div className="d-flex flex-col">
                                <span style={{ opacity: 0.6 }}>DIVIDIR CONTA POR:</span>

@@ -256,8 +256,7 @@ export const printContaMesa = (
   incluirTaxa: boolean
 ) => {
   const subtotal = itens.reduce((acc, i) => acc + i.preco * i.quantidade, 0);
-  const taxa = mesaNumero ? subtotal * 0.1 : 0;
-  const total = subtotal + (mesaNumero && incluirTaxa ? taxa : 0);
+  const total = subtotal;
   
   const date = new Date().toLocaleDateString('pt-BR');
   const time = new Date().toLocaleTimeString('pt-BR');
@@ -294,15 +293,9 @@ export const printContaMesa = (
     <div class="divider"></div>
     <table class="table" style="font-size: 11px;">
       <tr>
-        <td>SUBTOTAL:</td>
+        <td>TOTAL:</td>
         <td class="right">${subtotal.toFixed(2)}</td>
       </tr>
-      ${mesaNumero && incluirTaxa && taxa > 0 ? `
-      <tr>
-        <td>TAXA SERV (10%):</td>
-        <td class="right">${taxa.toFixed(2)}</td>
-      </tr>
-      ` : ''}
     </table>
     
     <div class="flex-between bold" style="font-size: 16px; margin-top: 5px;">
