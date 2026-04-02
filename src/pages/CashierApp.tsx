@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
 import { FechamentoCaixa } from '../components/FechamentoCaixa';
 import { AberturaCaixa } from '../components/AberturaCaixa';
-import { printContaMesa } from '../utils/printUtils';
+import { printContaMesa, printPetiscoTicket } from '../utils/printUtils';
 
 type TabType = 'mesas' | 'balcao' | 'cozinha' | 'fechamento';
 type PaymentMethod = 'dinheiro' | 'pix' | 'cartao' | 'debito' | 'credito';
@@ -212,17 +212,6 @@ export const Caixa = () => {
     const interval = setInterval(fetchData, 5000); 
     return () => clearInterval(interval);
   }, []);
-
-  // Watcher para Imprimir Automático Novos Itens de Cozinha
-  useEffect(() => {
-    if (isInitialLoad || !autoPrintKds) return;
-    cozinhaItems.forEach(item => {
-      if (!printedItemIds.includes(item.id)) {
-        handleImprimirCozinha(item);
-        setPrintedItemIds(prev => [...prev, item.id]);
-      }
-    });
-  }, [cozinhaItems, printedItemIds, isInitialLoad, autoPrintKds]);
 
   // Monitorar solicitações de conta
   useEffect(() => {
@@ -458,19 +447,12 @@ export const Caixa = () => {
   };
 
   const handleImprimirCozinha = (item: any) => {
-    import('jspdf').then(({ default: jsPDF }) => {
-      const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: [80, 80] });
-      doc.setFontSize(14); doc.setFont('helvetica', 'bold');
-      doc.text('PEDIDO COZINHA', 40, 10, { align: 'center' });
-      doc.line(5, 14, 75, 14);
-      doc.setFontSize(10);
-      doc.text(`MESA: ${item.mesa}`, 5, 20);
-      doc.text(`HORA: ${new Date(item.data_hora).toLocaleTimeString()}`, 75, 20, { align: 'right' });
-      doc.line(5, 24, 75, 24);
-      doc.setFontSize(14);
-      doc.text(`${item.quantidade}x ${item.produto_nome}`, 5, 32);
-      doc.save(`Cozinha_${item.mesa}_${Date.now()}.pdf`);
-    });
+    printPetiscoTicket(
+      item.mesa.toString(),
+      'Atendimento',
+      [item.pedido_id],
+      [{ qtd: item.quantidade, nome: item.produto_nome }]
+    );
   };
 
   const handleVerDetalhes = async (pedido: any) => {
