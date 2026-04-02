@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   LogOut, Receipt, History as HistoryIcon, Printer, 
   Lock, DollarSign,
-  ShoppingCart, Store, Search, X, Utensils, Trash2
+  ShoppingCart, Store, Search, X, Utensils, Trash2, Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { OwnerViewBanner } from '../components/OwnerViewBanner';
@@ -551,6 +551,12 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
               <button onClick={() => setActiveTab('fechamento')} style={{ background: 'none', border: 'none', color: activeTab === 'fechamento' ? 'var(--danger-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
                 <Lock size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>FECHAR DIA</span>
               </button>
+
+              <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <Link to="/garcom" style={{ textDecoration: 'none', color: 'var(--primary-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                  <Users size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 800 }}>GARÇOM</span>
+                </Link>
+              </div>
            </nav>
            <button onClick={() => signOut()} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}><LogOut size={28}/></button>
         </aside>
@@ -564,7 +570,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
            </h1>
            <div className="d-flex items-center gap-4">
               <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>LOGADO COMO: <b style={{color: '#fff'}}>{profile?.full_name?.toUpperCase()}</b></span>
-              {profile?.role === 'garcom' && (
+              {(profile?.role === 'garcom' || profile?.role === 'admin' || profile?.role === 'dono') && (
                 <Link to="/garcom" className="btn-outline" style={{ fontSize: '0.7rem', borderColor: 'var(--success-color)', color: 'var(--success-color)' }}>
                   🏃 Painel Garçom
                 </Link>
