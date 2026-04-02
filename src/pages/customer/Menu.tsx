@@ -26,39 +26,36 @@ export const Menu = () => {
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
-      {/* Categoria Tabs - Mobile Optimized Scroll */}
+      {/* Categoria Tabs - Estilo Screenshot (Arredondado) */}
       <div className="no-scrollbar" style={{ 
         display: 'flex', 
-        gap: '0.75rem', 
+        gap: '0.8rem', 
         overflowX: 'auto', 
         WebkitOverflowScrolling: 'touch', 
-        marginBottom: '1.5rem', 
-        padding: '0.5rem 0',
+        marginBottom: '2rem', 
+        padding: '1rem 0',
         position: 'sticky',
-        top: '65px',
-        backgroundColor: 'rgba(18, 18, 18, 0.8)',
-        backdropFilter: 'blur(10px)',
+        top: '75px',
         zIndex: 10,
         margin: '0 -1.25rem 1.5rem -1.25rem',
-        paddingLeft: '1.25rem',
-        borderBottom: '1px solid rgba(212, 175, 55, 0.1)'
+        paddingLeft: '1.25rem'
       }}>
         {categories.map(cat => (
           <button 
             key={cat} 
             onClick={() => setActiveTab(cat)}
             style={{
-              padding: '0.6rem 1.2rem', 
-              borderRadius: '10px', 
+              padding: '0.8rem 1.5rem', 
+              borderRadius: '20px', 
               whiteSpace: 'nowrap', 
               textTransform: 'uppercase',
-              fontSize: '0.75rem',
+              fontSize: '0.8rem',
               letterSpacing: '1px',
-              backgroundColor: activeTab === cat ? 'var(--primary-color)' : 'rgba(255,255,255,0.03)',
-              color: activeTab === cat ? '#000' : 'var(--text-muted)',
-              border: activeTab === cat ? '1px solid var(--primary-color)' : '1px solid rgba(255,255,255,0.05)',
+              backgroundColor: activeTab === cat ? '#facc15' : 'rgba(255,255,255,0.1)',
+              color: activeTab === cat ? '#000' : '#fff',
               fontWeight: 800,
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+              boxShadow: activeTab === cat ? '0 4px 15px rgba(250, 204, 21, 0.3)' : 'none',
+              transition: 'all 0.2s'
             }}
           >
             {cat}
@@ -66,40 +63,49 @@ export const Menu = () => {
         ))}
       </div>
 
-      {/* Lista de Itens Vertical */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {/* Grid de Itens (Cards como estava antes) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {filtered.map(product => (
           <div key={product.id} className="card" style={{ 
-            padding: '1.25rem', 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            background: 'rgba(255, 255, 255, 0.02)',
-            borderRadius: '14px',
-            border: '1px solid rgba(255, 255, 255, 0.05)'
+            padding: '1.5rem', 
+            background: 'var(--surface-color)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '20px',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <div style={{ flex: 1, paddingRight: '1rem' }}>
-              <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff' }}>{product.nome}</h4>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                 <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{product.categoria}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{product.nome}</h4>
+                <div style={{ fontSize: '0.7rem', color: 'var(--primary-color)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>{product.categoria}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ 
+                  color: 'var(--primary-color)', 
+                  fontWeight: 900, 
+                  fontSize: '1.3rem',
+                  textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+                }}>
+                  R$ {product.preco.toFixed(2).replace('.', ',')}
+                </div>
               </div>
             </div>
             
-            <div style={{ textAlign: 'right' }}>
+            {product.estoque <= 0 && (
               <div style={{ 
-                color: 'var(--primary-color)', 
+                marginTop: '10px', 
+                color: 'var(--danger-color)', 
+                fontSize: '0.7rem', 
                 fontWeight: 900, 
-                fontSize: '1.1rem',
-                letterSpacing: '-0.5px'
+                textTransform: 'uppercase',
+                display: 'inline-block',
+                padding: '4px 10px',
+                background: 'rgba(244, 63, 94, 0.1)',
+                borderRadius: '6px'
               }}>
-                R$ {product.preco.toFixed(2).replace('.', ',')}
+                ESGOTADO
               </div>
-              {product.estoque <= 0 && (
-                <div style={{ color: 'var(--danger-color)', fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', marginTop: '4px' }}>
-                  ESGOTADO
-                </div>
-              )}
-            </div>
+            )}
           </div>
         ))}
       </div>
