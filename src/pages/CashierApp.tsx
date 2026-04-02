@@ -28,7 +28,7 @@ interface CartItem {
   quantidade: number;
 }
 
-export const Caixa = () => {
+export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('mesas');
   const [mesasPendentes, setMesasPendentes] = useState<any[]>([]);
@@ -532,29 +532,31 @@ export const Caixa = () => {
 
   return (
     <div className="layout-container" style={{ background: '#0a0a0a', color: '#fff' }}>
-      <aside className="sidebar" style={{ width: '100px' }}>
-         <div style={{ marginBottom: '3rem' }}>
-           <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
-         </div>
-         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', opacity: isCaixaAberto ? 1 : 0.3, pointerEvents: isCaixaAberto ? 'auto' : 'none' }}>
-            <button onClick={() => setActiveTab('mesas')} style={{ background: 'none', border: 'none', color: activeTab === 'mesas' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer', position: 'relative' }}>
-              <Store size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>MESAS</span>
-            </button>
-            <button onClick={() => setActiveTab('balcao')} style={{ background: 'none', border: 'none', color: activeTab === 'balcao' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <ShoppingCart size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>BALCÃO</span>
-            </button>
-            <button onClick={() => setActiveTab('cozinha')} style={{ background: 'none', border: 'none', color: activeTab === 'cozinha' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <Utensils size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>COZINHA</span>
-            </button>
+      {!isEmbedded && (
+        <aside className="sidebar" style={{ width: '100px' }}>
+           <div style={{ marginBottom: '3rem' }}>
+             <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
+           </div>
+           <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2rem', opacity: isCaixaAberto ? 1 : 0.3, pointerEvents: isCaixaAberto ? 'auto' : 'none' }}>
+              <button onClick={() => setActiveTab('mesas')} style={{ background: 'none', border: 'none', color: activeTab === 'mesas' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer', position: 'relative' }}>
+                <Store size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>MESAS</span>
+              </button>
+              <button onClick={() => setActiveTab('balcao')} style={{ background: 'none', border: 'none', color: activeTab === 'balcao' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                <ShoppingCart size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>BALCÃO</span>
+              </button>
+              <button onClick={() => setActiveTab('cozinha')} style={{ background: 'none', border: 'none', color: activeTab === 'cozinha' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                <Utensils size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>COZINHA</span>
+              </button>
+  
+              <button onClick={() => setActiveTab('fechamento')} style={{ background: 'none', border: 'none', color: activeTab === 'fechamento' ? 'var(--danger-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                <Lock size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>FECHAR DIA</span>
+              </button>
+           </nav>
+           <button onClick={() => signOut()} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}><LogOut size={28}/></button>
+        </aside>
+      )}
 
-            <button onClick={() => setActiveTab('fechamento')} style={{ background: 'none', border: 'none', color: activeTab === 'fechamento' ? 'var(--danger-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <Lock size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>FECHAR DIA</span>
-            </button>
-         </nav>
-         <button onClick={() => signOut()} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer' }}><LogOut size={28}/></button>
-      </aside>
-
-      <main className="main-content">
+      <main className="main-content" style={{ paddingLeft: isEmbedded ? '0' : '100px' }}>
         <OwnerViewBanner panelName="Caixa" />
         <header className="d-flex justify-between items-center mb-6">
            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>
