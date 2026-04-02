@@ -242,135 +242,14 @@ export const Garcom = () => {
 
   if (loading) return <div className="container text-center" style={{padding: '5rem'}}><p>Carregando...</p></div>;
 
-  // VISÃO DA MESA ESPECÍFICA (Ainda dentro do Atendimento)
-  if (selectedMesa && activeView === 'atendimento') {
-    const mesaPedidos = pedidos.filter(p => p.mesa_id === selectedMesa.id);
-    const totalGasto = mesaPedidos.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
+  const currentMesaPedidos = selectedMesa ? pedidos.filter(p => p.mesa_id === selectedMesa.id) : [];
+  const currentMesaTotal = currentMesaPedidos.reduce((acc, p) => acc + (Number(p.total) || 0), 0);
 
-    return (
-      <div className="container" style={{ paddingBottom: '10rem' }}>
-         <OwnerViewBanner panelName="Garçom" />
-         <header className="d-flex justify-between items-center mb-6">
-           <button onClick={() => { setSelectedMesa(null); setShowAddMenu(false); clearCart(); setSearchTerm(''); }} className="btn-outline" style={{ width: 'auto', padding: '0.4rem 0.8rem' }}>&larr; Voltar</button>
-           <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Mesa {selectedMesa.numero}</h2>
-           <span style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '12px', background: `${getStatusColor(selectedMesa.status)}33`, color: getStatusColor(selectedMesa.status), fontWeight: 'bold' }}>
-             {selectedMesa.status}
-           </span>
-         </header>
-
-         {selectedMesa.status === 'livre' ? (
-           <div className="card text-center" style={{ padding: '3rem 1rem' }}>
-             <button className="btn-success" onClick={() => handleAbrirMesa(selectedMesa.id)} style={{ fontSize: '1.2rem', padding: '1rem' }}>Abrir Mesa Agora</button>
-           </div>
-         ) : (
-           <>
-            {showTransferModal && (
-              <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-                <div className="card w-100" style={{ padding: '2rem', maxWidth: '400px' }}>
-                  <h4 className="mb-4">Transferir mesa?</h4>
-                  <select value={targetMesaId} onChange={(e) => setTargetMesaId(e.target.value)} className="input-field" style={{ marginBottom: '1.5rem' }}>
-                    <option value="">Selecione...</option>
-                    {mesas.filter(m => m.status === 'livre').map(m => (
-                      <option key={m.id} value={m.id}>Mesa {m.numero}</option>
-                    ))}
-                  </select>
-                  <div className="d-flex gap-3">
-                    <button className="btn-outline" onClick={() => setShowTransferModal(false)} style={{ flex: 1 }}>Sair</button>
-                    <button className="btn-warning" onClick={handleTransferMesa} style={{ flex: 1 }}>Confirmar</button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="d-flex justify-between items-center mb-4">
-               <div>
-                  <h3 style={{ margin: 0 }}>Comanda</h3>
-                  <div className="text-muted">Total: R$ {totalGasto.toFixed(2)}</div>
-               </div>
-               <div className="d-flex gap-2">
-                 <button className="btn-outline" onClick={() => setShowTransferModal(true)} style={{ width: 'auto' }}>⇄</button>
-                 <button className="btn-primary" onClick={() => setShowAddMenu(!showAddMenu)} style={{ width: 'auto' }}>{showAddMenu ? 'Ver' : '✚'}</button>
-               </div>
-            </div>
-
-            {showAddMenu ? (
-              <div className="card">
-                 {items.length > 0 && (
-                   <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-color)', backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>
-                     {items.map(it => (
-                       <div key={it.id} className="d-flex justify-between items-center mb-2">
-                         <span>{it.quantidade}x {it.nome}</span>
-                         <div className="d-flex gap-2">
-                            <button className="btn-outline" style={{width: 'auto', padding: '4px 8px'}} onClick={() => removeItem(it.id)}>-</button>
-                            <button className="btn-success" style={{width: 'auto', padding: '4px 8px'}} onClick={() => addItem(it)}>+</button>
-                         </div>
-                       </div>
-                     ))}
-                     <button className="btn-success mt-4" onClick={handleLaunchOrder} disabled={isCheckingOut}>Lançar (R$ {currentCartTotal.toFixed(2)})</button>
-                   </div>
-                 )}
-                 <div style={{ padding: '1rem' }}>
-                   <div className="mb-4">
-                     <input 
-                       type="text" 
-                       placeholder="🔍 Pesquisar item..." 
-                       value={searchTerm} 
-                       onChange={(e) => setSearchTerm(e.target.value)} 
-                       className="input-field"
-                       style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '10px' }}
-                     />
-                   </div>
-                   <select value={activeCategory} onChange={(e) => { setActiveCategory(e.target.value); setSearchTerm(''); }} className="input-field mb-4" style={{ borderRadius: '10px' }}>
-                     <option value="TODOS">Todas Categorias</option>
-                     {Array.from(new Set(produtos.map(p => p.categoria.toUpperCase()))).map(cat => (
-                       <option key={cat as string} value={cat as string}>{cat}</option>
-                     ))}
-                   </select>
-                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                     {produtos.filter(p => 
-                        (activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory) &&
-                        (p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
-                     ).map(p => (
-                        <div key={p.id} onClick={() => p.estoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
-                          <div style={{fontSize: '0.8rem', fontWeight: 600}}>{p.nome}</div>
-                          <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem' }}>R$ {p.preco.toFixed(2)}</div>
-                        </div>
-                     ))}
-                   </div>
-                 </div>
-              </div>
-            ) : (
-              <>
-                <div className="card d-flex flex-col gap-2">
-                  {mesaPedidos.map(pedido => (
-                    <div key={pedido.id} style={{ padding: '0.75rem', borderLeft: '3px solid var(--primary-color)', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', marginBottom: '8px' }}>
-                       {itensPedido.filter(i => i.pedido_id === pedido.id).map(item => (
-                         <div key={item.id} className="d-flex justify-between items-center mb-2">
-                            <span>{item.quantidade}x {item.produtos?.nome}</span>
-                            <button onClick={() => handleExcluirItem(item.id, item)} style={{ color: 'var(--danger-color)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16}/></button>
-                         </div>
-                       ))}
-                    </div>
-                  ))}
-                  {mesaPedidos.length === 0 && <p className="text-center text-muted p-4">Nenhum item lançado.</p>}
-                </div>
-                <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'var(--surface-color)', zIndex: 100, borderTop: '1px solid var(--border-color)' }}>
-                  <button className="btn-warning" onClick={() => handlePedirConta(selectedMesa.id)} disabled={selectedMesa.status === 'aguardando conta'} style={{padding: '1rem', fontWeight: 800}}>
-                    {selectedMesa.status === 'aguardando conta' ? 'FECHAMENTO SOLICITADO' : 'SOLICITAR FECHAMENTO'}
-                  </button>
-                </div>
-              </>
-            )}
-           </>
-         )}
-      </div>
-    );
-  }
-
-  // ESTRUTURA PRINCIPAL (Mesas ou Caixa)
   return (
     <div className="container animate-fade-in" style={{ paddingBottom: '2rem' }}>
       <OwnerViewBanner panelName="Garçom" />
+      
+      {/* HEADER DE NAVEGAÇÃO PERMANENTE */}
       <header className="d-flex justify-between items-center mb-6" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
         <div className="d-flex gap-4">
           <button 
@@ -389,31 +268,151 @@ export const Garcom = () => {
         <button onClick={() => signOut()} style={{ color: 'var(--danger-color)', background: 'none', border: 'none', cursor: 'pointer' }}><LogOut size={24} /></button>
       </header>
 
-      {activeView === 'atendimento' ? (
-        <>
-          {!monitoringActive && (
-            <div className="card mb-6 text-center" style={{background: 'rgba(212,175,55,0.1)', border: '1px solid var(--primary-color)'}}>
-               <p className="mb-4">Ative os alertas para receber notificações de chamados e pedidos prontos.</p>
-               <button onClick={startMonitoring} className="btn-primary" style={{width: 'auto', padding: '8px 20px'}}>Ativar Alertas 🔔</button>
-            </div>
-          )}
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem' }}>
-            {mesas.map(mesa => (
-              <div key={mesa.id} onClick={() => setSelectedMesa(mesa)} className="card text-center" style={{ borderTop: `4px solid ${getStatusColor(mesa.status)}`, cursor: 'pointer' }}>
-                <h2 style={{ fontSize: '2.5rem', margin: '0.5rem 0' }}>{mesa.numero}</h2>
-                <span style={{fontSize: '0.7rem', fontWeight: 700, opacity: 0.7, textTransform: 'uppercase'}}>{mesa.status}</span>
-                {mesa.precisa_garcom && (
-                   <div className="mt-4">
-                      <button onClick={(e) => { e.stopPropagation(); handleAtenderChamado(mesa.id); }} className="btn-danger p-2" style={{fontSize: '0.7rem', animation: 'pulse 1s infinite'}}>ATENDER CHAMADO</button>
-                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </>
-      ) : (
+      {activeView === 'caixa' ? (
         <Caixa isEmbedded={true} />
+      ) : (
+        <>
+          {selectedMesa ? (
+            <div className="animate-fade-in" style={{ paddingBottom: '10rem' }}>
+              <header className="d-flex justify-between items-center mb-6">
+                <button onClick={() => { setSelectedMesa(null); setShowAddMenu(false); clearCart(); setSearchTerm(''); }} className="btn-outline" style={{ width: 'auto', padding: '0.4rem 0.8rem' }}>&larr; Voltar</button>
+                <h2 className="page-title" style={{ margin: 0, border: 'none' }}>Mesa {selectedMesa.numero}</h2>
+                <span style={{ fontSize: '0.8rem', padding: '4px 12px', borderRadius: '12px', background: `${getStatusColor(selectedMesa.status)}33`, color: getStatusColor(selectedMesa.status), fontWeight: 'bold' }}>
+                  {selectedMesa.status}
+                </span>
+              </header>
+
+              {selectedMesa.status === 'livre' ? (
+                <div className="card text-center" style={{ padding: '3rem 1rem' }}>
+                  <button className="btn-success" onClick={() => handleAbrirMesa(selectedMesa.id)} style={{ fontSize: '1.2rem', padding: '1rem' }}>Abrir Mesa Agora</button>
+                </div>
+              ) : (
+                <>
+                  {showTransferModal && (
+                    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                      <div className="card w-100" style={{ padding: '2rem', maxWidth: '400px' }}>
+                        <h4 className="mb-4">Transferir mesa?</h4>
+                        <select value={targetMesaId} onChange={(e) => setTargetMesaId(e.target.value)} className="input-field" style={{ marginBottom: '1.5rem' }}>
+                          <option value="">Selecione...</option>
+                          {mesas.filter(m => m.status === 'livre').map(m => (
+                            <option key={m.id} value={m.id}>Mesa {m.numero}</option>
+                          ))}
+                        </select>
+                        <div className="d-flex gap-3">
+                          <button className="btn-outline" onClick={() => setShowTransferModal(false)} style={{ flex: 1 }}>Sair</button>
+                          <button className="btn-warning" onClick={handleTransferMesa} style={{ flex: 1 }}>Confirmar</button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="d-flex justify-between items-center mb-4">
+                    <div>
+                        <h3 style={{ margin: 0 }}>Comanda</h3>
+                        <div className="text-muted">Total: R$ {currentMesaTotal.toFixed(2)}</div>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button className="btn-outline" onClick={() => setShowTransferModal(true)} style={{ width: 'auto' }}>⇄</button>
+                      <button className="btn-primary" onClick={() => setShowAddMenu(!showAddMenu)} style={{ width: 'auto' }}>{showAddMenu ? 'Ver' : '✚'}</button>
+                    </div>
+                  </div>
+
+                  {showAddMenu ? (
+                    <div className="card">
+                      {items.length > 0 && (
+                        <div style={{ padding: '1rem', borderBottom: '2px solid var(--border-color)', backgroundColor: 'rgba(212, 175, 55, 0.1)' }}>
+                          {items.map(it => (
+                            <div key={it.id} className="d-flex justify-between items-center mb-2">
+                              <span>{it.quantidade}x {it.nome}</span>
+                              <div className="d-flex gap-2">
+                                  <button className="btn-outline" style={{width: 'auto', padding: '4px 8px'}} onClick={() => removeItem(it.id)}>-</button>
+                                  <button className="btn-success" style={{width: 'auto', padding: '4px 8px'}} onClick={() => addItem(it)}>+</button>
+                              </div>
+                            </div>
+                          ))}
+                          <button className="btn-success mt-4" onClick={handleLaunchOrder} disabled={isCheckingOut}>Lançar (R$ {currentCartTotal.toFixed(2)})</button>
+                        </div>
+                      )}
+                      <div style={{ padding: '1rem' }}>
+                        <div className="mb-4">
+                          <input 
+                            type="text" 
+                            placeholder="🔍 Pesquisar item..." 
+                            value={searchTerm} 
+                            onChange={(e) => setSearchTerm(e.target.value)} 
+                            className="input-field"
+                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '10px' }}
+                          />
+                        </div>
+                        <select value={activeCategory} onChange={(e) => { setActiveCategory(e.target.value); setSearchTerm(''); }} className="input-field mb-4" style={{ borderRadius: '10px' }}>
+                          <option value="TODOS">Todas Categorias</option>
+                          {Array.from(new Set(produtos.map(p => p.categoria.toUpperCase()))).map(cat => (
+                            <option key={cat as string} value={cat as string}>{cat}</option>
+                          ))}
+                        </select>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                          {produtos.filter(p => 
+                              (activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory) &&
+                              (p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
+                          ).map(p => (
+                              <div key={p.id} onClick={() => p.estoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
+                                <div style={{fontSize: '0.8rem', fontWeight: 600}}>{p.nome}</div>
+                                <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem' }}>R$ {p.preco.toFixed(2)}</div>
+                              </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="card d-flex flex-col gap-1">
+                        {currentMesaPedidos.map(pedido => (
+                          <div key={pedido.id} style={{ padding: '0.75rem', borderLeft: '3px solid var(--primary-color)', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', marginBottom: '8px' }}>
+                            {itensPedido.filter(i => i.pedido_id === pedido.id).map(item => (
+                              <div key={item.id} className="d-flex justify-between items-center mb-2">
+                                  <span>{item.quantidade}x {item.produtos?.nome}</span>
+                                  <button onClick={() => handleExcluirItem(item.id, item)} style={{ color: 'var(--danger-color)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={16}/></button>
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                        {currentMesaPedidos.length === 0 && <p className="text-center text-muted p-4">Nenhum item lançado.</p>}
+                      </div>
+                      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'var(--surface-color)', zIndex: 100, borderTop: '1px solid var(--border-color)' }}>
+                        <button className="btn-warning" onClick={() => handlePedirConta(selectedMesa.id)} disabled={selectedMesa.status === 'aguardando conta'} style={{padding: '1rem', fontWeight: 800}}>
+                          {selectedMesa.status === 'aguardando conta' ? 'FECHAMENTO SOLICITADO' : 'SOLICITAR FECHAMENTO'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              {!monitoringActive && (
+                <div className="card mb-6 text-center" style={{background: 'rgba(212,175,55,0.1)', border: '1px solid var(--primary-color)'}}>
+                  <p className="mb-4">Ative os alertas para receber notificações de chamados e pedidos prontos.</p>
+                  <button onClick={startMonitoring} className="btn-primary" style={{width: 'auto', padding: '8px 20px'}}>Ativar Alertas 🔔</button>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: '1rem' }}>
+                {mesas.map(mesa => (
+                  <div key={mesa.id} onClick={() => setSelectedMesa(mesa)} className="card text-center" style={{ borderTop: `4px solid ${getStatusColor(mesa.status)}`, cursor: 'pointer' }}>
+                    <h2 style={{ fontSize: '2.5rem', margin: '0.5rem 0' }}>{mesa.numero}</h2>
+                    <span style={{fontSize: '0.7rem', fontWeight: 700, opacity: 0.7, textTransform: 'uppercase'}}>{mesa.status}</span>
+                    {mesa.precisa_garcom && (
+                      <div className="mt-4">
+                        <button onClick={(e) => { e.stopPropagation(); handleAtenderChamado(mesa.id); }} className="btn-danger p-2" style={{fontSize: '0.7rem', animation: 'pulse 1s infinite'}}>ATENDER CHAMADO</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
