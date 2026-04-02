@@ -13,7 +13,7 @@ import { FechamentoCaixa } from '../components/FechamentoCaixa';
 import { AberturaCaixa } from '../components/AberturaCaixa';
 import { printContaMesa } from '../utils/printUtils';
 
-type TabType = 'mesas' | 'balcao' | 'historico' | 'cozinha' | 'fechamento';
+type TabType = 'mesas' | 'balcao' | 'cozinha' | 'fechamento';
 type PaymentMethod = 'dinheiro' | 'pix' | 'cartao' | 'debito' | 'credito';
 
 interface Payment {
@@ -578,9 +578,7 @@ export const Caixa = () => {
             <button onClick={() => setActiveTab('cozinha')} style={{ background: 'none', border: 'none', color: activeTab === 'cozinha' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
               <Utensils size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>COZINHA</span>
             </button>
-            <button onClick={() => setActiveTab('historico')} style={{ background: 'none', border: 'none', color: activeTab === 'historico' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-              <HistoryIcon size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>HISTÓRICO</span>
-            </button>
+
             <button onClick={() => setActiveTab('fechamento')} style={{ background: 'none', border: 'none', color: activeTab === 'fechamento' ? 'var(--danger-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
               <Lock size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>FECHAR DIA</span>
             </button>
@@ -592,7 +590,7 @@ export const Caixa = () => {
         <OwnerViewBanner panelName="Caixa" />
         <header className="d-flex justify-between items-center mb-6">
            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>
-             {!isCaixaAberto ? 'STATUS DO SISTEMA' : (activeTab === 'mesas' ? 'GESTÃO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCÃO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : activeTab === 'historico' ? 'RELATÓRIO DE VENDAS' : 'FECHAMENTO E LEITURA Z')}
+             {!isCaixaAberto ? 'STATUS DO SISTEMA' : (activeTab === 'mesas' ? 'GESTÃO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCÃO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : 'FECHAMENTO E LEITURA Z')}
            </h1>
            <div className="d-flex items-center gap-4">
               <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>LOGADO COMO: <b style={{color: '#fff'}}>{profile?.full_name?.toUpperCase()}</b></span>
@@ -691,36 +689,7 @@ export const Caixa = () => {
                 </motion.div>
               )}
 
-              {activeTab === 'historico' && (
-                <motion.div key="historico" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                      <div className="card" style={{ padding: '1rem' }}>PIX: R$ {paymentTotals.pix.toFixed(2)}</div>
-                      <div className="card" style={{ padding: '1rem' }}>DINHEIRO: R$ {paymentTotals.dinheiro.toFixed(2)}</div>
-                      <div className="card" style={{ padding: '1rem' }}>DÉBITO: R$ {paymentTotals.debito.toFixed(2)}</div>
-                      <div className="card" style={{ padding: '1rem' }}>CRÉDITO: R$ {paymentTotals.credito.toFixed(2)}</div>
-                   </div>
-                   <div className="card" style={{ padding: 0 }}>
-                      <table style={{ width: '100%' }}>
-                        <thead>
-                          <tr style={{ background: 'rgba(255,255,255,0.05)' }}>
-                            <th style={{ padding: '1rem', textAlign: 'left' }}>Mesa</th>
-                            <th style={{ padding: '1rem', textAlign: 'left' }}>Pagamento</th>
-                            <th style={{ padding: '1rem', textAlign: 'right' }}>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {historicoVendas.map(v => (
-                            <tr key={v.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }} onClick={() => handleVerDetalhes(v)}>
-                              <td style={{ padding: '1rem' }}>{v.mesa_id ? "Mesa " + v.mesas?.numero : 'Balcão'}</td>
-                              <td style={{ padding: '1rem', fontSize: '0.7rem' }}>{v.forma_pagamento}</td>
-                              <td style={{ padding: '1rem', textAlign: 'right' }}>R$ {Number(v.total).toFixed(2)}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                     </table>
-                   </div>
-                </motion.div>
-              )}
+
 
               {activeTab === 'fechamento' && (
                 <motion.div key="fechamento" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

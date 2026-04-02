@@ -27,6 +27,7 @@ interface Movimentacao {
 
 export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onClose }: FechamentoCaixaProps) => {
   const { profile, signOut } = useAuth();
+  const isGestor = profile?.role === 'dono' || profile?.role === 'admin';
 
   const [turnoId, setTurnoId] = useState<string | null>(localStorage.getItem('turno_id'));
   const [fundoTroco, setFundoTroco] = useState('0.00');
@@ -262,10 +263,10 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
       </div>
 
       {/* Cards de resumo */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isGestor ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)', gap: '1rem' }}>
         {[
-          { label: 'DINHEIRO', icon: Banknote, val: paymentTotals.dinheiro, color: '16,185,129', qtd: pedidosPorMetodo.dinheiro.length, showDetalhes: () => setShowDetalhesDinheiro(v => !v), open: showDetalhesDinheiro },
-          { label: 'PIX', icon: Smartphone, val: paymentTotals.pix, color: '212,175,55', qtd: pedidosPorMetodo.pix.length, showDetalhes: () => setShowDetalhesPix(v => !v), open: showDetalhesPix },
+          ...(isGestor ? [{ label: 'DINHEIRO', icon: Banknote, val: paymentTotals.dinheiro, color: '16,185,129', qtd: pedidosPorMetodo.dinheiro.length }] : []),
+          { label: 'PIX', icon: Smartphone, val: paymentTotals.pix, color: '212,175,55', qtd: pedidosPorMetodo.pix.length },
           { label: 'DÉBITO', icon: CreditCard, val: paymentTotals.debito, color: '99,102,241', qtd: pedidosPorMetodo.debito.length },
           { label: 'CRÉDITO', icon: CreditCard, val: paymentTotals.credito, color: '244,63,94', qtd: pedidosPorMetodo.credito.length },
         ].map(({ label, icon: Icon, val, color, qtd }) => (
@@ -280,69 +281,75 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
         ))}
       </div>
 
-      {/* Total + Ticket Médio */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-        <div style={{ ...cardStyle('212,175,55'), gridColumn: 'span 2' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 700 }}>TOTAL GERAL DO TURNO</div>
-              <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#d4af37' }}>R$ {totalVendas.toFixed(2)}</div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.65rem', opacity: 0.5 }}>Digital (PIX + Cartões)</div>
-              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#a78bfa' }}>R$ {totalDigital.toFixed(2)}</div>
-              <div style={{ fontSize: '0.65rem', opacity: 0.5, marginTop: '4px' }}>Físico (Dinheiro)</div>
-              <div style={{ fontSize: '1rem', fontWeight: 800, color: '#10b981' }}>R$ {paymentTotals.dinheiro.toFixed(2)}</div>
-            </div>
-          </div>
-        </div>
-        <div style={cardStyle('99,102,241')}>
-          <BarChart3 size={18} color="#a78bfa" style={{ marginBottom: '8px' }} />
-          <div style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700 }}>TICKET MÉDIO</div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#a78bfa' }}>R$ {ticketMedio.toFixed(2)}</div>
-          <div style={{ fontSize: '0.6rem', opacity: 0.4, marginTop: '4px' }}>{vendasFinalizadas.length} vendas finalizadas</div>
-        </div>
-      </div>
-
-      {/* Movimentações */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <button onClick={() => setShowMovModal('sangria')} style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '16px', padding: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', color: '#f43f5e' }}>
-          <ArrowDownCircle size={24} />
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.7 }}>REGISTRAR SANGRIA</div>
-            <div style={{ fontSize: '1rem', fontWeight: 900 }}>-R$ {totalSangrias.toFixed(2)}</div>
-          </div>
-        </button>
-        <button onClick={() => setShowMovModal('suprimento')} style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '16px', padding: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', color: '#10b981' }}>
-          <ArrowUpCircle size={24} />
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.7 }}>REGISTRAR SUPRIMENTO</div>
-            <div style={{ fontSize: '1rem', fontWeight: 900 }}>+R$ {totalSuprimentos.toFixed(2)}</div>
-          </div>
-        </button>
-      </div>
-
-      {/* Lista movimentações */}
-      {movimentacoes.length > 0 && (
-        <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '1rem' }}>
-          <div style={{ fontSize: '0.65rem', fontWeight: 800, opacity: 0.4, marginBottom: '0.8rem' }}>MOVIMENTAÇÕES DO TURNO</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {movimentacoes.map((m, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '10px', background: m.tipo === 'sangria' ? 'rgba(244,63,94,0.07)' : 'rgba(16,185,129,0.07)', border: `1px solid ${m.tipo === 'sangria' ? 'rgba(244,63,94,0.15)' : 'rgba(16,185,129,0.15)'}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {m.tipo === 'sangria' ? <TrendingDown size={14} color="#f43f5e" /> : <TrendingUp size={14} color="#10b981" />}
-                  <div>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 700 }}>{m.motivo}</div>
-                    <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>{m.hora} • {m.operador}</div>
-                  </div>
-                </div>
-                <div style={{ fontWeight: 900, color: m.tipo === 'sangria' ? '#f43f5e' : '#10b981', fontSize: '0.9rem' }}>
-                  {m.tipo === 'sangria' ? '-' : '+'}R$ {m.valor.toFixed(2)}
-                </div>
+      {/* Total + Ticket Médio - Somente gestor */}
+      {isGestor && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+          <div style={{ ...cardStyle('212,175,55'), gridColumn: 'span 2' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 700 }}>TOTAL GERAL DO TURNO</div>
+                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#d4af37' }}>R$ {totalVendas.toFixed(2)}</div>
               </div>
-            ))}
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.65rem', opacity: 0.5 }}>Digital (PIX + Cartões)</div>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: '#a78bfa' }}>R$ {totalDigital.toFixed(2)}</div>
+                <div style={{ fontSize: '0.65rem', opacity: 0.5, marginTop: '4px' }}>Físico (Dinheiro)</div>
+                <div style={{ fontSize: '1rem', fontWeight: 800, color: '#10b981' }}>R$ {paymentTotals.dinheiro.toFixed(2)}</div>
+              </div>
+            </div>
+          </div>
+          <div style={cardStyle('99,102,241')}>
+            <BarChart3 size={18} color="#a78bfa" style={{ marginBottom: '8px' }} />
+            <div style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700 }}>TICKET MÉDIO</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#a78bfa' }}>R$ {ticketMedio.toFixed(2)}</div>
+            <div style={{ fontSize: '0.6rem', opacity: 0.4, marginTop: '4px' }}>{vendasFinalizadas.length} vendas finalizadas</div>
           </div>
         </div>
+      )}
+
+      {/* Movimentações - Somente gestor */}
+      {isGestor && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <button onClick={() => setShowMovModal('sangria')} style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.25)', borderRadius: '16px', padding: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', color: '#f43f5e' }}>
+              <ArrowDownCircle size={24} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.7 }}>REGISTRAR SANGRIA</div>
+                <div style={{ fontSize: '1rem', fontWeight: 900 }}>-R$ {totalSangrias.toFixed(2)}</div>
+              </div>
+            </button>
+            <button onClick={() => setShowMovModal('suprimento')} style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', borderRadius: '16px', padding: '1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', color: '#10b981' }}>
+              <ArrowUpCircle size={24} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: '0.65rem', fontWeight: 700, opacity: 0.7 }}>REGISTRAR SUPRIMENTO</div>
+                <div style={{ fontSize: '1rem', fontWeight: 900 }}>+R$ {totalSuprimentos.toFixed(2)}</div>
+              </div>
+            </button>
+          </div>
+
+          {/* Lista movimentações */}
+          {movimentacoes.length > 0 && (
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '16px', padding: '1rem' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, opacity: 0.4, marginBottom: '0.8rem' }}>MOVIMENTAÇÕES DO TURNO</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {movimentacoes.map((m, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderRadius: '10px', background: m.tipo === 'sangria' ? 'rgba(244,63,94,0.07)' : 'rgba(16,185,129,0.07)', border: `1px solid ${m.tipo === 'sangria' ? 'rgba(244,63,94,0.15)' : 'rgba(16,185,129,0.15)'}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {m.tipo === 'sangria' ? <TrendingDown size={14} color="#f43f5e" /> : <TrendingUp size={14} color="#10b981" />}
+                      <div>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 700 }}>{m.motivo}</div>
+                        <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>{m.hora} • {m.operador}</div>
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 900, color: m.tipo === 'sangria' ? '#f43f5e' : '#10b981', fontSize: '0.9rem' }}>
+                      {m.tipo === 'sangria' ? '-' : '+'}R$ {m.valor.toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Conferência de Gaveta */}
@@ -352,18 +359,21 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
           <h3 style={{ color: '#d4af37', fontSize: '0.85rem', fontWeight: 900, margin: 0 }}>CONFERÊNCIA DE GAVETA</h3>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isGestor ? '1fr 1fr' : '1fr', gap: '1rem', marginBottom: '1.2rem' }}>
           <div>
-            <label style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, display: 'block', marginBottom: '6px' }}>FUNDO DE TROCO (R$)</label>
-            <input type="number" value={fundoTroco} onChange={e => setFundoTroco(e.target.value)}
-              style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '0.7rem 1rem', color: '#fff', fontSize: '1.1rem', fontWeight: 700, outline: 'none' }} />
-          </div>
-          <div>
-            <label style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, display: 'block', marginBottom: '6px' }}>DINHEIRO ESPERADO</label>
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.7rem 1rem', fontSize: '1.1rem', fontWeight: 700, color: '#a78bfa' }}>
-              R$ {dinheiroEsperado.toFixed(2)}
+            <label style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, display: 'block', marginBottom: '6px' }}>FUNDO DE TROCO (R$) {!isGestor && '🔒'}</label>
+            <div style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.7rem 1rem', color: '#d4af37', fontSize: '1.1rem', fontWeight: 700 }}>
+              R$ {parseFloat(fundoTroco || '0').toFixed(2)}
             </div>
           </div>
+          {isGestor && (
+            <div>
+              <label style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, display: 'block', marginBottom: '6px' }}>DINHEIRO ESPERADO</label>
+              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.7rem 1rem', fontSize: '1.1rem', fontWeight: 700, color: '#a78bfa' }}>
+                R$ {dinheiroEsperado.toFixed(2)}
+              </div>
+            </div>
+          )}
         </div>
 
         <div style={{ marginBottom: '1rem' }}>
