@@ -238,30 +238,6 @@ export const Garcom = () => {
        if(!confirm("Esta mesa não possui itens lançados ou os dados ainda estão carregando. Deseja solicitar o fechamento mesmo assim?")) return;
     }
 
-    // 1. Verificação de categorias críticas em preparo
-    const categoriasCriticas = ['PETISCO', 'PETISCOS', 'COZINHA', 'COQUETÉIS', 'COQUETEIS', 'COQUITEIS'];
-    const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
-    
-    const criticosEmPreparo = mesaItens.filter(i => {
-      const cat = (i.produtos?.categoria || '').toUpperCase();
-      return categoriasCriticas.includes(cat) && i.status !== 'entregue' && i.status !== 'finalizado';
-    });
-
-    if (criticosEmPreparo.length > 0 && !ehGestor) {
-      alert(`⚠️ BLOQUEIO DE SEGURANÇA:\n\nHá itens de COZINHA ou COQUETÉIS em preparação nesta mesa:\n${criticosEmPreparo.map(i => `• ${i.produtos?.nome}`).join('\n')}\n\nGarçons não podem fechar a conta com itens críticos em execução.`);
-      return;
-    }
-
-    // Pendências gerais agora também respeitam as categorias críticas para não travar bebidas
-    const pendenciasCriticas = mesaItens.filter(i => {
-      const cat = (i.produtos?.categoria || '').toUpperCase();
-      return categoriasCriticas.includes(cat) && i.status !== 'entregue' && i.status !== 'finalizado';
-    });
-    
-    if (pendenciasCriticas.length > 0 && !ehGestor) {
-      alert(`⚠️ PENDÊNCIAS CRÍTICAS:\n\nNão é possível pedir a conta enquanto houver itens de COZINHA ou COQUETÉIS aguardando:\n${pendenciasCriticas.map(i => `• ${i.produtos?.nome}`).join('\n')}`);
-      return;
-    }
 
     if(!confirm("Enviar solicitação de fechamento para o caixa?")) return;
     

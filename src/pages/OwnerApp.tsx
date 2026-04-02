@@ -448,8 +448,8 @@ export const Dono = () => {
   };
 
 
-  const handleExcluirItemComanda = async (item: any, motivo: string) => {
-    if (!item.id || !motivo.trim()) return;
+  const handleExcluirItemComanda = async (item: any, motivo: string = 'Exclusão Direta') => {
+    if (!item.id) return;
 
     setIsExcluindoAtu(true);
     try {
@@ -845,7 +845,11 @@ export const Dono = () => {
                           <td style={{ padding: '12px 10px', fontWeight: 700 }}>R$ {(Number(item.preco_unitario) * item.quantidade).toFixed(2)}</td>
                           <td style={{ padding: '12px 10px', textAlign: 'right' }}>
                             <button 
-                              onClick={() => setItemParaExcluirAtu({ ...item, pedido_id: pedidoMesa?.id })} 
+                              onClick={() => {
+                                if(confirm(`Excluir ${item.quantidade}x ${item.produtos?.nome}?`)) {
+                                  handleExcluirItemComanda({ ...item, pedido_id: pedidoMesa?.id });
+                                }
+                              }} 
                               className="btn-outline" 
                               style={{ padding: '6px', color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', width: 'auto' }}
                             >
@@ -1318,52 +1322,6 @@ export const Dono = () => {
       </AnimatePresence>
 
 
-      {/* MODAL MANTATÓRIO: MOTIVO DA EXCLUSÃO (DONO) */}
-      <AnimatePresence>
-        {itemParaExcluirAtu && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              style={{ background: '#101010', border: '1px solid rgba(212,175,55,0.3)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem', boxShadow: '0 25px 50px -12px rgba(212,175,55,0.2)' }}>
-              
-              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ width: '60px', height: '60px', background: 'rgba(212,175,55,0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--primary-color)' }}>
-                  <Trash2 size={30} />
-                </div>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', margin: 0 }}>Motivo da Exclusão</h2>
-                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
-                  <b>PROPRIETÁRIO:</b> Removendo {itemParaExcluirAtu.quantidade}x {itemParaExcluirAtu.produtos?.nome}.
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--primary-color)', letterSpacing: '1px', display: 'block', marginBottom: '10px' }}>JUSTIFICATIVA EXIGIDA</label>
-                <textarea 
-                  value={motivoExclusaoAtu}
-                  onChange={e => setMotivoExclusaoAtu(e.target.value)}
-                  placeholder="Explique o motivo real do cancelamento..."
-                  style={{ width: '100%', height: '100px', background: '#000', border: '1px solid #333', borderRadius: '12px', padding: '1rem', color: '#fff', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <button onClick={() => { setItemParaExcluirAtu(null); setMotivoExclusaoAtu(''); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 800, cursor: 'pointer' }}>CANCELAR</button>
-                <button 
-                  type="button"
-                  disabled={!motivoExclusaoAtu.trim() || isExcluindoAtu}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleExcluirItemComanda(itemParaExcluirAtu, motivoExclusaoAtu);
-                  }}
-                  style={{ background: 'var(--primary-color)', color: '#000', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: (motivoExclusaoAtu.trim() && !isExcluindoAtu) ? 1 : 0.4 }}
-                >
-                  {isExcluindoAtu ? 'PROCESSANDO...' : 'CONFIRMAR'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

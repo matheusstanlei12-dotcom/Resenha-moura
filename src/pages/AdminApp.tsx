@@ -289,8 +289,8 @@ export const Administracao = () => {
     }
   };
 
-  const handleExcluirItemComanda = async (item: any, motivo: string) => {
-    if (!item.id || !motivo.trim()) return;
+  const handleExcluirItemComanda = async (item: any, motivo: string = 'Exclusão via Admin') => {
+    if (!item.id) return;
 
     setIsExcluindo(true);
     try {
@@ -907,13 +907,13 @@ export const Administracao = () => {
                                   onClick={(e) => { 
                                     e.preventDefault();
                                     e.stopPropagation(); 
-                                    // Em vez de chamar a exclusão direta, abrimos o modal de motivo
-                                    const itemParaExcluirObj = { 
-                                      ...it, 
-                                      pedido_id: pedido.id,
-                                      pedidos: { id: pedido.id, mesas: { numero: selectedMesaComanda.numero } } 
-                                    };
-                                    setItemParaExcluir(itemParaExcluirObj); 
+                                    if(confirm(`Excluir ${it.quantidade}x ${it.produtos?.nome}?`)) {
+                                      handleExcluirItemComanda({
+                                        ...it, 
+                                        pedido_id: pedido.id,
+                                        pedidos: { id: pedido.id, mesas: { numero: selectedMesaComanda.numero } } 
+                                      }, 'Exclusão Direta Admin (Dashboard)');
+                                    }
                                   }}
                                   style={{ 
                                     background: 'rgba(239,68,68,0.15)', 
@@ -960,52 +960,6 @@ export const Administracao = () => {
         )}
       </AnimatePresence>
 
-      {/* MODAL MANTATÓRIO: MOTIVO DA EXCLUSÃO */}
-      <AnimatePresence>
-        {itemParaExcluir && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} 
-              style={{ background: '#101010', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem', boxShadow: '0 25px 50px -12px rgba(239,68,68,0.2)' }}>
-              
-              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ width: '60px', height: '60px', background: 'rgba(239,68,68,0.1)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#ef4444' }}>
-                  <Trash2 size={30} />
-                </div>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', margin: 0 }}>Motivo da Exclusão</h2>
-                <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
-                  Você está removendo: <b>{itemParaExcluir.quantidade}x {itemParaExcluir.produtos?.nome}</b> da Mesa {itemParaExcluir.pedidos?.mesas?.numero}.
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ fontSize: '0.7rem', fontWeight: 800, color: '#ef4444', letterSpacing: '1px', display: 'block', marginBottom: '10px' }}>JUSTIFICATIVA OBRIGATÓRIA</label>
-                <textarea 
-                  value={motivoExclusao}
-                  onChange={e => setMotivoExclusao(e.target.value)}
-                  placeholder="Explique o motivo real (ex: Erro no lançamento, cliente desistiu...)"
-                  style={{ width: '100%', height: '100px', background: '#000', border: '1px solid #333', borderRadius: '12px', padding: '1rem', color: '#fff', fontSize: '0.9rem', outline: 'none', resize: 'none' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <button onClick={() => { setItemParaExcluir(null); setMotivoExclusao(''); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 800, cursor: 'pointer' }}>CANCELAR</button>
-                <button 
-                  type="button"
-                  disabled={!motivoExclusao.trim() || isExcluindo}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleExcluirItemComanda(itemParaExcluir, motivoExclusao);
-                  }}
-                  style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '1rem', borderRadius: '14px', fontWeight: 900, cursor: 'pointer', opacity: (motivoExclusao.trim() && !isExcluindo) ? 1 : 0.4 }}
-                >
-                  {isExcluindo ? 'PROCESSANDO...' : 'CONFIRMAR'}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
