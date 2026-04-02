@@ -237,7 +237,7 @@ export const Dono = () => {
   };
 
   const handleCopyLink = (qrCode: string) => {
-    const url = `https://www.trusteng.online/c/${qrCode}`;
+    const url = `${window.location.origin}/c/${qrCode}`;
     navigator.clipboard.writeText(url);
 
     alert("Link copiado para o clipboard! 🔗");
@@ -246,7 +246,7 @@ export const Dono = () => {
   const handleGeneratePDF = (numero: number, qrCode: string) => {
     import('jspdf').then(({ default: jsPDF }) => {
       const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a6' });
-      const url = `https://www.trusteng.online/c/${qrCode}`;
+      const url = `${window.location.origin}/c/${qrCode}`;
       const img = new Image();
       img.crossOrigin = 'Anonymous';
       img.src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}&margin=0`;
@@ -325,7 +325,7 @@ export const Dono = () => {
       for (let i = 0; i < mesas.length; i++) {
         if (i > 0) doc.addPage();
         const m = mesas[i];
-        const url = `https://www.trusteng.online/c/${m.qr_code}`;
+        const url = `${window.location.origin}/c/${m.qr_code}`;
         const img = new Image();
         img.crossOrigin = 'Anonymous';
         img.src = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(url)}&margin=0&t=${Date.now()}`;

@@ -161,21 +161,20 @@ export const CustomerApp = () => {
       {toast && <Toast message={toast.message} type={toast.type} />}
 
       <header style={{ 
-        padding: '1rem', backgroundColor: 'var(--surface-color)', borderBottom: '1px solid var(--border-color)',
-        position: 'sticky', top: 0, zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        padding: '0.75rem 1.25rem', backgroundColor: 'rgba(26, 26, 26, 0.8)', borderBottom: '1px solid rgba(212, 175, 55, 0.1)',
+        position: 'sticky', top: 0, zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        backdropFilter: 'blur(10px)'
       }}>
-        <div className="d-flex items-center gap-2">
-          <img src="/logo.png" alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'contain' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '36px', height: '36px', borderRadius: '8px', objectFit: 'contain', border: '1px solid rgba(212, 175, 55, 0.2)' }} />
           <div>
-            <h2 style={{ fontSize: '1.2rem', margin: 0, color: 'var(--primary-color)' }}>Resenha do Moura</h2>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Mesa {mesaNum}</span>
+            <h2 style={{ fontSize: '1rem', margin: 0, color: 'var(--primary-color)', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Resenha do Moura</h2>
+            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 700 }}>MESA {mesaNum}</div>
           </div>
-
         </div>
-        <button onClick={handleCallWaiter} style={{ color: 'var(--warning-color)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          <span style={{ fontSize: '0.7rem', marginTop: '4px' }}>Garçom</span>
-        </button>
+        <div style={{ background: 'rgba(212, 175, 55, 0.1)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
+           <span style={{ fontSize: '0.6rem', color: 'var(--primary-color)', fontWeight: 800 }}>CARDÁPIO DIGITAL</span>
+        </div>
       </header>
 
       <main className="container" style={{ flex: 1, overflowY: 'auto', paddingBottom: '90px' }}>
@@ -194,19 +193,43 @@ export const CustomerApp = () => {
         </footer>
       </main>
 
-      {/* Bottom Nav */}
+      {/* Bottom Nav - Refined Mobile Layout */}
       <div style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'var(--surface-color)',
-        borderTop: '1px solid var(--border-color)', padding: '0.75rem 0',
-        display: 'flex', justifyContent: 'space-around', alignItems: 'center', zIndex: 1000
+        position: 'fixed', bottom: 0, left: 0, right: 0, 
+        backgroundColor: 'rgba(26, 26, 26, 0.95)',
+        borderTop: '1px solid rgba(212, 175, 55, 0.1)', 
+        padding: '0.75rem 0 1.5rem',
+        display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
+        zIndex: 1000,
+        backdropFilter: 'blur(15px)'
       }}>
-        <button onClick={() => navigate(`/c/${qr_code}`)} style={{ color: 'var(--primary-color)' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto' }}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-          <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Ver Cardápio</div>
+        <button onClick={() => navigate(`/c/${qr_code}`)} style={{ 
+          color: location.pathname.endsWith(qr_code || '') ? 'var(--primary-color)' : 'var(--text-muted)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flex: 1
+        }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+          <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>Início</div>
         </button>
-        <button onClick={handleCallWaiter} style={{ color: 'var(--warning-color)' }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto' }}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Chamar Garçom</div>
+
+        <button onClick={handleCallWaiter} style={{ 
+          backgroundColor: 'var(--primary-color)',
+          color: '#000',
+          width: '56px',
+          height: '56px',
+          borderRadius: '18px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: '-30px',
+          boxShadow: '0 8px 20px rgba(212, 175, 55, 0.3)',
+          border: '4px solid #121212'
+        }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </button>
+
+        <button style={{ color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flex: 1, opacity: 0.5 }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <div style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>Sacola</div>
         </button>
       </div>
 
