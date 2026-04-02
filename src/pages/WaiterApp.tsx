@@ -192,6 +192,18 @@ export const Garcom = () => {
     fetchData();
   };
 
+  const handleCancelarFechamento = async (mesaId: string) => {
+    if(!confirm("Cancelar pedido de conta e voltar para ocupada?")) return;
+    try {
+      await supabase.from('mesas').update({ status: 'ocupada', precisa_garcom: false }).eq('id', mesaId);
+      alert("Mesa voltou para status Ocupada!");
+      fetchData();
+      setSelectedMesa(null);
+    } catch (err) {
+      alert("Erro ao cancelar fechamento.");
+    }
+  };
+
   const handlePedirConta = async (mesaId: string) => {
     const mesaItens = (itensPedido || []).filter(i => {
        const p = (pedidos || []).find(ped => ped.id === i.pedido_id);
@@ -378,10 +390,15 @@ export const Garcom = () => {
                         ))}
                         {currentMesaPedidos.length === 0 && <p className="text-center text-muted p-4">Nenhum item lançado.</p>}
                       </div>
-                      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'var(--surface-color)', zIndex: 100, borderTop: '1px solid var(--border-color)' }}>
-                        <button className="btn-warning" onClick={() => handlePedirConta(selectedMesa.id)} disabled={selectedMesa.status === 'aguardando conta'} style={{padding: '1rem', fontWeight: 800}}>
+                      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'var(--surface-color)', zIndex: 100, borderTop: '1px solid var(--border-color)', display: 'flex', gap: '1rem' }}>
+                        <button className="btn-warning" onClick={() => handlePedirConta(selectedMesa.id)} disabled={selectedMesa.status === 'aguardando conta'} style={{flex: 2, padding: '1rem', fontWeight: 800}}>
                           {selectedMesa.status === 'aguardando conta' ? 'FECHAMENTO SOLICITADO' : 'SOLICITAR FECHAMENTO'}
                         </button>
+                        {selectedMesa.status === 'aguardando conta' && (
+                          <button className="btn-danger" onClick={() => handleCancelarFechamento(selectedMesa.id)} style={{flex: 1, padding: '1rem', fontWeight: 800}}>
+                             CANCELAR
+                          </button>
+                        )}
                       </div>
                     </>
                   )}
