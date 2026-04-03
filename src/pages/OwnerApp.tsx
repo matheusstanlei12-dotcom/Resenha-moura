@@ -79,6 +79,12 @@ export const Dono = () => {
   const [newPasswordForUser, setNewPasswordForUser] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
+  // Estados para troca de função
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [selectedUserForRole, setSelectedUserForRole] = useState<any>(null);
+  const [newRoleForUser, setNewRoleForUser] = useState('');
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+
 
   const fetchData = async () => {
     try {
@@ -432,6 +438,27 @@ export const Dono = () => {
     }
   };
 
+  const handleUpdateRole = async () => {
+    if (!selectedUserForRole || !newRoleForUser) return;
+    setIsUpdatingRole(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRoleForUser })
+        .eq('id', selectedUserForRole.id);
+      
+      if (error) throw error;
+      
+      alert(`Função de ${selectedUserForRole.full_name} alterada para ${newRoleForUser.toUpperCase()}!`);
+      setIsRoleModalOpen(false);
+      fetchData();
+    } catch (err: any) {
+      alert("Erro ao alterar função: " + err.message);
+    } finally {
+      setIsUpdatingRole(false);
+    }
+  };
+
 
   const handleExcluirItemComanda = async (item: any, motivo: string = 'Exclusão Direta') => {
     if (!item.id) return;
@@ -653,6 +680,7 @@ export const Dono = () => {
               <td style={{ padding: '1rem' }}>
                 <div className="d-flex gap-2 justify-center">
                   <button onClick={() => { setSelectedUserForPassword(u); setIsPasswordModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Senha</button>
+                  <button onClick={() => { setSelectedUserForRole(u); setNewRoleForUser(u.role); setIsRoleModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>Alterar Função</button>
                   <button onClick={() => handleDeleteUser(u)} className="btn-outline" style={{ color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Remover</button>
                 </div>
               </td>
@@ -1313,6 +1341,42 @@ export const Dono = () => {
                 <button onClick={() => { setIsPasswordModalOpen(false); setNewPasswordForUser(''); }} className="btn-outline">Cancelar</button>
                 <button onClick={handleUpdatePassword} className="btn-primary" disabled={isUpdatingPassword || newPasswordForUser.length < 6}>
                   {isUpdatingPassword ? 'Salvando...' : 'Salvar Senha'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+ 
+      {/* Modal de Alteração de Função */}
+      <AnimatePresence>
+        {isRoleModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem' }}>Alterar Função</h2>
+              <p style={{ fontSize: '0.85rem', opacity: 0.6, marginBottom: '1.5rem' }}>Especifique o novo nível de acesso para <b>{selectedUserForRole?.full_name}</b>.</p>
+              
+              <div className="mb-6">
+                <label className="label-field">SELECIONE A NOVA FUNÇÃO</label>
+                <select 
+                  value={newRoleForUser} 
+                  onChange={e => setNewRoleForUser(e.target.value)} 
+                  className="input-field"
+                  style={{ background: '#222', color: '#fff', border: '1px solid #333' }}
+                >
+                  <option value="garcom">Garçom</option>
+                  <option value="caixa">Caixa</option>
+                  <option value="cozinha">Cozinha</option>
+                  <option value="admin">Administrador</option>
+                  <option value="dono">Dono (Proprietário)</option>
+                </select>
+              </div>
+
+              <div className="d-flex gap-3">
+                <button onClick={() => { setIsRoleModalOpen(false); setSelectedUserForRole(null); }} className="btn-outline">Cancelar</button>
+                <button onClick={handleUpdateRole} className="btn-primary" disabled={isUpdatingRole}>
+                  {isUpdatingRole ? 'Atualizando...' : 'Atualizar Função'}
                 </button>
               </div>
             </motion.div>
