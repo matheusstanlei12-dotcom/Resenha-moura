@@ -106,7 +106,11 @@ export const Administracao = () => {
   };
 
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { 
+    fetchData(); 
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   // --- Handlers ---
   const handleCopyLink = (qrCode: string) => {
@@ -587,6 +591,7 @@ export const Administracao = () => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                               <span style={{ fontSize: '0.7rem', color: '#d4af37', fontWeight: 600 }}>R$</span>
                               <input 
+                                key={p.id + '-preco-' + p.preco}
                                 type="number" 
                                 step="0.01" 
                                 defaultValue={p.preco} 

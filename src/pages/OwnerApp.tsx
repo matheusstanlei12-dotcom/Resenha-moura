@@ -719,13 +719,28 @@ export const Dono = () => {
               <td style={{ padding: '1rem' }}>
                 <div className="d-flex items-center gap-1">
                   <span style={{color: 'var(--text-muted)'}}>R$</span>
-                  <input type="number" step="0.01" defaultValue={p.preco} onBlur={(e) => handleUpdatePreco(p.id, e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleUpdatePreco(p.id, (e.target as HTMLInputElement).value)} style={{ width: '80px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'white' }} />
+                  <input 
+                    key={p.id + '-preco-' + p.preco}
+                    type="number" 
+                    step="0.01" 
+                    defaultValue={p.preco} 
+                    onBlur={(e) => handleUpdatePreco(p.id, e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && handleUpdatePreco(p.id, (e.target as HTMLInputElement).value)} 
+                    style={{ width: '80px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'white' }} 
+                  />
                 </div>
               </td>
               <td style={{ padding: '1rem' }}>
                 <div className="d-flex items-center gap-2">
                    <button onClick={() => handleUpdateEstoque(p.id, p.estoque, -1)} className="btn-outline" style={{width: '28px'}}>-</button>
-                   <input type="number" defaultValue={p.estoque} onBlur={(e) => handleDirectStockInput(p.id, e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleDirectStockInput(p.id, (e.target as HTMLInputElement).value)} style={{ width: '60px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center', color: p.estoque < 10 ? 'var(--danger-color)' : 'var(--success-color)', fontWeight: 'bold' }} />
+                   <input 
+                    key={p.id + '-estoque-' + p.estoque}
+                    type="number" 
+                    defaultValue={p.estoque} 
+                    onBlur={(e) => handleDirectStockInput(p.id, e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && handleDirectStockInput(p.id, (e.target as HTMLInputElement).value)} 
+                    style={{ width: '60px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center', color: p.estoque < 10 ? 'var(--danger-color)' : 'var(--success-color)', fontWeight: 'bold' }} 
+                   />
                    <button onClick={() => handleUpdateEstoque(p.id, p.estoque, 1)} className="btn-outline" style={{width: '28px'}}>+</button>
                 </div>
               </td>

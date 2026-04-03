@@ -57,27 +57,25 @@ export const Garcom = () => {
   };
 
   useEffect(() => {
-    if (activeView === 'atendimento') {
-      fetchData();
-      const interval = setInterval(fetchData, 5000);
-      
-      // Realtime subscription for products (stock/price updates)
-      const channel = supabase
-        .channel('schema-db-changes')
-        .on('postgres_changes', 
-          { event: '*', schema: 'public', table: 'produtos' }, 
-          () => {
-            fetchData();
-          }
-        )
-        .subscribe();
+    fetchData();
+    const interval = setInterval(fetchData, 5000);
+    
+    // Realtime subscription for products (stock/price updates)
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'produtos' }, 
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
 
-      return () => {
-        clearInterval(interval);
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [activeView]);
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedMesa) {
