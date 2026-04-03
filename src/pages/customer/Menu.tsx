@@ -47,7 +47,8 @@ export const Menu = () => {
 
   const categories = Array.from(new Set(products.map(p => p.categoria.toUpperCase())));
   const filtered = products.filter(p => {
-    const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const matchesSearch = normalize(p.nome).includes(normalize(searchTerm));
     const matchesCategory = p.categoria.toUpperCase() === activeTab;
     return searchTerm ? matchesSearch : matchesCategory;
   });

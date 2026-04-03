@@ -510,7 +510,8 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   }, [historicoVendas]);
 
   const filteredProdutos = produtos.filter(p => {
-    const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const matchesSearch = normalize(p.nome).includes(normalize(searchTerm));
     const matchesCategory = selectedCategory === 'TODOS' || p.categoria === selectedCategory;
     return searchTerm ? matchesSearch : matchesCategory;
   });

@@ -253,6 +253,18 @@ export const Administracao = () => {
     setProdutos(produtos.map(p => p.id === id ? { ...p, estoque: newValue } : p));
   };
 
+  const handleLiberarMesa = async (mesaId: string) => {
+    if (!confirm("Deseja realmente liberar esta mesa vazia?")) return;
+    try {
+      await supabase.from('mesas').update({ status: 'livre', precisa_garcom: false }).eq('id', mesaId);
+      setSelectedMesaComanda(null);
+      fetchData();
+      alert("Mesa liberada com sucesso!");
+    } catch (err) {
+      alert("Erro ao liberar mesa.");
+    }
+  };
+
   const handleUpdatePreco = async (id: string, value: string) => {
     const newPreco = parseFloat(value.replace(',', '.'));
     if (isNaN(newPreco) || newPreco < 0) return;
@@ -346,10 +358,11 @@ export const Administracao = () => {
     ? ((avaliacoes.reduce((a, av) => a + av.nota_atendimento + av.nota_comida + av.nota_ambiente, 0)) / (avaliacoes.length * 3)).toFixed(1)
     : '—';
 
-  const filteredProdutos = produtos.filter(p =>
-    p.nome.toLowerCase().includes(stockSearch.toLowerCase()) ||
-    p.categoria.toLowerCase().includes(stockSearch.toLowerCase())
-  );
+  const filteredProdutos = produtos.filter(p => {
+    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const search = normalize(stockSearch);
+    return normalize(p.nome).includes(search) || normalize(p.categoria).includes(search);
+  });
 
   const groupedProdutos = filteredProdutos.reduce((acc: any, p) => {
     if (!acc[p.categoria]) acc[p.categoria] = [];
@@ -888,9 +901,15 @@ export const Administracao = () => {
                   const items = pedido?.itens_pedido || [];
                   
                   if (items.length === 0) return (
-                    <div style={{ textAlign: 'center', padding: '3rem 1rem', opacity: 0.5 }}>
-                      <FileText size={40} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
-                      <p>Nenhum item lançado nesta mesa.</p>
+                    <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                      <FileText size={40} style={{ margin: '0 auto 1rem', opacity: 0.1 }} />
+                      <p style={{ opacity: 0.5, marginBottom: '2rem' }}>Nenhum item lançado nesta mesa.</p>
+                      <button 
+                        onClick={() => handleLiberarMesa(selectedMesaComanda.id)}
+                        style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)', padding: '0.8rem 1.5rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        LIBERAR MESA AGORA
+                      </button>
                     </div>
                   );
 

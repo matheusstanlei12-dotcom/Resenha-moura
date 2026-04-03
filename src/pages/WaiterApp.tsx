@@ -379,7 +379,8 @@ export const Garcom = () => {
                         </select>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           {produtos.filter(p => {
-                              const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
+                              const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+                              const matchesSearch = normalize(p.nome).includes(normalize(searchTerm));
                               const matchesCategory = activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory;
                               return searchTerm ? matchesSearch : matchesCategory;
                           }).map(p => (
@@ -407,11 +408,17 @@ export const Garcom = () => {
                         {currentMesaPedidos.length === 0 && <p className="text-center text-muted p-4">Nenhum item lançado.</p>}
                       </div>
                       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '1rem', background: 'var(--surface-color)', zIndex: 100, borderTop: '1px solid var(--border-color)', display: 'flex', gap: '1rem' }}>
-                        <button className="btn-warning" onClick={() => handlePedirConta(selectedMesa.id)} disabled={selectedMesa.status === 'aguardando conta'} style={{flex: 2, padding: '1rem', fontWeight: 800}}>
-                          {selectedMesa.status === 'aguardando conta' ? 'FECHAMENTO SOLICITADO' : 'SOLICITAR FECHAMENTO'}
-                        </button>
+                        {currentMesaPedidos.length === 0 && selectedMesa.status === 'ocupada' ? (
+                          <button className="btn-danger" onClick={() => handleLiberarMesa(selectedMesa.id)} style={{ flex: 1, padding: '1rem', fontWeight: 800 }}>
+                            LIBERAR MESA
+                          </button>
+                        ) : (
+                          <button className="btn-warning" onClick={() => handlePedirConta(selectedMesa.id)} disabled={selectedMesa.status === 'aguardando conta'} style={{ flex: 2, padding: '1rem', fontWeight: 800 }}>
+                            {selectedMesa.status === 'aguardando conta' ? 'FECHAMENTO SOLICITADO' : 'SOLICITAR FECHAMENTO'}
+                          </button>
+                        )}
                         {selectedMesa.status === 'aguardando conta' && (
-                          <button className="btn-danger" onClick={() => handleCancelarFechamento(selectedMesa.id)} style={{flex: 1, padding: '1rem', fontWeight: 800}}>
+                          <button className="btn-danger" onClick={() => handleCancelarFechamento(selectedMesa.id)} style={{ flex: 1, padding: '1rem', fontWeight: 800 }}>
                              CANCELAR
                           </button>
                         )}

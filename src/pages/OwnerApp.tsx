@@ -84,6 +84,7 @@ export const Dono = () => {
   const [selectedUserForRole, setSelectedUserForRole] = useState<any>(null);
   const [newRoleForUser, setNewRoleForUser] = useState('');
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [searchTermEstoque, setSearchTermEstoque] = useState('');
 
 
   const fetchData = async () => {
@@ -459,6 +460,17 @@ export const Dono = () => {
     }
   };
 
+  const handleLiberarMesa = async (mesaId: string) => {
+    if (!confirm("Deseja realmente liberar esta mesa vazia?")) return;
+    try {
+      await supabase.from('mesas').update({ status: 'livre', precisa_garcom: false }).eq('id', mesaId);
+      fetchData();
+      alert("Mesa liberada com sucesso!");
+    } catch (err) {
+      alert("Erro ao liberar mesa.");
+    }
+  };
+
 
   const handleExcluirItemComanda = async (item: any, motivo: string = 'Exclusão Direta') => {
     if (!item.id) return;
@@ -710,10 +722,25 @@ export const Dono = () => {
           <button type="submit" className="btn-primary">Adicionar</button>
         </form>
       </div>
+      <div style={{ position: 'relative', marginBottom: '1.5rem' }}>
+        <input 
+          type="text" 
+          placeholder="🔍 Buscar no estoque (nome ou categoria)..." 
+          value={searchTermEstoque} 
+          onChange={(e) => setSearchTermEstoque(e.target.value)}
+          className="input-field"
+          style={{ paddingLeft: '2.8rem', background: 'rgba(255,255,255,0.05)' }}
+        />
+      </div>
+
       <div className="card" style={{ padding: 0 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem' }}>Item</th><th style={{ padding: '1rem' }}>Preço</th><th style={{ padding: '1rem' }}>Estoque</th><th style={{ padding: '1rem' }}>Ações</th></tr></thead>
-          <tbody>{produtos.map(p => (
+          <tbody>{produtos.filter(p => {
+            const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+            const search = normalize(searchTermEstoque);
+            return normalize(p.nome).includes(search) || normalize(p.categoria).includes(search);
+          }).map(p => (
             <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <td style={{ padding: '1rem' }}>{p.nome}</td>
               <td style={{ padding: '1rem' }}>
@@ -746,7 +773,7 @@ export const Dono = () => {
               </td>
               <td style={{ padding: '1rem' }}><button onClick={() => handleDeleteProduto(p.id)} style={{ color: 'var(--danger-color)' }}>Excluir</button></td>
             </tr>
-          ))}</tbody>
+          )) }</tbody>
         </table>
       </div>
     </div>
@@ -854,6 +881,15 @@ export const Dono = () => {
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>SUBTOTAL ATUAL</div>
                     <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalMesa.toFixed(2)}</div>
+                    {totalMesa === 0 && (
+                      <button 
+                        onClick={() => handleLiberarMesa(mesa.id)}
+                        className="btn-outline"
+                        style={{ marginTop: '8px', fontSize: '0.7rem', color: 'var(--danger-color)', borderColor: 'var(--danger-color)', width: 'auto', padding: '4px 10px' }}
+                      >
+                        Liberar Mesa Vazia
+                      </button>
+                    )}
                   </div>
                 </div>
 
