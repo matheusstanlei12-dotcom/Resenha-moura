@@ -276,9 +276,35 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
        quantidade: i.quantidade,
        preco: Number(i.preco_unitario),
        categoria: i.produtos?.categoria,
-       status: i.status
+       status: i.status,
+       pedido_id: i.pedido_id
     })) || []);
     setIsCheckoutOpen(true);
+  };
+  
+  const handleDeleteCheckoutItem = async (item: any) => {
+    if (!confirm(`Deseja remover "${item.nome}" da comanda?`)) return;
+
+    if (selectedMesa) {
+      // 1. Remover item_pedido
+      const { error: delError } = await supabase.from('itens_pedido').delete().eq('id', item.id);
+      if (delError) {
+        alert("Erro ao remover item do banco.");
+        return;
+      }
+      // 2. Atualizar total no pedido
+      const { data: pedido } = await supabase.from('pedidos').select('total').eq('id', item.pedido_id).single();
+      if (pedido) {
+        const novoTotal = Math.max(0, Number(pedido.total) - (item.preco * item.quantidade));
+        await supabase.from('pedidos').update({ total: novoTotal }).eq('id', item.pedido_id);
+      }
+      // 3. Update local
+      setCheckoutItens(prev => prev.filter(i => i.id !== item.id));
+    } else {
+       // Balcão
+       setCarrinho(prev => prev.filter(i => i.id !== item.id));
+       setCheckoutItens(prev => prev.filter(i => i.id !== item.id));
+    }
   };
 
   const openQuickCheckout = () => {
@@ -710,7 +736,17 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                               <span style={{ fontWeight: 800, color: 'var(--primary-color)' }}>{item.quantidade}x</span>
                               <span style={{ fontWeight: 600 }}>{item.nome}</span>
                            </div>
-                           <span style={{ fontWeight: 700 }}>R$ {(item.preco * item.quantidade).toFixed(2)}</span>
+                           <div className="d-flex items-center gap-4">
+                              <span style={{ fontWeight: 700 }}>R$ {(item.preco * item.quantidade).toFixed(2)}</span>
+                              {profile?.role === 'dono' && (
+                                <button 
+                                  onClick={() => handleDeleteCheckoutItem(item)}
+                                  style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', padding: '4px' }}
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
+                           </div>
                         </div>
                       ))}
                    </div>
