@@ -114,25 +114,10 @@ export const Dono = () => {
           stats[name].mesas.add(p.mesa_id);
         });
 
-        // Adiciona 5 garçons fictícios à visualização para preencher gráficos de produtividade
-        const mockWaiters = [
-           { name: 'Lucas Silva', total: 650.00, count: 12, mesaCount: 4 },
-           { name: 'Mariana Costa', total: 820.50, count: 15, mesaCount: 5 },
-           { name: 'Pedro Santos', total: 430.00, count: 8, mesaCount: 3 },
-           { name: 'Ana Oliveira', total: 540.00, count: 10, mesaCount: 4 },
-           { name: 'Rafael Souza', total: 290.00, count: 6, mesaCount: 2 }
-        ];
-
         let finalRanking = Object.values(stats)
            .map((s: any) => ({ 
              name: s.name, total: s.total, count: s.count, mesaCount: s.mesas.size 
            }));
-
-        mockWaiters.forEach(mock => {
-           if (!finalRanking.find(r => r.name === mock.name)) {
-               finalRanking.push(mock);
-           }
-        });
 
         setWaiterRanking(finalRanking.sort((a: any, b: any) => b.total - a.total));
       }
