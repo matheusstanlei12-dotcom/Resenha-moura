@@ -764,7 +764,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                            </div>
                            <div className="d-flex items-center gap-4">
                               <span style={{ fontWeight: 700 }}>R$ {(item.preco * item.quantidade).toFixed(2)}</span>
-                              {profile?.role === 'dono' && (
+                              {['dono', 'garcom', 'admin'].includes(profile?.role || '') && (
                                 <button 
                                   onClick={() => handleDeleteCheckoutItem(item)}
                                   style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', padding: '4px' }}
