@@ -75,6 +75,15 @@ export const Administracao = () => {
   const [motivoExclusao, setMotivoExclusao] = useState('');
   const [isExcluindo, setIsExcluindo] = useState(false);
 
+  const filteredProdutos = useMemo(() => {
+    const normalizeStr = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const searchLower = normalizeStr(stockSearch);
+    return produtos.filter(p => {
+      const matchesSearch = normalizeStr(p.nome).includes(searchLower) || normalizeStr(p.categoria).includes(searchLower);
+      return stockSearch ? matchesSearch : true;
+    });
+  }, [produtos, stockSearch]);
+
   const fetchData = async () => {
     const [pRes, mRes, uRes, pedRes, avRes, itemsEntRes] = await Promise.all([
       supabase.from('produtos').select('*').order('categoria'),
@@ -358,11 +367,7 @@ export const Administracao = () => {
     ? ((avaliacoes.reduce((a, av) => a + av.nota_atendimento + av.nota_comida + av.nota_ambiente, 0)) / (avaliacoes.length * 3)).toFixed(1)
     : '—';
 
-  const filteredProdutos = produtos.filter(p => {
-    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const search = normalize(stockSearch);
-    return normalize(p.nome).includes(search) || normalize(p.categoria).includes(search);
-  });
+  // filteredProdutos is now a useMemo at the top
 
   const groupedProdutos = filteredProdutos.reduce((acc: any, p) => {
     if (!acc[p.categoria]) acc[p.categoria] = [];

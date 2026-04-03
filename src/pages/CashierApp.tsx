@@ -509,12 +509,15 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
     return totals;
   }, [historicoVendas]);
 
-  const filteredProdutos = produtos.filter(p => {
-    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const matchesSearch = normalize(p.nome).includes(normalize(searchTerm));
-    const matchesCategory = selectedCategory === 'TODOS' || p.categoria === selectedCategory;
-    return searchTerm ? matchesSearch : matchesCategory;
-  });
+  const filteredProdutos = useMemo(() => {
+    const normalizeStr = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const searchLower = normalizeStr(searchTerm);
+    return produtos.filter(p => {
+      const matchesSearch = normalizeStr(p.nome).includes(searchLower) || normalizeStr(p.categoria).includes(searchLower);
+      const matchesCategory = selectedCategory === 'TODOS' || p.categoria === selectedCategory;
+      return searchTerm ? matchesSearch : matchesCategory;
+    });
+  }, [produtos, searchTerm, selectedCategory]);
 
   // handleFechamentoCaixa movido para o componente FechamentoCaixa
 

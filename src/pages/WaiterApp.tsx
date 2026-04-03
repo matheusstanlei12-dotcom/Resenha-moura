@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCartStore } from '../store/cartStore';
@@ -267,6 +267,16 @@ export const Garcom = () => {
     setIsCheckingOut(false);
   };
 
+  const filteredProdutosAtendimento = useMemo(() => {
+    const normalizeStr = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const searchLower = normalizeStr(searchTerm);
+    return produtos.filter(p => {
+        const matchesSearch = normalizeStr(p.nome).includes(searchLower) || normalizeStr(p.categoria).includes(searchLower);
+        const matchesCategory = activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory;
+        return searchTerm ? matchesSearch : matchesCategory;
+    });
+  }, [produtos, searchTerm, activeCategory]);
+
   if (loading) return <div className="container text-center" style={{padding: '5rem'}}><p>Carregando...</p></div>;
 
   const currentMesaPedidos = selectedMesa ? pedidos.filter(p => p.mesa_id === selectedMesa.id) : [];
@@ -378,16 +388,11 @@ export const Garcom = () => {
                           ))}
                         </select>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                          {produtos.filter(p => {
-                              const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-                              const matchesSearch = normalize(p.nome).includes(normalize(searchTerm));
-                              const matchesCategory = activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory;
-                              return searchTerm ? matchesSearch : matchesCategory;
-                          }).map(p => (
-                              <div key={p.id} onClick={() => p.estoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
-                                <div style={{fontSize: '0.8rem', fontWeight: 600}}>{p.nome}</div>
-                                <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem' }}>R$ {p.preco.toFixed(2)}</div>
-                              </div>
+                          {filteredProdutosAtendimento.map(p => (
+                             <div key={p.id} onClick={() => p.estoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
+                               <div style={{fontSize: '0.8rem', fontWeight: 600}}>{p.nome}</div>
+                               <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem' }}>R$ {p.preco.toFixed(2)}</div>
+                             </div>
                           ))}
                         </div>
                       </div>

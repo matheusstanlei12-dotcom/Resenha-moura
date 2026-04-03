@@ -84,8 +84,23 @@ export const Dono = () => {
   const [selectedUserForRole, setSelectedUserForRole] = useState<any>(null);
   const [newRoleForUser, setNewRoleForUser] = useState('');
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+
+  // Estados para troca de nome
+  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
+  const [selectedUserForName, setSelectedUserForName] = useState<any>(null);
+  const [newNameForUser, setNewNameForUser] = useState('');
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
+
   const [searchTermEstoque, setSearchTermEstoque] = useState('');
 
+  const filteredProdutosEstoque = useMemo(() => {
+    const normalizeStr = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const searchLower = normalizeStr(searchTermEstoque);
+    return produtos.filter(p => {
+      const matchesSearch = normalizeStr(p.nome).includes(searchLower) || normalizeStr(p.categoria).includes(searchLower);
+      return searchTermEstoque ? matchesSearch : true;
+    });
+  }, [produtos, searchTermEstoque]);
 
   const fetchData = async () => {
     try {
@@ -460,6 +475,27 @@ export const Dono = () => {
     }
   };
 
+  const handleUpdateName = async () => {
+    if (!selectedUserForName || !newNameForUser.trim()) return;
+    setIsUpdatingName(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ full_name: newNameForUser.trim() })
+        .eq('id', selectedUserForName.id);
+      
+      if (error) throw error;
+      
+      alert("Nome atualizado com sucesso!");
+      setIsNameModalOpen(false);
+      fetchData();
+    } catch (err: any) {
+      alert("Erro ao alterar nome: " + err.message);
+    } finally {
+      setIsUpdatingName(false);
+    }
+  };
+
   const handleLiberarMesa = async (mesaId: string) => {
     if (!confirm("Deseja realmente liberar esta mesa vazia?")) return;
     try {
@@ -691,6 +727,7 @@ export const Dono = () => {
               </td>
               <td style={{ padding: '1rem' }}>
                 <div className="d-flex gap-2 justify-center">
+                  <button onClick={() => { setSelectedUserForName(u); setNewNameForUser(u.full_name); setIsNameModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Nome</button>
                   <button onClick={() => { setSelectedUserForPassword(u); setIsPasswordModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Senha</button>
                   <button onClick={() => { setSelectedUserForRole(u); setNewRoleForUser(u.role); setIsRoleModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>Alterar Função</button>
                   <button onClick={() => handleDeleteUser(u)} className="btn-outline" style={{ color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Remover</button>
@@ -736,11 +773,8 @@ export const Dono = () => {
       <div className="card" style={{ padding: 0 }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem' }}>Item</th><th style={{ padding: '1rem' }}>Preço</th><th style={{ padding: '1rem' }}>Estoque</th><th style={{ padding: '1rem' }}>Ações</th></tr></thead>
-          <tbody>{produtos.filter(p => {
-            const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-            const search = normalize(searchTermEstoque);
-            return normalize(p.nome).includes(search) || normalize(p.categoria).includes(search);
-          }).map(p => (
+          <tbody>
+            {filteredProdutosEstoque.map(p => (
             <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <td style={{ padding: '1rem' }}>{p.nome}</td>
               <td style={{ padding: '1rem' }}>
@@ -773,7 +807,7 @@ export const Dono = () => {
               </td>
               <td style={{ padding: '1rem' }}><button onClick={() => handleDeleteProduto(p.id)} style={{ color: 'var(--danger-color)' }}>Excluir</button></td>
             </tr>
-          )) }</tbody>
+          ))}</tbody>
         </table>
       </div>
     </div>
@@ -1428,6 +1462,35 @@ export const Dono = () => {
                 <button onClick={() => { setIsRoleModalOpen(false); setSelectedUserForRole(null); }} className="btn-outline">Cancelar</button>
                 <button onClick={handleUpdateRole} className="btn-primary" disabled={isUpdatingRole}>
                   {isUpdatingRole ? 'Atualizando...' : 'Atualizar Função'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {isNameModalOpen && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem' }}>Alterar Nome</h2>
+              <p style={{ fontSize: '0.85rem', opacity: 0.6, marginBottom: '1.5rem' }}>Especifique o novo nome completo para <b>{selectedUserForName?.full_name}</b>.</p>
+              
+              <div className="mb-6">
+                <label className="label-field">NOVO NOME</label>
+                <input 
+                  type="text"
+                  value={newNameForUser} 
+                  onChange={e => setNewNameForUser(e.target.value)} 
+                  className="input-field"
+                  placeholder="Digite o nome completo"
+                  style={{ background: '#222', color: '#fff', border: '1px solid #333' }}
+                />
+              </div>
+
+              <div className="d-flex gap-3">
+                <button onClick={() => { setIsNameModalOpen(false); setSelectedUserForName(null); }} className="btn-outline">Cancelar</button>
+                <button onClick={handleUpdateName} className="btn-primary" disabled={isUpdatingName}>
+                  {isUpdatingName ? 'Atualizando...' : 'Atualizar Nome'}
                 </button>
               </div>
             </motion.div>

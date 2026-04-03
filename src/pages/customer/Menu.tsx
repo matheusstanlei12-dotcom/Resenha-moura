@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabase';
 
 // Helper mock array in case DB isn't seeded yet
@@ -46,12 +46,15 @@ export const Menu = () => {
   }, []);
 
   const categories = Array.from(new Set(products.map(p => p.categoria.toUpperCase())));
-  const filtered = products.filter(p => {
-    const normalize = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    const matchesSearch = normalize(p.nome).includes(normalize(searchTerm));
-    const matchesCategory = p.categoria.toUpperCase() === activeTab;
-    return searchTerm ? matchesSearch : matchesCategory;
-  });
+  const filtered = useMemo(() => {
+    const normalizeStr = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const searchLower = normalizeStr(searchTerm);
+    return products.filter(p => {
+      const matchesSearch = normalizeStr(p.nome).includes(searchLower) || normalizeStr(p.categoria).includes(searchLower);
+      const matchesCategory = p.categoria.toUpperCase() === activeTab;
+      return searchTerm ? matchesSearch : matchesCategory;
+    });
+  }, [products, searchTerm, activeTab]);
 
   // Garantir que a aba ativa existe nas categorias se elas mudarem
   useEffect(() => {
