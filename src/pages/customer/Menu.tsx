@@ -14,15 +14,45 @@ export const Menu = () => {
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [activeTab, setActiveTab] = useState('PETISCO');
 
+  const fetchProducts = async () => {
+    const { data } = await supabase.from('produtos').select('*').eq('ativo', true).order('nome', { ascending: true });
+    if (data && data.length > 0) {
+      setProducts(data);
+    }
+  };
+
   useEffect(() => {
-    supabase.from('produtos').select('*').eq('ativo', true)
-      .then(({ data }) => {
-        if (data && data.length > 0) setProducts(data);
-      });
+    fetchProducts();
+    
+    // Polling de 10 segundos para garantir preços atualizados
+    const interval = setInterval(fetchProducts, 10000);
+
+    // Inscrição em tempo real para mudanças nos produtos
+    const channel = supabase
+      .channel('menu-products-realtime')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'produtos' }, 
+        () => {
+          fetchProducts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const categories = Array.from(new Set(products.map(p => p.categoria.toUpperCase())));
   const filtered = products.filter(p => p.categoria.toUpperCase() === activeTab);
+
+  // Garantir que a aba ativa existe nas categorias se elas mudarem
+  useEffect(() => {
+    if (categories.length > 0 && !categories.includes(activeTab)) {
+      setActiveTab(categories[0]);
+    }
+  }, [categories]);
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
@@ -86,7 +116,7 @@ export const Menu = () => {
                   fontSize: '1.3rem',
                   textShadow: '0 2px 10px rgba(0,0,0,0.3)'
                 }}>
-                  R$ {product.preco.toFixed(2).replace('.', ',')}
+                  R$ {product.preco?.toFixed(2).replace('.', ',')}
                 </div>
               </div>
             </div>
@@ -98,12 +128,13 @@ export const Menu = () => {
                 fontSize: '0.7rem', 
                 fontWeight: 900, 
                 textTransform: 'uppercase',
-                display: 'inline-block',
-                padding: '4px 10px',
-                background: 'rgba(244, 63, 94, 0.1)',
-                borderRadius: '6px'
+                letterSpacing: '1px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                display: 'inline-block'
               }}>
-                ESGOTADO
+                Esgotado
               </div>
             )}
           </div>
