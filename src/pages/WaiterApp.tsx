@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useCartStore } from '../store/cartStore';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +9,7 @@ import { Caixa } from './CashierApp';
 
 export const Garcom = () => {
   const { signOut, profile } = useAuth();
+  const navigate = useNavigate();
   const [activeView, setActiveView] = useState<'atendimento' | 'caixa'>('atendimento');
   const [mesas, setMesas] = useState<any[]>([]);
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -286,7 +288,7 @@ export const Garcom = () => {
             🏠 Atendimento
           </button>
           <button 
-            onClick={() => setActiveView('caixa')}
+            onClick={() => navigate('/caixa')}
             style={{ padding: '8px 20px', borderRadius: '10px', background: activeView === 'caixa' ? 'var(--primary-color)' : 'rgba(255,255,255,0.05)', color: activeView === 'caixa' ? '#000' : '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
           >
             📊 Caixa
