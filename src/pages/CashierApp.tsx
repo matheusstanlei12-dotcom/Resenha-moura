@@ -552,7 +552,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
     fetchData();
   };
 
-  const categories = ['TODOS', 'PETISCO', 'BEBIDAS', 'COQUETÉIS', 'DESTILADOS (DOSE)'];
+  const categories = ['TODOS', 'PETISCO', 'BEBIDAS', 'COQUETÉIS', 'DESTILADOS (DOSE)', 'OUTROS'];
 
   if (loading) return <div className="layout-container d-flex justify-center items-center" style={{height: '100vh', background: '#000', color: 'var(--primary-color)'}}>CARREGANDO CAIXA RESENHA...</div>;
 
@@ -635,6 +635,31 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                        <div style={{ position: 'relative' }}>
                           <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.4 }} />
                           <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: '#111', border: '1px solid #222', borderRadius: '10px', color: '#fff' }} />
+                       </div>
+                       <div className="mb-2">
+                          <select 
+                            value={selectedCategory} 
+                            onChange={(e) => { setSelectedCategory(e.target.value); setSearchTerm(''); }} 
+                            style={{ 
+                              width: '100%',
+                              padding: '0.70rem',
+                              background: '#111',
+                              border: '1px solid var(--primary-color)',
+                              borderRadius: '10px',
+                              color: '#fff',
+                              fontSize: '1rem',
+                              fontWeight: 800,
+                              outline: 'none',
+                              appearance: 'none',
+                              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
+                              backgroundRepeat: 'no-repeat',
+                              backgroundPosition: 'right 1rem center'
+                            }}
+                          >
+                            {categories.map(cat => (
+                              <option key={cat} value={cat}>{cat}</option>
+                            ))}
+                          </select>
                        </div>
                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: '0.8rem', overflowY: 'auto' }}>
                            {filteredProdutos.map(p => (

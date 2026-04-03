@@ -677,6 +677,7 @@ export const Dono = () => {
             <option value="BEBIDAS">BEBIDAS</option>
             <option value="COQUETÉIS">COQUETÉIS</option>
             <option value="DESTILADOS (DOSE)">DESTILADOS (DOSE)</option>
+            <option value="OUTROS">OUTROS</option>
           </select>
           <input name="preco" type="number" step="0.01" placeholder="R$" required className="input-field" />
           <input name="estoque" type="number" placeholder="Estoque" required className="input-field" />

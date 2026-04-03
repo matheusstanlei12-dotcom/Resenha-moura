@@ -78,7 +78,7 @@ export const Producao = () => {
     'PETISCO', 'PETISCOS', 'LANCHES', 'LANCHE', 'PORÇÕES', 'PORCOES', 
     'PORÇÃO', 'PORCAO', 'COZINHA', 'PRATOS', 'PRATO', 'REFEIÇÕES', 
     'REFEICOES', 'ENTRADAS', 'SOBREMESAS', 'SOBREMESA', 'PIZZA', 'BURGER',
-    'BEBIDAS', 'BEBIDA', 'CHOPP', 'CERVEJA'
+    'BEBIDAS', 'BEBIDA', 'CHOPP', 'CERVEJA', 'OUTROS'
   ];
   const CATS_BAR = [
     'COQUETÉIS', 'COQUITEIS', 'COQUETEIS', 'DRINKS', 'DRINK', 

@@ -543,7 +543,7 @@ export const Administracao = () => {
                       </div>
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>CATEGORIA</label>
                         <select name="categoria" className="input-field">
-                          <option>PETISCO</option><option>BEBIDAS</option><option>COQUETÉIS</option><option>DESTILADOS (DOSE)</option>
+                          <option>PETISCO</option><option>BEBIDAS</option><option>COQUETÉIS</option><option>DESTILADOS (DOSE)</option><option>OUTROS</option>
                         </select>
                       </div>
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>PREÇO</label>
