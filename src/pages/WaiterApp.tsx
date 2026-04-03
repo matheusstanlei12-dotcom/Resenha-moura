@@ -378,10 +378,11 @@ export const Garcom = () => {
                           ))}
                         </select>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                          {produtos.filter(p => 
-                              (activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory) &&
-                              (p.nome.toLowerCase().includes(searchTerm.toLowerCase()))
-                          ).map(p => (
+                          {produtos.filter(p => {
+                              const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
+                              const matchesCategory = activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory;
+                              return searchTerm ? matchesSearch : matchesCategory;
+                          }).map(p => (
                               <div key={p.id} onClick={() => p.estoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
                                 <div style={{fontSize: '0.8rem', fontWeight: 600}}>{p.nome}</div>
                                 <div style={{ color: 'var(--primary-color)', fontSize: '0.9rem' }}>R$ {p.preco.toFixed(2)}</div>

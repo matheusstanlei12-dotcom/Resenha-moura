@@ -512,7 +512,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
   const filteredProdutos = produtos.filter(p => {
     const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'TODOS' || p.categoria === selectedCategory;
-    return matchesSearch && matchesCategory;
+    return searchTerm ? matchesSearch : matchesCategory;
   });
 
   // handleFechamentoCaixa movido para o componente FechamentoCaixa

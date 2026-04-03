@@ -13,6 +13,7 @@ const MOCK_PRODUCTS = [
 export const Menu = () => {
   const [products, setProducts] = useState(MOCK_PRODUCTS);
   const [activeTab, setActiveTab] = useState('PETISCO');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchProducts = async () => {
     const { data } = await supabase.from('produtos').select('*').eq('ativo', true).order('nome', { ascending: true });
@@ -45,7 +46,11 @@ export const Menu = () => {
   }, []);
 
   const categories = Array.from(new Set(products.map(p => p.categoria.toUpperCase())));
-  const filtered = products.filter(p => p.categoria.toUpperCase() === activeTab);
+  const filtered = products.filter(p => {
+    const matchesSearch = p.nome.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = p.categoria.toUpperCase() === activeTab;
+    return searchTerm ? matchesSearch : matchesCategory;
+  });
 
   // Garantir que a aba ativa existe nas categorias se elas mudarem
   useEffect(() => {
@@ -56,6 +61,27 @@ export const Menu = () => {
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
+      {/* Barra de Pesquisa Global */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <input 
+          type="text" 
+          placeholder="🔍 O que você procura?" 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            width: '100%',
+            padding: '1rem 1.5rem',
+            background: 'var(--surface-color)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '15px',
+            color: '#fff',
+            fontSize: '1rem',
+            outline: 'none',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+          }}
+        />
+      </div>
+
       {/* Categoria Tabs - Estilo Screenshot (Arredondado) */}
       <div className="no-scrollbar" style={{ 
         display: 'flex', 
