@@ -58,7 +58,22 @@ export const Garcom = () => {
     if (activeView === 'atendimento') {
       fetchData();
       const interval = setInterval(fetchData, 5000);
-      return () => clearInterval(interval);
+      
+      // Realtime subscription for products (stock/price updates)
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'produtos' }, 
+          () => {
+            fetchData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        clearInterval(interval);
+        supabase.removeChannel(channel);
+      };
     }
   }, [activeView]);
 

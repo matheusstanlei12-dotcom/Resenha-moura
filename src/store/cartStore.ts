@@ -27,11 +27,17 @@ export const useCartStore = create<CartState>((set, get) => ({
     const existing = state.items.find(i => i.id === product.id);
     if (existing) {
       if (existing.quantidade >= product.estoque) {
-        alert("Quantidade máxima em estoque atingida!");
+        alert(`Quantidade máxima em estoque atingida para "${product.nome}"!`);
         return state;
       }
       return { items: state.items.map(i => i.id === product.id ? { ...i, quantidade: i.quantidade + 1 } : i) };
     }
+    
+    if (product.estoque <= 0) {
+      alert(`O item "${product.nome}" está esgotado!`);
+      return state;
+    }
+
     return { items: [...state.items, { ...product, quantidade: 1 }] };
   }),
   removeItem: (productId) => set((state) => {

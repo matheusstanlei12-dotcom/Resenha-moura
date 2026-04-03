@@ -637,12 +637,13 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                           <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: '#111', border: '1px solid #222', borderRadius: '10px', color: '#fff' }} />
                        </div>
                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: '0.8rem', overflowY: 'auto' }}>
-                          {filteredProdutos.map(p => (
-                            <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: 'pointer' }} onClick={() => addToCart(p)}>
-                               <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{p.nome}</div>
-                               <div style={{ color: 'var(--primary-color)', fontWeight: 900 }}>R$ {Number(p.preco).toFixed(2)}</div>
-                            </div>
-                          ))}
+                           {filteredProdutos.map(p => (
+                             <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: p.estoque > 0 ? 'pointer' : 'not-allowed', opacity: p.estoque > 0 ? 1 : 0.4 }} onClick={() => p.estoque > 0 && addToCart(p)}>
+                                <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{p.nome}</div>
+                                <div style={{ color: p.estoque > 0 ? 'var(--primary-color)' : '#666', fontWeight: 900 }}>R$ {Number(p.preco).toFixed(2)}</div>
+                                {p.estoque <= 0 && <div style={{fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger-color)', marginTop: '4px'}}>ESGOTADO</div>}
+                             </div>
+                           ))}
                        </div>
                     </div>
                    
@@ -844,7 +845,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                            onClick={() => {
                              const completed = splitPayments.filter(s => s.method !== null);
                              if (completed.length === 0) {
-                                alert("Selecione a forma de pagamento de pelo menos uma pessoa!");
+                                alert("Selecione a forma de pagamento de pelo menos uma person!");
                                 return;
                              }
                              const newPayments = [...pagamentos];
@@ -928,24 +929,24 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                            />
 
                            {selectedMethod === 'dinheiro' && (
-                              <div className="mt-2 mb-4 p-3 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                                <div className="d-flex justify-between items-center mb-2">
-                                  <label style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 800 }}>VALOR RECEBIDO DO CLIENTE (R$)</label>
-                                  {troco > 0 && (
-                                    <div style={{ background: '#10b981', color: '#000', fontSize: '0.7rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px' }}>
-                                      TROCO: R$ {troco.toFixed(2)}
-                                    </div>
-                                  )}
-                                </div>
-                                <input 
-                                  type="number" 
-                                  value={valorRecebido} 
-                                  onChange={e => setValorRecebido(e.target.value)} 
-                                  placeholder="0.00"
-                                  style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid #10b981', color: '#fff', fontSize: '1.2rem', fontWeight: 800, outline: 'none' }}
-                                />
-                              </div>
-                            )}
+                               <div className="mt-2 mb-4 p-3 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                 <div className="d-flex justify-between items-center mb-2">
+                                   <label style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: 800 }}>VALOR RECEBIDO DO CLIENTE (R$)</label>
+                                   {troco > 0 && (
+                                     <div style={{ background: '#10b981', color: '#000', fontSize: '0.7rem', fontWeight: 900, padding: '2px 8px', borderRadius: '4px' }}>
+                                       TROCO: R$ {troco.toFixed(2)}
+                                     </div>
+                                   )}
+                                 </div>
+                                 <input 
+                                   type="number" 
+                                   value={valorRecebido} 
+                                   onChange={e => setValorRecebido(e.target.value)} 
+                                   placeholder="0.00"
+                                   style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid #10b981', color: '#fff', fontSize: '1.2rem', fontWeight: 800, outline: 'none' }}
+                                 />
+                               </div>
+                             )}
                            
                            <button 
                              onClick={() => {
