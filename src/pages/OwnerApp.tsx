@@ -620,11 +620,12 @@ export const Dono = () => {
             <input value={newUserName} onChange={e => setNewUserName(e.target.value)} placeholder="Nome" required className="input-field" />
             <input type="email" value={newUserEmail} onChange={e => setNewUserEmail(e.target.value)} placeholder="E-mail" required className="input-field" />
             <input type="password" value={newUserPassword} onChange={e => setNewUserPassword(e.target.value)} placeholder="Senha" required className="input-field" />
-            <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="input-field">
+            <select value={newUserRole} onChange={e => setNewUserRole(e.target.value)} className="input-field" style={{ background: '#111', color: '#fff' }}>
               <option value="garcom">Garçom</option>
               <option value="caixa">Caixa</option>
               <option value="cozinha">Cozinha</option>
               <option value="admin">Admin</option>
+              <option value="dono">Dono (Proprietário)</option>
             </select>
             <button type="submit" className="btn-primary" disabled={isCreatingUser}>{isCreatingUser ? 'Criando...' : 'Criar'}</button>
           </form>
@@ -632,13 +633,25 @@ export const Dono = () => {
       )}
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem' }}>Nome</th><th style={{ padding: '1rem' }}>Função</th><th style={{ padding: '1rem' }}>Ações</th></tr></thead>
+          <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem', textAlign: 'left' }}>Nome</th><th style={{ padding: '1rem', textAlign: 'left' }}>E-mail</th><th style={{ padding: '1rem', textAlign: 'left' }}>Função</th><th style={{ padding: '1rem', textAlign: 'center' }}>Ações</th></tr></thead>
           <tbody>{usuarios.map(u => (
             <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
               <td style={{ padding: '1rem' }}>{u.full_name}</td>
-              <td style={{ padding: '1rem' }}>{u.role.toUpperCase()}</td>
+              <td style={{ padding: '1rem', fontSize: '0.8rem', opacity: 0.7 }}>{u.email || '---'}</td>
               <td style={{ padding: '1rem' }}>
-                <div className="d-flex gap-2">
+                <span style={{ 
+                  fontSize: '0.65rem', 
+                  padding: '4px 8px', 
+                  borderRadius: '10px', 
+                  background: u.role === 'dono' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
+                  color: u.role === 'dono' ? 'var(--primary-color)' : '#fff',
+                  fontWeight: 800
+                }}>
+                  {u.role.toUpperCase()}
+                </span>
+              </td>
+              <td style={{ padding: '1rem' }}>
+                <div className="d-flex gap-2 justify-center">
                   <button onClick={() => { setSelectedUserForPassword(u); setIsPasswordModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Senha</button>
                   <button onClick={() => handleDeleteUser(u)} className="btn-outline" style={{ color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Remover</button>
                 </div>
