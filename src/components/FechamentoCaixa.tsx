@@ -100,6 +100,24 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
     fetchTurnoData();
   }, [turnoId]);
 
+  const handleUpdateFundoTroco = async (val: string) => {
+    const novoValor = parseFloat(val.replace(',', '.'));
+    if (isNaN(novoValor)) return;
+    
+    setFundoTroco(novoValor.toFixed(2));
+    
+    if (turnoId) {
+      try {
+        await supabase
+          .from('turnos_caixa')
+          .update({ fundo_troco: novoValor })
+          .eq('id', turnoId);
+      } catch (err) {
+        console.error("Erro ao atualizar fundo de troco:", err);
+      }
+    }
+  };
+
   const saveMovimentacaoDB = async (nova: Movimentacao) => {
     if (!turnoId) return;
     try {
@@ -361,10 +379,21 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
 
         <div style={{ display: 'grid', gridTemplateColumns: isGestor ? '1fr 1fr' : '1fr', gap: '1rem', marginBottom: '1.2rem' }}>
           <div>
-            <label style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, display: 'block', marginBottom: '6px' }}>FUNDO DE TROCO (R$) {!isGestor && '🔒'}</label>
-            <div style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.7rem 1rem', color: '#d4af37', fontSize: '1.1rem', fontWeight: 700 }}>
-              R$ {parseFloat(fundoTroco || '0').toFixed(2)}
-            </div>
+            <label style={{ fontSize: '0.6rem', opacity: 0.4, fontWeight: 700, display: 'block', marginBottom: '6px' }}>FUNDO DE TROCO (R$) {profile?.role !== 'dono' && '🔒'}</label>
+            {profile?.role === 'dono' ? (
+              <input
+                type="number"
+                step="0.01"
+                value={fundoTroco}
+                onChange={(e) => setFundoTroco(e.target.value)}
+                onBlur={(e) => handleUpdateFundoTroco(e.target.value)}
+                style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid #d4af37', borderRadius: '10px', padding: '0.7rem 1rem', color: '#d4af37', fontSize: '1.1rem', fontWeight: 700, outline: 'none' }}
+              />
+            ) : (
+              <div style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.7rem 1rem', color: '#d4af37', fontSize: '1.1rem', fontWeight: 700 }}>
+                R$ {parseFloat(fundoTroco || '0').toFixed(2)}
+              </div>
+            )}
           </div>
           {isGestor && (
             <div>
