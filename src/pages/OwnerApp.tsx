@@ -45,6 +45,7 @@ export const Dono = () => {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   
   const [faturamento, setFaturamento] = useState(0);
+  const [faturamentoHoje, setFaturamentoHoje] = useState(0);
   const [pedidosAtivosCount, setPedidosAtivosCount] = useState(0);
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [produtos, setProdutos] = useState<any[]>([]);
@@ -108,11 +109,16 @@ export const Dono = () => {
       today.setHours(0, 0, 0, 0);
       const todayStart = today.toISOString();
 
-      const { data: pFinalizados } = await supabase.from('pedidos')
+      const { data: allFinalizadosStatus } = await supabase.from('pedidos')
+        .select('total')
+        .eq('status', 'finalizado');
+      setFaturamento(allFinalizadosStatus?.reduce((acc, p) => acc + Number(p.total), 0) || 0);
+
+      const { data: pFinalizadosHoje } = await supabase.from('pedidos')
         .select('total')
         .eq('status', 'finalizado')
         .gte('finalizado_at', todayStart);
-      setFaturamento(pFinalizados?.reduce((acc, p) => acc + Number(p.total), 0) || 0);
+      setFaturamentoHoje(pFinalizadosHoje?.reduce((acc, p) => acc + Number(p.total), 0) || 0);
       
       const { count } = await supabase.from('pedidos')
         .select('id', { count: 'exact' })
@@ -635,8 +641,8 @@ export const Dono = () => {
         </div>
       </div>
       <div className="stat-grid mb-6">
-        <KPIItem title="Receita Bruta" value={`R$ ${faturamento.toFixed(2).replace('.', ',')}`} icon={<TrendingUp color="#d4af37" />} color="#d4af37" trend="+12%" />
-        <KPIItem title="Equipe Resenha" value={usuarios.length.toString()} icon={<UsersIcon color="#10b981" />} color="#10b981" trend="Membros" />
+        <KPIItem title="Receita Bruta (TOTAL)" value={`R$ ${faturamento.toFixed(2).replace('.', ',')}`} icon={<TrendingUp color="#d4af37" />} color="#d4af37" trend="Acumulado" />
+        <KPIItem title="Faturamento Hoje" value={`R$ ${faturamentoHoje.toFixed(2).replace('.', ',')}`} icon={<Banknote color="#10b981" />} color="#10b981" trend="Diário" />
         <KPIItem title="Pedidos Ativos" value={pedidosAtivosCount.toString()} icon={<Utensils color="#3b82f6" />} color="#3b82f6" trend="Cozinha" />
         <KPIItem title="Top Garçom" value={waiterRanking[0]?.name?.split(' ')[0] || '---'} icon={<Star color="#8b5cf6" />} color="#8b5cf6" trend="Destaque" />
       </div>
