@@ -33,7 +33,7 @@ export const Garcom = () => {
     try {
       const { data: mesasData } = await supabase.from('mesas').select('*').order('numero', { ascending: true });
       const { data: pedidosData } = await supabase.from('pedidos').select('id, mesa_id, status, total').neq('status', 'finalizado');
-      const { data: prodsData } = await supabase.from('produtos').select('*').eq('ativo', true).order('categoria', { ascending: true });
+      const { data: prodsData } = await supabase.from('produtos').select('*').order('categoria', { ascending: true });
       
       if (mesasData) setMesas(mesasData);
       if (pedidosData) {
@@ -271,8 +271,9 @@ export const Garcom = () => {
     const normalizeStr = (s: string) => (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
     const searchLower = normalizeStr(searchTerm);
     return produtos.filter(p => {
-        const matchesSearch = normalizeStr(p.nome).includes(searchLower) || normalizeStr(p.categoria).includes(searchLower);
-        const matchesCategory = activeCategory === 'TODOS' || p.categoria.toUpperCase() === activeCategory;
+        const pCat = (p.categoria || "GERAL").toUpperCase();
+        const matchesSearch = normalizeStr(p.nome).includes(searchLower) || normalizeStr(pCat).includes(searchLower);
+        const matchesCategory = activeCategory === 'TODOS' || pCat === activeCategory;
         return searchTerm ? matchesSearch : matchesCategory;
     });
   }, [produtos, searchTerm, activeCategory]);
@@ -383,7 +384,7 @@ export const Garcom = () => {
                         </div>
                         <select value={activeCategory} onChange={(e) => { setActiveCategory(e.target.value); setSearchTerm(''); }} className="input-field mb-4" style={{ borderRadius: '10px' }}>
                           <option value="TODOS">Todas Categorias</option>
-                          {Array.from(new Set(produtos.map(p => p.categoria.toUpperCase()))).map(cat => (
+                          {Array.from(new Set(produtos.map(p => (p.categoria || "GERAL").toUpperCase()))).map(cat => (
                             <option key={cat as string} value={cat as string}>{cat}</option>
                           ))}
                         </select>

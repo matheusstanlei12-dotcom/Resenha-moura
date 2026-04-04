@@ -52,16 +52,20 @@ export const useCartStore = create<CartState>((set, get) => ({
     const state = get();
     if (state.items.length === 0) return false;
 
-    const totalCalculado = state.items.reduce((a, b) => a + (b.preco * b.quantidade), 0);
+    // Previne múltiplos cliques esvaziando o carrinho sincronicamente antes da requisição
+    const itemsToSubmit = [...state.items];
+    set({ items: [] });
+
+    const totalCalculado = itemsToSubmit.reduce((a, b) => a + (b.preco * b.quantidade), 0);
 
     // 1. Criar Pedido no Supabase
-    // Buscar id interno da mesa pelo qr_code ID ou usar o UUID já fornecido pelo Garçom
     let uuidRealDaMesa = mesaId;
     
     if (mesaId.startsWith('mesa-') && mesaId.endsWith('-qr')) {
       const { data: mesaData } = await supabase.from('mesas').select('id').eq('qr_code', mesaId).single();
       if (!mesaData) {
          console.error("Mesa não encontrada no Supabase:", mesaId);
+         set({ items: itemsToSubmit }); // Reverte o carrinho
          return false;
       }
       uuidRealDaMesa = mesaData.id;
@@ -77,11 +81,12 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     if (errPedido || !pedido) {
       console.error(errPedido);
+      set({ items: itemsToSubmit }); // Reverte o carrinho
       return false;
     }
 
     // 2. Criar Itens do Pedido
-    const itensInsert = state.items.map(i => ({
+    const itensInsert = itemsToSubmit.map(i => ({
       pedido_id: pedido.id,
       produto_id: i.id,
       quantidade: i.quantidade,
@@ -90,8 +95,7 @@ export const useCartStore = create<CartState>((set, get) => ({
 
     await supabase.from('itens_pedido').insert(itensInsert);
 
-    // Sucesso
-    set({ items: [] });
+    // Sucesso (já limpou antes)
     return true;
   }
 }));
