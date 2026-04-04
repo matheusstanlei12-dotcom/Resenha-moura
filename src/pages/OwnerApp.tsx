@@ -104,10 +104,19 @@ export const Dono = () => {
 
   const fetchData = async () => {
     try {
-      const { data: pFinalizados } = await supabase.from('pedidos').select('total').eq('status', 'finalizado');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStart = today.toISOString();
+
+      const { data: pFinalizados } = await supabase.from('pedidos')
+        .select('total')
+        .eq('status', 'finalizado')
+        .gte('finalizado_at', todayStart);
       setFaturamento(pFinalizados?.reduce((acc, p) => acc + Number(p.total), 0) || 0);
       
-      const { count } = await supabase.from('pedidos').select('id', { count: 'exact' }).neq('status', 'finalizado');
+      const { count } = await supabase.from('pedidos')
+        .select('id', { count: 'exact' })
+        .neq('status', 'finalizado');
       setPedidosAtivosCount(count || 0);
 
       // Buscar todos os perfis, inclusive o dono
@@ -121,7 +130,10 @@ export const Dono = () => {
       const { data: mses } = await supabase.from('mesas').select('*').order('numero', { ascending: true });
       setMesas(mses || []);
 
-      const { data: rankingData } = await supabase.from('pedidos').select('total, mesa_id, garcom_id, profiles:garcom_id(full_name, role)').eq('status', 'finalizado');
+      const { data: rankingData } = await supabase.from('pedidos')
+        .select('total, mesa_id, garcom_id, profiles:garcom_id(full_name, role)')
+        .eq('status', 'finalizado')
+        .gte('finalizado_at', todayStart);
       
       if (rankingData) {
         const stats: any = {};
@@ -1081,6 +1093,35 @@ export const Dono = () => {
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedOS, setExpandedOS] = useState<string | null>(null);
 
+  const currentShiftOrders = useMemo(() => {
+    const turnoAberto = turnosHistorico.find(t => t.status === 'aberto');
+    if (!turnoAberto) return [];
+    return historicoCompleto.filter(p => p.turno_id === turnoAberto.id);
+  }, [historicoCompleto, turnosHistorico]);
+
+  const currentShiftPaymentTotals = useMemo(() => {
+    const totals = { pix: 0, dinheiro: 0, debito: 0, credito: 0 };
+    currentShiftOrders.forEach(p => {
+      if (!p.forma_pagamento) return;
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9.]+)\)/gi);
+      if (matches) {
+        matches.forEach((m: string) => {
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
+          const valMatch = m.match(/R\$([0-9.]+)/);
+          if (typeMatch && valMatch) {
+            const type = typeMatch[1].toUpperCase();
+            const val = parseFloat(valMatch[1]);
+            if (type === 'PIX') totals.pix += val;
+            else if (type === 'DINHEIRO') totals.dinheiro += val;
+            else if (type === 'DÉBITO' || type === 'DEBITO') totals.debito += val;
+            else if (type === 'CRÉDITO' || type === 'CREDITO') totals.credito += val;
+          }
+        });
+      }
+    });
+    return totals;
+  }, [currentShiftOrders]);
+
   // 1. Agrupar turnos por data de forma robusta (Movido para o topo para seguir as regras de Hooks)
   const turnosPorData = useMemo(() => {
       try {
@@ -1151,8 +1192,8 @@ export const Dono = () => {
             </div>
 
             <FechamentoCaixa
-                historicoVendas={historicoCompleto}
-                paymentTotals={paymentTotalsForCaixa}
+                historicoVendas={currentShiftOrders}
+                paymentTotals={currentShiftPaymentTotals}
                 onRefresh={fetchData}
             />
         </div>

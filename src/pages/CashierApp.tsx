@@ -184,14 +184,21 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
          }
       }
 
-      // 2. Histórico (Últimas 24 horas para cobrir turnos de madrugada)
-      const now = new Date();
-      const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-      const { data: historico } = await supabase.from('pedidos')
+      // 2. Histórico (Filtrar por turno_id se estiver aberto, caso contrário últimas 24 horas)
+      const currentTurnoId = localStorage.getItem('turno_id');
+      let query = supabase.from('pedidos')
         .select('*, profiles:garcom_id(full_name), mesas(numero)')
-        .eq('status', 'finalizado')
-        .gte('finalizado_at', last24h)
-        .order('finalizado_at', { ascending: false });
+        .eq('status', 'finalizado');
+
+      if (currentTurnoId) {
+        query = query.eq('turno_id', currentTurnoId);
+      } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        query = query.gte('finalizado_at', today.toISOString());
+      }
+
+      const { data: historico } = await query.order('finalizado_at', { ascending: false });
       setHistoricoVendas(historico || []);
 
       // 3. Produtos para Venda de Balcão

@@ -101,14 +101,29 @@ export const Administracao = () => {
     setAvaliacoes(avRes.data || []);
     setItensEntregues(itemsEntRes.data || []);
 
-    // Histórico (Últimas 24 horas)
-    const now = new Date();
-    const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: historico } = await supabase.from('pedidos')
+    // Identificar turno ativo para filtrar histórico
+    const { data: activeTurno } = await supabase
+      .from('turnos_caixa')
+      .select('id')
+      .eq('status', 'aberto')
+      .order('aberto_em', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Histórico (Filtrar por turno ativo se houver, caso contrário últimas 24 horas)
+    let qHist = supabase.from('pedidos')
       .select('*, profiles:garcom_id(full_name), mesas(numero)')
-      .eq('status', 'finalizado')
-      .gte('finalizado_at', last24h)
-      .order('finalizado_at', { ascending: false });
+      .eq('status', 'finalizado');
+
+    if (activeTurno) {
+      qHist = qHist.eq('turno_id', activeTurno.id);
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      qHist = qHist.gte('finalizado_at', today.toISOString());
+    }
+
+    const { data: historico } = await qHist.order('finalizado_at', { ascending: false });
     setHistoricoVendas(historico || []);
     
     setLoading(false);
