@@ -21,8 +21,8 @@ type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 
 
 const COLORS = ['#d4af37', '#eab308', '#f59e0b', '#10b981', '#3b82f6'];
 
-const KPIItem = ({ title, value, icon, color, trend }: any) => (
-  <div className="card" style={{ padding: '1.5rem', position: 'relative' }}>
+const KPIItem = ({ title, value, icon, color, trend, onClick }: any) => (
+  <div className="card" onClick={onClick} style={{ padding: '1.5rem', position: 'relative', cursor: onClick ? 'pointer' : 'default', transition: 'all 0.3s ease' }}>
     <div style={{ position: 'absolute', top: 0, left: 0, height: '3px', width: '100%', background: color }}></div>
     <div className="d-flex justify-between items-start mb-4">
        <div style={{ background: `${color}11`, padding: '10px', borderRadius: '10px' }}>{icon}</div>
@@ -64,6 +64,8 @@ export const Dono = () => {
   const [itemParaExcluirAtu, setItemParaExcluirAtu] = useState<any>(null);
   const [motivoExclusaoAtu, setMotivoExclusaoAtu] = useState('');
   const [isExcluindoAtu, setIsExcluindoAtu] = useState(false);
+  
+  const [selectedPaymentDetail, setSelectedPaymentDetail] = useState<string | null>(null);
 
 
   // Modal Novo Colaborador
@@ -169,7 +171,11 @@ export const Dono = () => {
       setRecentOrders(recents || []);
 
 
-      const { data: allFinalizados } = await supabase.from('pedidos').select('*, mesas(numero)').eq('status', 'finalizado').order('finalizado_at', { ascending: false });
+      const { data: allFinalizados } = await supabase
+        .from('pedidos')
+        .select('*, mesas(numero), itens_pedido(quantidade, preco_unitario, produtos(nome))')
+        .eq('status', 'finalizado')
+        .order('finalizado_at', { ascending: false });
       setHistoricoCompleto(allFinalizados || []);
 
       const { data: turnos, error: turnosError } = await supabase
@@ -599,6 +605,46 @@ export const Dono = () => {
     return totals;
   }, [historicoCompleto]);
 
+  const ordersByPaymentMethod = useMemo(() => {
+    const groups: Record<string, any[]> = { 
+      'PIX': [], 
+      'DINHEIRO': [], 
+      'DÉBITO': [], 
+      'CRÉDITO': [], 
+      'CARTÕES ANTIGOS': [] 
+    };
+    
+    historicoCompleto.forEach(order => {
+      if (!order.forma_pagamento) return;
+      
+      const matches = order.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9.]+)\)/gi);
+      if (matches) {
+        matches.forEach((m: string) => {
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
+          if (typeMatch) {
+            const type = typeMatch[1].toUpperCase();
+            let key = type;
+            if (type === 'DEBITO') key = 'DÉBITO';
+            if (type === 'CREDITO') key = 'CRÉDITO';
+            if (type === 'CARTAO' || type === 'CARTÃO') key = 'CARTÕES ANTIGOS';
+            
+            if (groups[key]) {
+               if (!groups[key].find((o: any) => o.id === order.id)) {
+                 groups[key].push(order);
+               }
+            }
+          }
+        });
+      }
+    });
+
+    Object.keys(groups).forEach(key => {
+      groups[key].sort((a, b) => new Date(b.finalizado_at || b.data_hora).getTime() - new Date(a.finalizado_at || a.data_hora).getTime());
+    });
+
+    return groups;
+  }, [historicoCompleto]);
+
   const dynamicChartData = useMemo(() => {
     const dailyTotals: Record<string, number> = {};
     const sevenDaysAgo = new Date();
@@ -648,13 +694,139 @@ export const Dono = () => {
       </div>
       
       <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fff' }}>Receita por Forma de Pagamento</h3>
-      <div className="stat-grid mb-10">
-        <KPIItem title="PIX" value={`R$ ${paymentTotals.pix.toFixed(2).replace('.', ',')}`} icon={<QrCode color="#10b981" />} color="#10b981" trend="Digital" />
-        <KPIItem title="DINHEIRO" value={`R$ ${paymentTotals.dinheiro.toFixed(2).replace('.', ',')}`} icon={<Banknote color="#f59e0b" />} color="#f59e0b" trend="Cédulas" />
-        <KPIItem title="DÉBITO" value={`R$ ${paymentTotals.debito.toFixed(2).replace('.', ',')}`} icon={<CreditCard color="#3b82f6" />} color="#3b82f6" trend="Cartão" />
-        <KPIItem title="CRÉDITO" value={`R$ ${paymentTotals.credito.toFixed(2).replace('.', ',')}`} icon={<CreditCard color="#8b5cf6" />} color="#8b5cf6" trend="Cartão" />
-        {paymentTotals.outrosCartoes > 0 && <KPIItem title="CARTÕES ANTIGOS" value={`R$ ${paymentTotals.outrosCartoes.toFixed(2).replace('.', ',')}`} icon={<CreditCard color="#888" />} color="#888" trend="Legado" />}
+      <div className="stat-grid mb-6">
+        <KPIItem 
+          title="PIX" 
+          value={`R$ ${paymentTotals.pix.toFixed(2).replace('.', ',')}`} 
+          icon={<QrCode color="#10b981" />} 
+          color="#10b981" 
+          trend="Digital" 
+          onClick={() => setSelectedPaymentDetail(selectedPaymentDetail === 'PIX' ? null : 'PIX')}
+        />
+        <KPIItem 
+          title="DINHEIRO" 
+          value={`R$ ${paymentTotals.dinheiro.toFixed(2).replace('.', ',')}`} 
+          icon={<Banknote color="#f59e0b" />} 
+          color="#f59e0b" 
+          trend="Cédulas" 
+          onClick={() => setSelectedPaymentDetail(selectedPaymentDetail === 'DINHEIRO' ? null : 'DINHEIRO')}
+        />
+        <KPIItem 
+          title="DÉBITO" 
+          value={`R$ ${paymentTotals.debito.toFixed(2).replace('.', ',')}`} 
+          icon={<CreditCard color="#3b82f6" />} 
+          color="#3b82f6" 
+          trend="Cartão" 
+          onClick={() => setSelectedPaymentDetail(selectedPaymentDetail === 'DÉBITO' ? null : 'DÉBITO')}
+        />
+        <KPIItem 
+          title="CRÉDITO" 
+          value={`R$ ${paymentTotals.credito.toFixed(2).replace('.', ',')}`} 
+          icon={<CreditCard color="#8b5cf6" />} 
+          color="#8b5cf6" 
+          trend="Cartão" 
+          onClick={() => setSelectedPaymentDetail(selectedPaymentDetail === 'CRÉDITO' ? null : 'CRÉDITO')}
+        />
+        {paymentTotals.outrosCartoes > 0 && 
+          <KPIItem 
+            title="CARTÕES ANTIGOS" 
+            value={`R$ ${paymentTotals.outrosCartoes.toFixed(2).replace('.', ',')}`} 
+            icon={<CreditCard color="#888" />} 
+            color="#888" 
+            trend="Legado" 
+            onClick={() => setSelectedPaymentDetail(selectedPaymentDetail === 'CARTÕES ANTIGOS' ? null : 'CARTÕES ANTIGOS')}
+          />
+        }
       </div>
+
+      <AnimatePresence>
+        {selectedPaymentDetail && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-10"
+            style={{ overflow: 'hidden' }}
+          >
+            <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--primary-color)22' }}>
+              <div className="d-flex justify-between items-center mb-6">
+                <div className="d-flex items-center gap-3">
+                  <Folder color="var(--primary-color)" />
+                  <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Detalhamento: {selectedPaymentDetail}</h3>
+                </div>
+                <button 
+                  onClick={() => setSelectedPaymentDetail(null)}
+                  className="btn-outline" 
+                  style={{ width: 'auto', padding: '5px 15px', fontSize: '0.8rem' }}
+                >
+                  Fechar Detalhes
+                </button>
+              </div>
+
+              {ordersByPaymentMethod[selectedPaymentDetail]?.length === 0 ? (
+                <div className="text-center py-10 opacity-50">Nenhum pedido encontrado para este método.</div>
+              ) : (
+                <div className="d-flex flex-col gap-4">
+                  {ordersByPaymentMethod[selectedPaymentDetail]?.map((order: any) => (
+                    <div key={order.id} className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.01)' }}>
+                      <details className="group">
+                        <summary className="d-flex justify-between items-center p-4 cursor-pointer hover:bg-white/5 transition-colors">
+                          <div className="d-flex items-center gap-4">
+                            <div style={{ background: 'var(--primary-color)22', padding: '8px 12px', borderRadius: '8px', color: 'var(--primary-color)', fontWeight: 800 }}>
+                              MESA {order.mesas?.numero || 'S/N'}
+                            </div>
+                            <div className="d-flex flex-col">
+                              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{new Date(order.finalizado_at || order.data_hora).toLocaleString('pt-BR')}</span>
+                              <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>{order.cliente_nome || 'Cliente não identificado'}</span>
+                            </div>
+                          </div>
+                          <div className="d-flex items-center gap-4">
+                            <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--primary-color)' }}>
+                              R$ {Number(order.total).toFixed(2).replace('.', ',')}
+                            </span>
+                            <ChevronDown className="group-open:rotate-180 transition-transform opacity-50" />
+                          </div>
+                        </summary>
+                        <div className="p-4 pt-0 border-t border-white/5 bg-black/20">
+                          <table style={{ width: '100%', fontSize: '0.85rem', marginTop: '1rem' }}>
+                            <thead>
+                              <tr style={{ opacity: 0.5 }}>
+                                <th style={{ textAlign: 'left', padding: '8px 0' }}>Produto</th>
+                                <th style={{ textAlign: 'center', padding: '8px 0' }}>Qtd</th>
+                                <th style={{ textAlign: 'right', padding: '8px 0' }}>Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {order.itens_pedido?.map((item: any, idx: number) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                  <td style={{ padding: '8px 0' }}>{item.produtos?.nome || 'Item Desconhecido'}</td>
+                                  <td style={{ padding: '8px 0', textAlign: 'center' }}>{item.quantidade}x</td>
+                                  <td style={{ padding: '8px 0', textAlign: 'right' }}>R$ {(Number(item.preco_unitario || 0) * item.quantidade).toFixed(2).replace('.', ',')}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot>
+                              <tr>
+                                <td colSpan={2} style={{ padding: '15px 0 5px', fontWeight: 700 }}>Total do Pedido</td>
+                                <td style={{ padding: '15px 0 5px', textAlign: 'right', fontWeight: 800 }}>R$ {Number(order.total).toFixed(2).replace('.', ',')}</td>
+                              </tr>
+                              <tr>
+                                <td colSpan={3} style={{ fontSize: '0.7rem', opacity: 0.4, fontStyle: 'italic' }}>
+                                  Pagamento: {order.forma_pagamento}
+                                </td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </details>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
         <div className="card" style={{ padding: '1.5rem', gridColumn: '1 / -1' }}>
