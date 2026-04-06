@@ -22,14 +22,14 @@ type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 
 const COLORS = ['#d4af37', '#eab308', '#f59e0b', '#10b981', '#3b82f6'];
 
 const KPIItem = ({ title, value, icon, color, trend, onClick }: any) => (
-  <div className="card" onClick={onClick} style={{ padding: '1.5rem', position: 'relative', cursor: onClick ? 'pointer' : 'default', transition: 'all 0.3s ease' }}>
+  <div className="card" onClick={onClick} style={{ padding: '1.25rem', position: 'relative', cursor: onClick ? 'pointer' : 'default', transition: 'all 0.3s ease' }}>
     <div style={{ position: 'absolute', top: 0, left: 0, height: '3px', width: '100%', background: color }}></div>
-    <div className="d-flex justify-between items-start mb-4">
-       <div style={{ background: `${color}11`, padding: '10px', borderRadius: '10px' }}>{icon}</div>
-       <span style={{ fontSize: '0.65rem', padding: '4px 8px', background: `${color}11`, borderRadius: '20px', color }}>{trend}</span>
+    <div className="d-flex justify-between items-start mb-3">
+       <div style={{ background: `${color}11`, padding: '8px', borderRadius: '10px' }}>{icon}</div>
+       <span style={{ fontSize: '0.6rem', padding: '3px 7px', background: `${color}11`, borderRadius: '20px', color }}>{trend}</span>
     </div>
-    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{title}</div>
-    <div style={{ fontSize: '1.8rem', fontWeight: 800 }}>{value}</div>
+    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{title}</div>
+    <div style={{ fontSize: 'clamp(1.2rem, 5vw, 1.8rem)', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
   </div>
 );
 
@@ -43,6 +43,13 @@ export const Dono = () => {
   const { signOut, profile } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   const [faturamento, setFaturamento] = useState(0);
   const [faturamentoHoje, setFaturamentoHoje] = useState(0);
@@ -680,10 +687,10 @@ export const Dono = () => {
 
   const renderDashboard = () => (
     <div className="animate-fade-in">
-      <div className="d-flex justify-between items-center mb-8">
+      <div className="d-flex justify-between items-center mb-6">
         <div>
-          <h1 style={{ fontSize: '2rem', color: '#fff', fontWeight: 800 }}>Bem-vindo, {profile?.full_name || 'Gestor'}! ✨</h1>
-          <p className="text-muted">Painel VIP - Controle Total do Estabelecimento.</p>
+          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', color: '#fff', fontWeight: 800 }}>Olá, {profile?.full_name?.split(' ')[0] || 'Gestor'}! ✨</h1>
+          <p className="text-muted" style={{ fontSize: '0.85rem' }}>Painel VIP - Gestão em Tempo Real.</p>
         </div>
       </div>
       <div className="stat-grid mb-6">
@@ -828,10 +835,10 @@ export const Dono = () => {
         )}
       </AnimatePresence>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-        <div className="card" style={{ padding: '1.5rem', gridColumn: '1 / -1' }}>
-           <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>Vendas Diárias (Últimos 7 dias)</h3>
-           <div style={{ height: '250px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+        <div className="card" style={{ padding: '1.25rem', gridColumn: isMobile ? 'span 1' : '1 / -1' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1.25rem' }}>Vendas Diárias (Últimos 7 dias)</h3>
+           <div style={{ height: isMobile ? '200px' : '250px' }}>
              <ResponsiveContainer width="100%" height="100%">
                <AreaChart data={dynamicChartData}>
                  <XAxis dataKey="name" fontSize={10} />
@@ -848,9 +855,9 @@ export const Dono = () => {
              <ResponsiveContainer width="100%" height="100%"><BarChart data={waiterRanking}><XAxis dataKey="name" fontSize={10} /><YAxis fontSize={10} /><Tooltip /><Bar dataKey="mesaCount" fill="#10b981" /></BarChart></ResponsiveContainer>
            </div>
         </div>
-        <div className="card" style={{ padding: '1.5rem' }}>
-           <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>Fluxo de Pedidos Recentes</h3>
-           <div className="d-flex flex-col gap-3">
+        <div className="card" style={{ padding: '1.25rem' }}>
+           <h3 style={{ fontSize: '1rem', marginBottom: '1.25rem' }}>Fluxo de Pedidos Recentes</h3>
+           <div className="d-flex flex-col gap-2">
              {recentOrders.map((o: any) => (
                <div key={o.id} className="d-flex justify-between items-center p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.02)' }}>
                  <div>
@@ -876,8 +883,8 @@ export const Dono = () => {
   const renderUsuarios = () => (
     <div className="animate-fade-in">
       <div className="d-flex justify-between items-center mb-6">
-        <h2 style={{ fontSize: '1.8rem', fontWeight: 800 }}>Gestão de Equipe ({usuarios.length})</h2>
-        <button className="btn-success" onClick={() => setShowNewUser(!showNewUser)} style={{ width: 'auto' }}>{showNewUser ? 'Cancelar' : '+ Cadastrar Usuário'}</button>
+        <h2 style={{ fontSize: isMobile ? '1.4rem' : '1.8rem', fontWeight: 800 }}>Gestão de Equipe ({usuarios.length})</h2>
+        <button className="btn-success" onClick={() => setShowNewUser(!showNewUser)} style={{ width: 'auto', padding: isMobile ? '8px 12px' : '1rem', fontSize: isMobile ? '0.8rem' : '1rem' }}>{showNewUser ? 'Cancelar' : '+ Cadastrar Usuário'}</button>
       </div>
       {showNewUser && (
         <div className="card mb-6">
@@ -896,17 +903,19 @@ export const Dono = () => {
           </form>
         </div>
       )}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem', textAlign: 'left' }}>Nome</th><th style={{ padding: '1rem', textAlign: 'left' }}>E-mail</th><th style={{ padding: '1rem', textAlign: 'left' }}>Função</th><th style={{ padding: '1rem', textAlign: 'center' }}>Ações</th></tr></thead>
-          <tbody>{usuarios.map(u => (
-            <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <td style={{ padding: '1rem' }}>{u.full_name}</td>
-              <td style={{ padding: '1rem', fontSize: '0.8rem', opacity: 0.7 }}>{u.email || '---'}</td>
-              <td style={{ padding: '1rem' }}>
+      
+      {isMobile ? (
+        <div className="mobile-card-view">
+          {usuarios.map(u => (
+            <div key={u.id} className="mobile-card-item">
+              <div className="d-flex justify-between items-start mb-3">
+                <div>
+                  <span className="mobile-label">Nome</span>
+                  <div className="mobile-value">{u.full_name}</div>
+                </div>
                 <span style={{ 
-                  fontSize: '0.65rem', 
-                  padding: '4px 8px', 
+                  fontSize: '0.6rem', 
+                  padding: '3px 8px', 
                   borderRadius: '10px', 
                   background: u.role === 'dono' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
                   color: u.role === 'dono' ? 'var(--primary-color)' : '#fff',
@@ -914,26 +923,59 @@ export const Dono = () => {
                 }}>
                   {u.role.toUpperCase()}
                 </span>
-              </td>
-              <td style={{ padding: '1rem' }}>
-                <div className="d-flex gap-2 justify-center">
-                  <button onClick={() => { setSelectedUserForName(u); setNewNameForUser(u.full_name); setIsNameModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Nome</button>
-                  <button onClick={() => { setSelectedUserForPassword(u); setIsPasswordModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Senha</button>
-                  <button onClick={() => { setSelectedUserForRole(u); setNewRoleForUser(u.role); setIsRoleModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>Alterar Função</button>
-                  <button onClick={() => handleDeleteUser(u)} className="btn-outline" style={{ color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Remover</button>
-                </div>
-              </td>
-            </tr>
-          ))}</tbody>
-
-        </table>
-      </div>
+              </div>
+              <div className="mb-4">
+                <span className="mobile-label">E-mail</span>
+                <div className="mobile-value" style={{ fontSize: '0.8rem', opacity: 0.7 }}>{u.email || '---'}</div>
+              </div>
+              <div className="d-flex flex-wrap gap-2">
+                <button onClick={() => { setSelectedUserForName(u); setNewNameForUser(u.full_name); setIsNameModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.65rem', padding: '6px 10px', width: 'auto' }}>Nome</button>
+                <button onClick={() => { setSelectedUserForPassword(u); setIsPasswordModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.65rem', padding: '6px 10px', width: 'auto' }}>Senha</button>
+                <button onClick={() => { setSelectedUserForRole(u); setNewRoleForUser(u.role); setIsRoleModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.65rem', padding: '6px 10px', width: 'auto', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>Função</button>
+                <button onClick={() => handleDeleteUser(u)} className="btn-outline" style={{ color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', fontSize: '0.65rem', padding: '6px 10px', width: 'auto' }}>Remover</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem', textAlign: 'left' }}>Nome</th><th style={{ padding: '1rem', textAlign: 'left' }}>E-mail</th><th style={{ padding: '1rem', textAlign: 'left' }}>Função</th><th style={{ padding: '1rem', textAlign: 'center' }}>Ações</th></tr></thead>
+            <tbody>{usuarios.map(u => (
+              <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={{ padding: '1rem' }}>{u.full_name}</td>
+                <td style={{ padding: '1rem', fontSize: '0.8rem', opacity: 0.7 }}>{u.email || '---'}</td>
+                <td style={{ padding: '1rem' }}>
+                  <span style={{ 
+                    fontSize: '0.65rem', 
+                    padding: '4px 8px', 
+                    borderRadius: '10px', 
+                    background: u.role === 'dono' ? 'rgba(212,175,55,0.1)' : 'rgba(255,255,255,0.05)',
+                    color: u.role === 'dono' ? 'var(--primary-color)' : '#fff',
+                    fontWeight: 800
+                  }}>
+                    {u.role.toUpperCase()}
+                  </span>
+                </td>
+                <td style={{ padding: '1rem' }}>
+                  <div className="d-flex gap-2 justify-center">
+                    <button onClick={() => { setSelectedUserForName(u); setNewNameForUser(u.full_name); setIsNameModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Nome</button>
+                    <button onClick={() => { setSelectedUserForPassword(u); setIsPasswordModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Alterar Senha</button>
+                    <button onClick={() => { setSelectedUserForRole(u); setNewRoleForUser(u.role); setIsRoleModalOpen(true); }} className="btn-outline" style={{ fontSize: '0.7rem', padding: '5px 10px', width: 'auto', borderColor: 'var(--primary-color)', color: 'var(--primary-color)' }}>Função</button>
+                    <button onClick={() => handleDeleteUser(u)} className="btn-outline" style={{ color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', fontSize: '0.7rem', padding: '5px 10px', width: 'auto' }}>Remover</button>
+                  </div>
+                </td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 
   const renderProdutos = () => (
     <div className="animate-fade-in">
-      <h2 className="mb-6" style={{ fontSize: '1.8rem', fontWeight: 800 }}>Produtos & Estoque</h2>
+      <h2 className="mb-6" style={{ fontSize: isMobile ? '1.4rem' : '1.8rem', fontWeight: 800 }}>Produtos & Estoque</h2>
       <div className="card mb-6">
         <form onSubmit={handleAddProduto} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
           <input name="nome" placeholder="Nome" required className="input-field" />
@@ -960,46 +1002,95 @@ export const Dono = () => {
         />
       </div>
 
-      <div className="card" style={{ padding: 0 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem' }}>Item</th><th style={{ padding: '1rem' }}>Preço</th><th style={{ padding: '1rem' }}>Estoque</th><th style={{ padding: '1rem' }}>Ações</th></tr></thead>
-          <tbody>
-            {filteredProdutosEstoque.map(p => (
-            <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <td style={{ padding: '1rem' }}>{p.nome}</td>
-              <td style={{ padding: '1rem' }}>
-                <div className="d-flex items-center gap-1">
-                  <span style={{color: 'var(--text-muted)'}}>R$</span>
-                  <input 
-                    key={p.id + '-preco-' + p.preco}
-                    type="number" 
-                    step="0.01" 
-                    defaultValue={p.preco} 
-                    onBlur={(e) => handleUpdatePreco(p.id, e.target.value)} 
-                    onKeyDown={(e) => e.key === 'Enter' && handleUpdatePreco(p.id, (e.target as HTMLInputElement).value)} 
-                    style={{ width: '80px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'white' }} 
-                  />
+      {isMobile ? (
+        <div className="mobile-card-view">
+          {filteredProdutosEstoque.map(p => (
+            <div key={p.id} className="mobile-card-item">
+              <div className="d-flex justify-between items-center mb-4">
+                <div>
+                  <span className="mobile-label">Item</span>
+                  <div className="mobile-value">{p.nome} <span style={{ opacity: 0.5, fontSize: '0.7rem' }}>({p.categoria})</span></div>
                 </div>
-              </td>
-              <td style={{ padding: '1rem' }}>
-                <div className="d-flex items-center gap-2">
-                   <button onClick={() => handleUpdateEstoque(p.id, p.estoque, -1)} className="btn-outline" style={{width: '28px'}}>-</button>
-                   <input 
-                    key={p.id + '-estoque-' + p.estoque}
-                    type="number" 
-                    defaultValue={p.estoque} 
-                    onBlur={(e) => handleDirectStockInput(p.id, e.target.value)} 
-                    onKeyDown={(e) => e.key === 'Enter' && handleDirectStockInput(p.id, (e.target as HTMLInputElement).value)} 
-                    style={{ width: '60px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center', color: p.estoque < 10 ? 'var(--danger-color)' : 'var(--success-color)', fontWeight: 'bold' }} 
-                   />
-                   <button onClick={() => handleUpdateEstoque(p.id, p.estoque, 1)} className="btn-outline" style={{width: '28px'}}>+</button>
+                <button onClick={() => handleDeleteProduto(p.id)} style={{ color: 'var(--danger-color)', padding: '8px' }}>
+                  <Trash2 size={18} />
+                </button>
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <span className="mobile-label">Preço</span>
+                  <div className="d-flex items-center gap-1">
+                    <span style={{color: 'var(--text-muted)', fontSize: '0.8rem'}}>R$</span>
+                    <input 
+                      key={p.id + '-preco-mob-' + p.preco}
+                      type="number" 
+                      step="0.01" 
+                      defaultValue={p.preco} 
+                      onBlur={(e) => handleUpdatePreco(p.id, e.target.value)} 
+                      style={{ width: '100%', padding: '8px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'white', fontSize: '1rem' }} 
+                    />
+                  </div>
                 </div>
-              </td>
-              <td style={{ padding: '1rem' }}><button onClick={() => handleDeleteProduto(p.id)} style={{ color: 'var(--danger-color)' }}>Excluir</button></td>
-            </tr>
-          ))}</tbody>
-        </table>
-      </div>
+                <div>
+                  <span className="mobile-label">Estoque</span>
+                  <div className="d-flex items-center gap-2">
+                    <button onClick={() => handleUpdateEstoque(p.id, p.estoque, -1)} className="btn-outline" style={{width: '36px', height: '36px', padding: 0}}>-</button>
+                    <input 
+                      key={p.id + '-estoque-mob-' + p.estoque}
+                      type="number" 
+                      defaultValue={p.estoque} 
+                      onBlur={(e) => handleDirectStockInput(p.id, e.target.value)} 
+                      style={{ width: '100%', padding: '8px', background: 'var(--bg-color)', border: '1px solid var(--border-color)', borderRadius: '8px', textAlign: 'center', color: p.estoque < 10 ? 'var(--danger-color)' : 'var(--success-color)', fontWeight: 'bold' }} 
+                    />
+                    <button onClick={() => handleUpdateEstoque(p.id, p.estoque, 1)} className="btn-outline" style={{width: '36px', height: '36px', padding: 0}}>+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card" style={{ padding: 0 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead><tr style={{ borderBottom: '1px solid var(--border-color)' }}><th style={{ padding: '1rem' }}>Item</th><th style={{ padding: '1rem' }}>Preço</th><th style={{ padding: '1rem' }}>Estoque</th><th style={{ padding: '1rem' }}>Ações</th></tr></thead>
+            <tbody>
+              {filteredProdutosEstoque.map(p => (
+              <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={{ padding: '1rem' }}>{p.nome}</td>
+                <td style={{ padding: '1rem' }}>
+                  <div className="d-flex items-center gap-1">
+                    <span style={{color: 'var(--text-muted)'}}>R$</span>
+                    <input 
+                      key={p.id + '-preco-' + p.preco}
+                      type="number" 
+                      step="0.01" 
+                      defaultValue={p.preco} 
+                      onBlur={(e) => handleUpdatePreco(p.id, e.target.value)} 
+                      onKeyDown={(e) => e.key === 'Enter' && handleUpdatePreco(p.id, (e.target as HTMLInputElement).value)} 
+                      style={{ width: '80px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', color: 'white' }} 
+                    />
+                  </div>
+                </td>
+                <td style={{ padding: '1rem' }}>
+                  <div className="d-flex items-center gap-2">
+                    <button onClick={() => handleUpdateEstoque(p.id, p.estoque, -1)} className="btn-outline" style={{width: '28px'}}>-</button>
+                    <input 
+                      key={p.id + '-estoque-' + p.estoque}
+                      type="number" 
+                      defaultValue={p.estoque} 
+                      onBlur={(e) => handleDirectStockInput(p.id, e.target.value)} 
+                      onKeyDown={(e) => e.key === 'Enter' && handleDirectStockInput(p.id, (e.target as HTMLInputElement).value)} 
+                      style={{ width: '60px', padding: '4px', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '4px', textAlign: 'center', color: p.estoque < 10 ? 'var(--danger-color)' : 'var(--success-color)', fontWeight: 'bold' }} 
+                    />
+                    <button onClick={() => handleUpdateEstoque(p.id, p.estoque, 1)} className="btn-outline" style={{width: '28px'}}>+</button>
+                  </div>
+                </td>
+                <td style={{ padding: '1rem' }}><button onClick={() => handleDeleteProduto(p.id)} style={{ color: 'var(--danger-color)' }}>Excluir</button></td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 
@@ -1075,8 +1166,8 @@ export const Dono = () => {
 
   const renderComandas = () => (
     <div className="animate-fade-in">
-      <h2 style={{ fontSize: '1.8rem', fontWeight: 800, marginBottom: '0.5rem' }}>Comandas por Mesa</h2>
-      <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Visualização detalhada de todos os itens lançados em mesas abertas.</p>
+      <h2 style={{ fontSize: isMobile ? '1.5rem' : '1.8rem', fontWeight: 800, marginBottom: '0.5rem' }}>Comandas por Mesa</h2>
+      <p style={{ color: 'var(--text-muted)', marginBottom: isMobile ? '1rem' : '2rem', fontSize: isMobile ? '0.8rem' : '1rem' }}>Visualização detalhada de todos os itens lançados em mesas abertas.</p>
 
       {mesas.filter(m => m.status !== 'livre').length === 0 ? (
         <div className="card text-center" style={{ padding: '5rem' }}>
@@ -1084,7 +1175,7 @@ export const Dono = () => {
           <h3 className="text-muted">Nenhuma mesa ocupada no momento.</h3>
         </div>
       ) : (
-        <div className="d-flex flex-col gap-8">
+        <div className="d-flex flex-col gap-6">
           {mesas.filter(m => m.status !== 'livre').map(mesa => {
             const pedidoMesa = pedidosAtivos.find(p => p.mesa_id === mesa.id);
             const itemsMesa = pedidoMesa?.itens_pedido || [];
@@ -1092,81 +1183,119 @@ export const Dono = () => {
 
             return (
               <div key={mesa.id} className="card" style={{ padding: '0', borderLeft: '4px solid var(--primary-color)' }}>
-                <div style={{ padding: '1.5rem', background: 'rgba(212,175,55,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)' }}>
-                  <div className="d-flex items-center gap-4">
-                    <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: '1.3rem' }}>
+                <div style={{ padding: isMobile ? '1rem' : '1.5rem', background: 'rgba(212,175,55,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)' }}>
+                  <div className="d-flex items-center gap-3">
+                    <div style={{ width: isMobile ? '40px' : '50px', height: isMobile ? '40px' : '50px', borderRadius: '10px', background: 'var(--primary-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000', fontWeight: 900, fontSize: isMobile ? '1.1rem' : '1.3rem' }}>
                       {mesa.numero}
                     </div>
                     <div>
-                      <h3 style={{ margin: 0 }}>Mesa {mesa.numero}</h3>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary-color)' }}>Status: {mesa.status}</span>
+                      <h3 style={{ margin: 0, fontSize: isMobile ? '1rem' : '1.2rem' }}>Mesa {mesa.numero}</h3>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary-color)' }}>Status: {mesa.status}</span>
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>SUBTOTAL ATUAL</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalMesa.toFixed(2)}</div>
-                    {totalMesa === 0 && (
-                      <button 
-                        onClick={() => handleLiberarMesa(mesa.id)}
-                        className="btn-outline"
-                        style={{ marginTop: '8px', fontSize: '0.7rem', color: 'var(--danger-color)', borderColor: 'var(--danger-color)', width: 'auto', padding: '4px 10px' }}
-                      >
-                        Liberar Mesa Vazia
-                      </button>
-                    )}
+                    <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>TOTAL</div>
+                    <div style={{ fontSize: isMobile ? '1.2rem' : '1.6rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalMesa.toFixed(2)}</div>
                   </div>
                 </div>
 
-                <div style={{ padding: '1rem' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
-                        <th style={{ padding: '12px 10px' }}>Qtd</th>
-                        <th style={{ padding: '12px 10px' }}>Produto</th>
-                        <th style={{ padding: '12px 10px' }}>Status</th>
-                        <th style={{ padding: '12px 10px' }}>Valor</th>
-                        <th style={{ padding: '12px 10px' }}>Total</th>
-                        <th style={{ padding: '12px 10px', textAlign: 'right' }}>Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {itemsMesa.map(item => (
-                        <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                          <td style={{ padding: '12px 10px', fontWeight: 800 }}>{item.quantidade}x</td>
-                          <td style={{ padding: '12px 10px' }}>{item.produtos?.nome}</td>
-                          <td style={{ padding: '12px 10px' }}>
-                            <span style={{ 
-                              fontSize: '0.65rem', padding: '4px 10px', borderRadius: '20px', fontWeight: 800, 
-                              background: item.status === 'pronto' ? 'rgba(16,185,129,0.1)' : item.status === 'em preparo' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
-                              color: item.status === 'pronto' ? 'var(--success-color)' : item.status === 'em preparo' ? 'var(--warning-color)' : 'var(--text-muted)'
-                            }}>
-                              {item.status.toUpperCase()}
-                            </span>
-                          </td>
-                          <td style={{ padding: '12px 10px', fontSize: '0.85rem', opacity: 0.6 }}>R$ {Number(item.preco_unitario).toFixed(2)}</td>
-                          <td style={{ padding: '12px 10px', fontWeight: 700 }}>R$ {(Number(item.preco_unitario) * item.quantidade).toFixed(2)}</td>
-                          <td style={{ padding: '12px 10px', textAlign: 'right' }}>
+                <div style={{ padding: isMobile ? '0' : '1rem' }}>
+                  {isMobile ? (
+                    <div className="d-flex flex-col">
+                      {itemsMesa.map((item, idx) => (
+                        <div key={item.id} style={{ padding: '12px 1rem', borderBottom: idx === itemsMesa.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div className="d-flex items-center gap-3">
+                            <div style={{ fontWeight: 800, color: 'var(--primary-color)', minWidth: '30px' }}>{item.quantidade}x</div>
+                            <div>
+                              <div style={{ fontSize: '0.9rem', fontWeight: 600 }}>{item.produtos?.nome}</div>
+                              <span style={{ 
+                                fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, 
+                                background: item.status === 'pronto' ? 'rgba(16,185,129,0.1)' : item.status === 'em preparo' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
+                                color: item.status === 'pronto' ? 'var(--success-color)' : item.status === 'em preparo' ? 'var(--warning-color)' : 'var(--text-muted)'
+                              }}>
+                                {item.status.toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="d-flex items-center gap-4">
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>R$ {(Number(item.preco_unitario) * item.quantidade).toFixed(2)}</div>
+                              <div style={{ fontSize: '0.7rem', opacity: 0.5 }}>R$ {Number(item.preco_unitario).toFixed(2)} un.</div>
+                            </div>
                             <button 
                               onClick={() => {
                                 if(confirm(`Excluir ${item.quantidade}x ${item.produtos?.nome}?`)) {
                                   handleExcluirItemComanda({ ...item, pedido_id: pedidoMesa?.id });
                                 }
                               }} 
-                              className="btn-outline" 
-                              style={{ padding: '6px', color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', width: 'auto' }}
+                              style={{ color: 'var(--danger-color)', opacity: 0.6, padding: '4px' }}
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={18} />
                             </button>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       ))}
                       {itemsMesa.length === 0 && (
-                        <tr>
-                          <td colSpan={6} style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic' }}>Nenhum item lançado nesta mesa.</td>
-                        </tr>
+                        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.8rem' }}>Nenhum item lançado.</div>
                       )}
-                    </tbody>
-                  </table>
+                    </div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ padding: '12px 10px' }}>Qtd</th>
+                          <th style={{ padding: '12px 10px' }}>Produto</th>
+                          <th style={{ padding: '12px 10px' }}>Status</th>
+                          <th style={{ padding: '12px 10px' }}>Valor</th>
+                          <th style={{ padding: '12px 10px' }}>Total</th>
+                          <th style={{ padding: '12px 10px', textAlign: 'right' }}>Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itemsMesa.map(item => (
+                          <tr key={item.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '12px 10px', fontWeight: 800 }}>{item.quantidade}x</td>
+                            <td style={{ padding: '12px 10px' }}>{item.produtos?.nome}</td>
+                            <td style={{ padding: '12px 10px' }}>
+                              <span style={{ 
+                                fontSize: '0.65rem', padding: '4px 10px', borderRadius: '20px', fontWeight: 800, 
+                                background: item.status === 'pronto' ? 'rgba(16,185,129,0.1)' : item.status === 'em preparo' ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)',
+                                color: item.status === 'pronto' ? 'var(--success-color)' : item.status === 'em preparo' ? 'var(--warning-color)' : 'var(--text-muted)'
+                              }}>
+                                {item.status.toUpperCase()}
+                              </span>
+                            </td>
+                            <td style={{ padding: '12px 10px', fontSize: '0.85rem', opacity: 0.6 }}>R$ {Number(item.preco_unitario).toFixed(2)}</td>
+                            <td style={{ padding: '12px 10px', fontWeight: 700 }}>R$ {(Number(item.preco_unitario) * item.quantidade).toFixed(2)}</td>
+                            <td style={{ padding: '12px 10px', textAlign: 'right' }}>
+                              <button 
+                                onClick={() => {
+                                  if(confirm(`Excluir ${item.quantidade}x ${item.produtos?.nome}?`)) {
+                                    handleExcluirItemComanda({ ...item, pedido_id: pedidoMesa?.id });
+                                  }
+                                }} 
+                                className="btn-outline" 
+                                style={{ padding: '6px', color: 'var(--danger-color)', borderColor: 'rgba(220,53,69,0.2)', width: 'auto' }}
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                  {totalMesa === 0 && (
+                    <div style={{ padding: '1rem', borderTop: isMobile ? '1px solid rgba(255,255,255,0.05)' : 'none', textAlign: 'center' }}>
+                      <button 
+                        onClick={() => handleLiberarMesa(mesa.id)}
+                        className="btn-outline"
+                        style={{ fontSize: '0.7rem', color: 'var(--danger-color)', borderColor: 'var(--danger-color)', width: 'auto', padding: '4px 15px' }}
+                      >
+                        Liberar Mesa Vazia
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -1341,12 +1470,12 @@ export const Dono = () => {
     return (
       <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
         <div className="mb-8">
-            <h2 style={{ fontSize: '2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>Banco de fechamento de caixa</h2>
-            <p className="text-muted">Gestão de turno atual e histórico organizado por pastas.</p>
+            <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>Banco de fechamento de caixa</h2>
+            <p className="text-muted" style={{ fontSize: isMobile ? '0.8rem' : '1rem' }}>Gestão de turno atual e histórico organizado por pastas.</p>
         </div>
 
         {/* Turno Atual / Gestão em Tempo Real */}
-        <div className="mb-8 p-6 card" style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.2)' }}>
+        <div className="mb-8 p-4 p-md-6 card" style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.2)' }}>
             <div className="d-flex justify-between items-center mb-6">
                 <div className="d-flex items-center gap-3">
                     <div style={{ 
@@ -1357,14 +1486,14 @@ export const Dono = () => {
                         boxShadow: turnoAberto ? '0 0 10px #10b981' : 'none',
                         animation: turnoAberto ? 'pulse 2s infinite' : 'none'
                     }} />
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
+                    <h3 style={{ fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 800 }}>
                         {turnoAberto ? 'TURNO EM ANDAMENTO' : 'CAIXA FECHADO'}
                     </h3>
                 </div>
                 {turnoAberto && (
                     <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: '0.7rem', opacity: 0.5 }}>OS ATUAL:</span>
-                        <div style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--primary-color)' }}>#{turnoAberto.os_number || '---'}</div>
+                        <span style={{ fontSize: '0.6rem', opacity: 0.5 }}>OS ATUAL:</span>
+                        <div style={{ fontWeight: 900, fontSize: isMobile ? '1rem' : '1.2rem', color: 'var(--primary-color)' }}>#{turnoAberto.os_number || '---'}</div>
                     </div>
                 )}
             </div>
@@ -1376,9 +1505,9 @@ export const Dono = () => {
             />
         </div>
 
-        <div className="mb-4 d-flex items-center gap-2">
+        <div className="mb-4 d-flex items-center gap-2 px-2">
             <HistoryIcon size={18} opacity={0.5} />
-            <span style={{ fontWeight: 800, fontSize: '0.8rem', opacity: 0.6, letterSpacing: '1px' }}>HISTÓRICO RECENTE</span>
+            <span style={{ fontWeight: 800, fontSize: '0.75rem', opacity: 0.6, letterSpacing: '1px' }}>HISTÓRICO RECENTE</span>
         </div>
 
         <div className="d-flex flex-col gap-4">
@@ -1396,7 +1525,7 @@ export const Dono = () => {
                         <div 
                             onClick={() => setExpandedDate(isDateExpanded ? null : data)}
                             style={{ 
-                                padding: '1.2rem 1.5rem', 
+                                padding: isMobile ? '1rem' : '1.2rem 1.5rem', 
                                 background: isDateExpanded ? 'rgba(212,175,55,0.05)' : 'rgba(255,255,255,0.01)', 
                                 cursor: 'pointer',
                                 display: 'flex',
@@ -1404,26 +1533,26 @@ export const Dono = () => {
                                 alignItems: 'center'
                             }}
                         >
-                            <div className="d-flex items-center gap-4">
-                                <div style={{ background: 'rgba(212,175,55,0.1)', padding: '10px', borderRadius: '12px' }}>
-                                    <Folder size={24} color="#d4af37" fill="rgba(212,175,55,0.1)" />
+                            <div className="d-flex items-center gap-3 md:gap-4">
+                                <div style={{ background: 'rgba(212,175,55,0.1)', padding: isMobile ? '8px' : '10px', borderRadius: '10px' }}>
+                                    <Folder size={isMobile ? 20 : 24} color="#d4af37" fill="rgba(212,175,55,0.1)" />
                                 </div>
                                 <div>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>PASTA: {data}</div>
-                                    <div style={{ fontSize: '0.75rem', opacity: 0.5, fontWeight: 700 }}>{turnos.length} O.S. ARQUIVADA(S)</div>
+                                    <div style={{ fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>PASTA: {data}</div>
+                                    <div style={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 700 }}>{turnos.length} O.S. ARQUIVADA(S)</div>
                                 </div>
                             </div>
-                            <div className="d-flex items-center gap-6">
+                            <div className="d-flex items-center gap-4 md:gap-6">
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>TOTAL DO DIA</div>
-                                    <div style={{ fontWeight: 900, color: 'var(--primary-color)', fontSize: '1.1rem' }}>R$ {totalDia.toFixed(2)}</div>
+                                    <div style={{ fontSize: '0.55rem', opacity: 0.4 }}>TOTAL</div>
+                                    <div style={{ fontWeight: 900, color: 'var(--primary-color)', fontSize: isMobile ? '0.9rem' : '1.1rem' }}>R$ {totalDia.toFixed(2)}</div>
                                 </div>
-                                {isDateExpanded ? <ChevronUp size={20} opacity={0.5} /> : <ChevronDown size={20} opacity={0.5} />}
+                                {isDateExpanded ? <ChevronUp size={isMobile ? 16 : 20} opacity={0.5} /> : <ChevronDown size={isMobile ? 16 : 20} opacity={0.5} />}
                             </div>
                         </div>
 
                         {isDateExpanded && (
-                            <div style={{ padding: '1.5rem', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ padding: isMobile ? '1rem' : '1.5rem', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 {turnos.map((t) => {
                                     const isOSExpanded = expandedOS === t.id;
                                     const fundo = Number(t.fundo_troco || 0);
@@ -1437,84 +1566,79 @@ export const Dono = () => {
                                     const statusColor = Math.abs(diferenca) < 0.1 ? '#10b981' : diferenca > 0 ? '#d4af37' : '#ef4444';
                                     
                                     const totalOS = t.pedidos?.reduce((acc: number, p: any) => acc + Number(p.total), 0) || 0;
-                                    const totalTaxas = 0;
 
                                     return (
-                                        <div key={t.id} style={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', overflow: 'hidden' }}>
+                                        <div key={t.id} style={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', overflow: 'hidden' }}>
                                             <div 
                                                 onClick={() => setExpandedOS(isOSExpanded ? null : t.id)}
-                                                style={{ padding: '1rem 1.2rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                                                style={{ padding: '0.8rem 1rem', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                             >
                                                 <div className="d-flex items-center gap-3">
-                                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px' }}>
-                                                        <FileText size={18} color={t.status === 'aberto' ? '#10b981' : '#fff'} opacity={0.6} />
+                                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '6px' }}>
+                                                        <FileText size={16} color={t.status === 'aberto' ? '#10b981' : '#fff'} opacity={0.6} />
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontWeight: 900, fontSize: '0.95rem', color: t.status === 'aberto' ? '#10b981' : '#fff' }}>O.S. #{t.os_number || '---'}</div>
-                                                        <div style={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 700 }}>OPERADOR: {t.profiles?.full_name?.toUpperCase()} • {new Date(t.aberto_em).toLocaleTimeString('pt-BR')}</div>
+                                                        <div style={{ fontWeight: 900, fontSize: '0.85rem', color: t.status === 'aberto' ? '#10b981' : '#fff' }}>O.S. #{t.os_number || '---'}</div>
+                                                        <div style={{ fontSize: '0.6rem', opacity: 0.5, fontWeight: 700 }}>{t.profiles?.full_name?.split(' ')[0]} • {new Date(t.aberto_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
                                                     </div>
                                                 </div>
-                                                <div className="d-flex items-center gap-4">
+                                                <div className="d-flex items-center gap-3">
                                                     <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>FATURAMENTO</div>
-                                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#fff' }}>R$ {totalOS.toFixed(2)}</div>
+                                                        <div style={{ fontSize: '0.55rem', opacity: 0.4 }}>VALOR</div>
+                                                        <div style={{ fontWeight: 700, fontSize: '0.8rem', color: '#fff' }}>R$ {totalOS.toFixed(2)}</div>
                                                     </div>
-                                                    {isOSExpanded ? <ChevronUp size={16} opacity={0.3} /> : <ChevronDown size={16} opacity={0.3} />}
+                                                    {isOSExpanded ? <ChevronUp size={14} opacity={0.3} /> : <ChevronDown size={14} opacity={0.3} />}
                                                 </div>
                                             </div>
 
                                             {isOSExpanded && (
-                                                <div style={{ padding: '1.2rem', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)' }}>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                                                        <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>VENDAS BRUTAS</div>
-                                                            <div style={{ fontWeight: 800, color: 'var(--primary-color)' }}>R$ {totalOS.toFixed(2)}</div>
+                                                <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.1)' }}>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '0.75rem', marginBottom: '1.2rem' }}>
+                                                        <div className="p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                                            <div style={{ fontSize: '0.5rem', opacity: 0.4 }}>VENDAS</div>
+                                                            <div style={{ fontWeight: 800, color: 'var(--primary-color)', fontSize: '0.85rem' }}>R$ {totalOS.toFixed(2)}</div>
                                                         </div>
-                                                        <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>PEDIDOS (TOTAL)</div>
-                                                            <div style={{ fontWeight: 800, color: '#a78bfa' }}>R$ {totalOS.toFixed(2)}</div>
+                                                        <div className="p-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                                            <div style={{ fontSize: '0.5rem', opacity: 0.4 }}>FUNDO</div>
+                                                            <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>R$ {fundo.toFixed(2)}</div>
                                                         </div>
-                                                        <div className="p-3 rounded-lg" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                                                            <div style={{ fontSize: '0.6rem', opacity: 0.4 }}>FUNDO DE TROCO</div>
-                                                            <div style={{ fontWeight: 800 }}>R$ {fundo.toFixed(2)}</div>
-                                                        </div>
-                                                        <div className="p-3 rounded-lg" style={{ background: `${statusColor}15`, border: `1px solid ${statusColor}30` }}>
-                                                            <div style={{ fontSize: '0.6rem', color: statusColor, fontWeight: 700 }}>{t.status === 'aberto' ? 'STATUS: ABERTO' : Math.abs(diferenca) < 0.1 ? 'CONFERE ✓' : diferenca > 0 ? `SOBRA: R$ ${diferenca.toFixed(2)}` : `QUEBRA: R$ ${Math.abs(diferenca).toFixed(2)}`}</div>
-                                                            <div style={{ fontWeight: 900, fontSize: '0.9rem', color: statusColor }}>{t.status === 'fechado' ? `Declarado: R$ ${declarado.toFixed(2)}` : 'Em andamento...'}</div>
+                                                        <div className="p-2 rounded-lg" style={{ background: `${statusColor}15`, border: `1px solid ${statusColor}30`, gridColumn: isMobile ? 'span 2' : 'auto' }}>
+                                                            <div style={{ fontSize: '0.5rem', color: statusColor, fontWeight: 700 }}>{t.status === 'aberto' ? 'STATUS: ABERTO' : Math.abs(diferenca) < 0.1 ? 'CONFERE ✓' : diferenca > 0 ? `SOBRA: R$ ${diferenca.toFixed(2)}` : `QUEBRA: R$ ${Math.abs(diferenca).toFixed(2)}`}</div>
+                                                            <div style={{ fontWeight: 900, fontSize: '0.8rem', color: statusColor }}>{t.status === 'fechado' ? `Declarado: R$ ${declarado.toFixed(2)}` : 'Em andamento...'}</div>
                                                         </div>
                                                     </div>
 
-                                                    <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '0.8rem', letterSpacing: '1px' }}>DETALHAMENTO DE VENDAS</h4>
+                                                    <h4 style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary-color)', marginBottom: '0.6rem', letterSpacing: '1px' }}>VENDAS DETALHADAS</h4>
                                                     <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}>
-                                                        <table style={{ width: '100%', fontSize: '0.75rem' }}>
+                                                        <table style={{ width: '100%', fontSize: '0.7rem' }}>
                                                             <thead>
                                                                 <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                    <th style={{ padding: '0.8rem', textAlign: 'left' }}>Cliente/Mesa</th>
-                                                                    <th style={{ padding: '0.8rem', textAlign: 'left' }}>Pagamento</th>
-                                                                    <th style={{ padding: '0.8rem', textAlign: 'right' }}>Total</th>
+                                                                    <th style={{ padding: '0.6rem', textAlign: 'left' }}>Mesa</th>
+                                                                    <th style={{ padding: '0.6rem', textAlign: 'left' }}>Pag.</th>
+                                                                    <th style={{ padding: '0.6rem', textAlign: 'right' }}>Total</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 {t.pedidos?.map((p: any) => (
                                                                     <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                                                                        <td style={{ padding: '0.8rem' }}>{p.mesa_id ? `Mesa ${p.mesas?.numero || '?'}` : 'Balcão'}</td>
-                                                                        <td style={{ padding: '0.8rem', fontSize: '0.65rem', opacity: 0.6 }}>{p.forma_pagamento}</td>
-                                                                        <td style={{ padding: '0.8rem', textAlign: 'right', fontWeight: 700 }}>R$ {Number(p.total).toFixed(2)}</td>
+                                                                        <td style={{ padding: '0.6rem' }}>{p.mesa_id ? `Mesa ${p.mesas?.numero || '?'}` : 'Balcão'}</td>
+                                                                        <td style={{ padding: '0.6rem', fontSize: '0.6rem', opacity: 0.6 }}>{p.forma_pagamento?.split(' ')[0]}</td>
+                                                                        <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 700 }}>R$ {Number(p.total).toFixed(2)}</td>
                                                                     </tr>
                                                                 ))}
                                                                 {(!t.pedidos || t.pedidos.length === 0) && (
-                                                                    <tr><td colSpan={3} style={{ padding: '2rem', textAlign: 'center', opacity: 0.4 }}>Nenhuma venda registrada neste turno.</td></tr>
+                                                                    <tr><td colSpan={3} style={{ padding: '1.5rem', textAlign: 'center', opacity: 0.4 }}>Sem vendas.</td></tr>
                                                                 )}
                                                             </tbody>
                                                         </table>
                                                     </div>
 
-                                                    {/* Auditoria de Exclusões desta O.S. / Turno */}
+                                                    {/* Auditoria de Exclusões */}
                                                     {auditoriaExclusoes.filter(a => a.turno_id === t.id).length > 0 && (
-                                                        <div style={{ marginTop: '1.5rem' }}>
-                                                             <h4 style={{ fontSize: '0.75rem', fontWeight: 800, color: '#ef4444', marginBottom: '0.8rem', letterSpacing: '1px' }}>AUDITORIA: ITENS EXCLUÍDOS / CANCELADOS</h4>
+                                                        <div style={{ marginTop: '1.2rem' }}>
+                                                             <h4 style={{ fontSize: '0.65rem', fontWeight: 800, color: '#ef4444', marginBottom: '0.6rem', letterSpacing: '1px' }}>AUDITORIA: EXCLUSÕES</h4>
                                                              <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.02)' }}>
-                                                                <table style={{ width: '100%', fontSize: '0.75rem' }}>
+                                                                <table style={{ width: '100%', fontSize: '0.7rem' }}>
                                                                     <thead>
                                                                         <tr style={{ background: 'rgba(239,68,68,0.05)', borderBottom: '1px solid rgba(239,68,68,0.1)' }}>
                                                                             <th style={{ padding: '0.8rem', textAlign: 'left' }}>Item</th>

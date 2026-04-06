@@ -145,6 +145,42 @@ select option {
   to { transform: rotate(360deg); }
 }
 
+/* Mobile-First Card View for Tables */
+@media (max-width: 640px) {
+  .mobile-card-view {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+  }
+  
+  .mobile-card-item {
+    background: var(--surface-color);
+    padding: 1.25rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  }
+
+  .mobile-label {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  .mobile-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+  }
+}
+
 /* Mobile adjustments */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
