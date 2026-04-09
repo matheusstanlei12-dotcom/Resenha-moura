@@ -1,0 +1,272 @@
+﻿
+> resenha-moura@0.0.0 lint
+> eslint .
+
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\App.tsx
+   2:40  error  'Link' is defined but never used               @typescript-eslint/no-unused-vars
+  20:9   error  'navigate' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\components\AberturaCaixa.tsx
+   3:16  error  'Calculator' is defined but never used    @typescript-eslint/no-unused-vars
+   3:40  error  'DollarSign' is defined but never used    @typescript-eslint/no-unused-vars
+  45:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\components\FechamentoCaixa.tsx
+    8:3   error  'FileText' is defined but never used                          @typescript-eslint/no-unused-vars
+    8:16  error  'ChevronDown' is defined but never used                       @typescript-eslint/no-unused-vars
+    8:29  error  'ChevronUp' is defined but never used                         @typescript-eslint/no-unused-vars
+    8:40  error  'Eye' is defined but never used                               @typescript-eslint/no-unused-vars
+   14:20  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+   29:20  error  'signOut' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+   40:10  error  'showDetalhesPix' is assigned a value but never used          @typescript-eslint/no-unused-vars
+   40:27  error  'setShowDetalhesPix' is assigned a value but never used       @typescript-eslint/no-unused-vars
+   41:10  error  'showDetalhesDinheiro' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   41:32  error  'setShowDetalhesDinheiro' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  136:19  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  159:33  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  159:56  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  159:77  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  159:99  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+  237:21  error  Unexpected any. Specify a different type                      @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\contexts\AuthContext.tsx
+  90:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\lib\supabase.ts
+  23:14  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\AdminApp.tsx
+    8:3   error  'TrendingUp' is defined but never used                   @typescript-eslint/no-unused-vars
+    8:43  error  'Clock' is defined but never used                        @typescript-eslint/no-unused-vars
+    9:14  error  'Settings' is defined but never used                     @typescript-eslint/no-unused-vars
+    9:24  error  'ChevronDown' is defined but never used                  @typescript-eslint/no-unused-vars
+    9:37  error  'ChevronUp' is defined but never used                    @typescript-eslint/no-unused-vars
+   10:45  error  'Utensils' is defined but never used                     @typescript-eslint/no-unused-vars
+   28:55  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   60:44  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   61:38  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   62:44  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   63:48  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   64:54  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   65:10  error  'itensEntregues' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   65:56  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   66:66  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   67:58  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   73:10  error  'expandedProduto' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   73:27  error  'setExpandedProduto' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   74:10  error  'itemParaExcluir' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   74:58  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+   75:10  error  'motivoExclusao' is assigned a value but never used      @typescript-eslint/no-unused-vars
+   76:10  error  'isExcluindo' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  287:14  error  'err' is defined but never used                          @typescript-eslint/no-unused-vars
+  332:49  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  369:19  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  387:57  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  424:64  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  606:67  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  615:36  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  855:41  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  938:39  error  Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\CashierApp.tsx
+     6:31  error    'HistoryIcon' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+     7:9   error    'DollarSign' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+    34:56  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    35:10  error    'pedidosAtivos' is assigned a value but never used                                                            @typescript-eslint/no-unused-vars
+    35:54  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    36:58  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    37:52  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    38:10  error    'printedItemIds' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+    40:10  error    'autoPrintKds' is assigned a value but never used                                                             @typescript-eslint/no-unused-vars
+    40:24  error    'setAutoPrintKds' is assigned a value but never used                                                          @typescript-eslint/no-unused-vars
+    41:68  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    42:62  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    44:44  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    80:52  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+    81:54  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   128:45  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   163:60  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   178:28  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   178:36  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   182:48  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   215:10  error    'lastAccountRequestCount' is assigned a value but never used                                                  @typescript-eslint/no-unused-vars
+   221:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   230:31  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   239:9   error    'removeFromCart' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+   243:9   error    'updateCartQty' is assigned a value but never used                                                            @typescript-eslint/no-unused-vars
+   254:42  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   292:49  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   335:9   error    'taxaServico' is assigned a value but never used                                                              @typescript-eslint/no-unused-vars
+   344:9   error    'totalEmDinheiro' is assigned a value but never used                                                          @typescript-eslint/no-unused-vars
+   389:27  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   405:33  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   422:27  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   452:19  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   460:22  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   468:40  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   477:9   error    'handleVerDetalhes' is assigned a value but never used                                                        @typescript-eslint/no-unused-vars
+   477:44  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   488:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   546:9   error    'handleSimularCozinha' is assigned a value but never used                                                     @typescript-eslint/no-unused-vars
+   556:9   error    'handleSimularHistorico' is assigned a value but never used                                                   @typescript-eslint/no-unused-vars
+   835:22  error    Unexpected constant truthiness on the left-hand side of a `&&` expression                                     no-constant-binary-expression
+  1067:50  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\CustomerApp.tsx
+  26:51  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\LoginPage.tsx
+  48:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\OwnerApp.tsx
+    12:3    error  'Clock' is defined but never used                           @typescript-eslint/no-unused-vars
+    13:15   error  'PieIcon' is defined but never used                         @typescript-eslint/no-unused-vars
+    22:7    error  'COLORS' is assigned a value but never used                 @typescript-eslint/no-unused-vars
+    24:65   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    36:63   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    57:44   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    58:44   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    59:38   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    60:52   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    61:54   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    62:10   error  'avgPrepTimes' is assigned a value but never used           @typescript-eslint/no-unused-vars
+    62:52   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    63:48   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    64:62   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    65:58   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    66:54   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    67:64   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    68:10   error  'error' is assigned a value but never used                  @typescript-eslint/no-unused-vars
+    71:10   error  'itemParaExcluirAtu' is assigned a value but never used     @typescript-eslint/no-unused-vars
+    71:64   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    72:10   error  'motivoExclusaoAtu' is assigned a value but never used      @typescript-eslint/no-unused-vars
+    73:10   error  'isExcluindoAtu' is assigned a value but never used         @typescript-eslint/no-unused-vars
+    88:74   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+    94:66   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   100:66   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   154:22   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   155:33   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   166:13   error  'finalRanking' is never reassigned. Use 'const' instead     prefer-const
+   167:21   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   171:48   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   171:56   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   213:22   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   214:30   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   223:54   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   239:19   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   445:19   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   448:41   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   460:21   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   481:19   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   502:19   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   523:19   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   536:14   error  'err' is defined but never used                             @typescript-eslint/no-unused-vars
+   542:49   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   579:19   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   616:34   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   639:42   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   777:78   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   807:63   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   861:36   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+   866:51   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  1271:9    error  'renderRendimentos' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  1339:9    error  'paymentTotalsForCaixa' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1399:40   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  1416:24   error  'e' is defined but never used                               @typescript-eslint/no-unused-vars
+  1483:103  error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  1522:85   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  1522:158  error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  1530:88   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+  1531:43   error  'totalTaxas' is assigned a value but never used             @typescript-eslint/no-unused-vars
+  1589:85   error  Unexpected any. Specify a different type                    @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\ProductionApp.tsx
+   27:26  error  'error' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   40:40  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   51:27  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   51:35  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+   57:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\ProductionApp.tsx:57:5
+  55 |
+  56 |   useEffect(() => {
+> 57 |     fetchActiveItems();
+     |     ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  58 |     const interval = setInterval(fetchActiveItems, 5000);
+  59 |     return () => clearInterval(interval);
+  60 |   }, []);  react-hooks/set-state-in-effect
+   68:22  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  124:19  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  128:42  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+  152:16  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\WaiterApp.tsx
+   14:38  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+   15:42  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+   16:44  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+   18:50  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+   21:52  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+   85:6   warning  React Hook useEffect has a missing dependency: 'selectedMesa'. Either include it or remove the dependency array         react-hooks/exhaustive-deps
+   94:19  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+   98:42  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  129:16  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  141:6   warning  React Hook useEffect has a missing dependency: 'lastNotificationIds'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  149:16  error    'e' is defined but never used                                                                                           @typescript-eslint/no-unused-vars
+  149:19  error    Empty block statement                                                                                                   no-empty
+  159:9   error    'handleEntregarPedido' is assigned a value but never used                                                               @typescript-eslint/no-unused-vars
+  164:58  error    Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  217:14  error    'err' is defined but never used                                                                                         @typescript-eslint/no-unused-vars
+  236:14  error    'err' is defined but never used                                                                                         @typescript-eslint/no-unused-vars
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\customer\Menu.tsx
+  26:5  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\customer\Menu.tsx:26:5
+  24 |
+  25 |   useEffect(() => {
+> 26 |     fetchProducts();
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  27 |     
+  28 |     // Polling de 10 segundos para garantir pre├ºos atualizados
+  29 |     const interval = setInterval(fetchProducts, 10000);  react-hooks/set-state-in-effect
+  62:7  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\pages\customer\Menu.tsx:62:7
+  60 |   useEffect(() => {
+  61 |     if (categories.length > 0 && !categories.includes(activeTab)) {
+> 62 |       setActiveTab(categories[0]);
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  63 |     }
+  64 |   }, [categories]);
+  65 |                 react-hooks/set-state-in-effect
+  64:6  warning  React Hook useEffect has a missing dependency: 'activeTab'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/exhaustive-deps
+
+C:\Users\Mathe\Documents\Resenha-moura-main\Resenha-moura-main\src\utils\printUtils.ts
+  124:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  124:76  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  256:3   error  'incluirTaxa' is defined but never used   @typescript-eslint/no-unused-vars
+
+Ô£û 191 problems (187 errors, 4 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
