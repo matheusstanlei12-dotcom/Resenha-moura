@@ -786,29 +786,37 @@ export const Dono = () => {
                       />
                    </div>
                    <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
-                   <div className="d-flex items-center gap-1">
+                   <div className="d-flex items-center gap-3">
                       <input 
                         type="date" 
                         value={filterDate}
                         onChange={(e) => setFilterDate(e.target.value)}
                         className="date-input-custom" 
-                        style={{ border: 'none', background: 'transparent', fontSize: '0.85rem', width: 'auto', margin: 0, color: 'var(--primary-color)', fontWeight: 800 }} 
+                        style={{ border: 'none', background: 'transparent', fontSize: '0.9rem', width: 'auto', margin: 0, color: 'var(--primary-color)', fontWeight: 800, height: '32px', display: 'flex', alignItems: 'center', outline: 'none' }} 
                       />
                       <style>{`
                         .date-input-custom::-webkit-calendar-picker-indicator {
                           filter: brightness(0) invert(1);
-                          transform: scale(1.6);
+                          transform: scale(1.5);
                           cursor: pointer;
+                          margin-right: 10px;
+                          padding: 0;
+                          position: relative;
+                          top: 0;
+                        }
+                        .date-input-custom {
+                           display: flex;
+                           align-items: center;
                         }
                       `}</style>
                       <button 
                         onClick={() => setFilterDate(new Date().toISOString().split('T')[0])}
                         className="btn-outline"
-                        style={{ width: 'auto', padding: '6px 10px', fontSize: '0.7rem', borderColor: filterDate === new Date().toISOString().split('T')[0] ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)', background: filterDate === new Date().toISOString().split('T')[0] ? 'var(--primary-color)11' : 'transparent' }}
+                        style={{ width: 'auto', padding: '6px 12px', fontSize: '0.7rem', borderColor: filterDate === new Date().toISOString().split('T')[0] ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)', background: filterDate === new Date().toISOString().split('T')[0] ? 'var(--primary-color)11' : 'transparent', borderRadius: '20px' }}
                       >
                         HOJE
                       </button>
-                   </div>
+                    </div>
                    <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
                    <button 
                      onClick={() => {
