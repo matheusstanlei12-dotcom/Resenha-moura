@@ -791,9 +791,16 @@ export const Dono = () => {
                         type="date" 
                         value={filterDate}
                         onChange={(e) => setFilterDate(e.target.value)}
-                        className="input-field" 
-                        style={{ border: 'none', background: 'transparent', fontSize: '0.85rem', width: 'auto', margin: 0, color: 'var(--primary-color)', fontWeight: 700 }} 
+                        className="date-input-custom" 
+                        style={{ border: 'none', background: 'transparent', fontSize: '0.85rem', width: 'auto', margin: 0, color: 'var(--primary-color)', fontWeight: 800 }} 
                       />
+                      <style>{`
+                        .date-input-custom::-webkit-calendar-picker-indicator {
+                          filter: brightness(0) invert(1);
+                          transform: scale(1.6);
+                          cursor: pointer;
+                        }
+                      `}</style>
                       <button 
                         onClick={() => setFilterDate(new Date().toISOString().split('T')[0])}
                         className="btn-outline"
