@@ -12,7 +12,7 @@ import {
   Clock, Star, LogOut, LayoutDashboard,
   PieChart as PieIcon, LayoutGrid,
   QrCode, Banknote, CreditCard, Lock, History as HistoryIcon,
-  ChevronDown, ChevronUp, Folder, FileText, Trash2
+  ChevronDown, ChevronUp, Folder, FileText, Trash2, Search
 } from 'lucide-react';
 import { FechamentoCaixa } from '../components/FechamentoCaixa';
 
@@ -73,6 +73,8 @@ export const Dono = () => {
   const [isExcluindoAtu, setIsExcluindoAtu] = useState(false);
   
   const [selectedPaymentDetail, setSelectedPaymentDetail] = useState<string | null>(null);
+  const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [detailSearch, setDetailSearch] = useState('');
 
 
   // Modal Novo Colaborador
@@ -636,7 +638,12 @@ export const Dono = () => {
             if (type === 'CARTAO' || type === 'CARTÃO') key = 'CARTÕES ANTIGOS';
             
             if (groups[key]) {
-               if (!groups[key].find((o: any) => o.id === order.id)) {
+               const matchesSearch = !detailSearch || 
+                 (order.cliente_nome?.toLowerCase().includes(detailSearch.toLowerCase())) ||
+                 (order.mesas?.numero?.toString().includes(detailSearch)) ||
+                 (order.id?.toLowerCase().includes(detailSearch.toLowerCase()));
+
+               if (matchesSearch && !groups[key].find((o: any) => o.id === order.id)) {
                  groups[key].push(order);
                }
             }
@@ -697,7 +704,7 @@ export const Dono = () => {
         <KPIItem title="Receita Bruta (TOTAL)" value={`R$ ${faturamento.toFixed(2).replace('.', ',')}`} icon={<TrendingUp color="#d4af37" />} color="#d4af37" trend="Acumulado" />
         <KPIItem title="Faturamento Hoje" value={`R$ ${faturamentoHoje.toFixed(2).replace('.', ',')}`} icon={<Banknote color="#10b981" />} color="#10b981" trend="Diário" />
         <KPIItem title="Pedidos Ativos" value={pedidosAtivosCount.toString()} icon={<Utensils color="#3b82f6" />} color="#3b82f6" trend="Cozinha" />
-        <KPIItem title="Top Garçom" value={waiterRanking[0]?.name?.split(' ')[0] || '---'} icon={<Star color="#8b5cf6" />} color="#8b5cf6" trend="Destaque" />
+        <KPIItem title="Top Garçom" value={waiterRanking[0]?.name?.split(' ')[0] || 'Nenhum'} icon={<Star color="#8b5cf6" />} color="#8b5cf6" trend={waiterRanking.length > 0 ? "Destaque" : "Sem dados"} />
       </div>
       
       <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fff' }}>Receita por Forma de Pagamento</h3>
@@ -758,16 +765,55 @@ export const Dono = () => {
             <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--primary-color)22' }}>
               <div className="d-flex justify-between items-center mb-6">
                 <div className="d-flex items-center gap-3">
-                  <Folder color="var(--primary-color)" />
-                  <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Detalhamento: {selectedPaymentDetail}</h3>
+                  <div style={{ background: 'var(--primary-color)22', padding: '10px', borderRadius: '12px' }}>
+                    <Folder color="var(--primary-color)" size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 800 }}>DETALHAMENTO: {selectedPaymentDetail}</h3>
+                  </div>
                 </div>
-                <button 
-                  onClick={() => setSelectedPaymentDetail(null)}
-                  className="btn-outline" 
-                  style={{ width: 'auto', padding: '5px 15px', fontSize: '0.8rem' }}
-                >
-                  Fechar Detalhes
-                </button>
+
+                <div className="d-flex flex-wrap items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/5">
+                   <div className="d-flex items-center gap-2" style={{ position: 'relative' }}>
+                      <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }} />
+                      <input 
+                        type="text"
+                        placeholder="Buscar cliente..."
+                        value={detailSearch}
+                        onChange={(e) => setDetailSearch(e.target.value)}
+                        className="search-input-fix"
+                        style={{ border: 'none', background: 'rgba(255,255,255,0.05)', padding: '8px 12px 8px 2.5rem', fontSize: '0.8rem', width: isMobile ? '120px' : '180px', margin: 0, borderRadius: '8px', color: '#fff' }}
+                      />
+                   </div>
+                   <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+                   <div className="d-flex items-center gap-1">
+                      <input 
+                        type="date" 
+                        value={filterDate}
+                        onChange={(e) => setFilterDate(e.target.value)}
+                        className="input-field" 
+                        style={{ border: 'none', background: 'transparent', fontSize: '0.85rem', width: 'auto', margin: 0, color: 'var(--primary-color)', fontWeight: 700 }} 
+                      />
+                      <button 
+                        onClick={() => setFilterDate(new Date().toISOString().split('T')[0])}
+                        className="btn-outline"
+                        style={{ width: 'auto', padding: '6px 10px', fontSize: '0.7rem', borderColor: filterDate === new Date().toISOString().split('T')[0] ? 'var(--primary-color)' : 'rgba(255,255,255,0.1)', background: filterDate === new Date().toISOString().split('T')[0] ? 'var(--primary-color)11' : 'transparent' }}
+                      >
+                        HOJE
+                      </button>
+                   </div>
+                   <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }} />
+                   <button 
+                     onClick={() => {
+                       setSelectedPaymentDetail(null);
+                       setDetailSearch('');
+                     }}
+                     className="btn-outline" 
+                     style={{ width: 'auto', padding: '6px 16px', fontSize: '0.75rem', background: '#ef4444', color: '#fff', borderColor: 'transparent', fontWeight: 700, borderRadius: '8px' }}
+                   >
+                     FECHAR
+                   </button>
+                </div>
               </div>
 
               {ordersByPaymentMethod[selectedPaymentDetail]?.length === 0 ? (
@@ -849,10 +895,25 @@ export const Dono = () => {
              </ResponsiveContainer>
            </div>
         </div>
-        <div className="card" style={{ padding: '1.5rem' }}>
+        <div className="card" style={{ padding: '1.5rem', minHeight: '350px', display: 'flex', flexDirection: 'column' }}>
            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem' }}>Produtividade: Mesas por Garçom</h3>
-           <div style={{ height: '250px' }}>
-             <ResponsiveContainer width="100%" height="100%"><BarChart data={waiterRanking}><XAxis dataKey="name" fontSize={10} /><YAxis fontSize={10} /><Tooltip /><Bar dataKey="mesaCount" fill="#10b981" /></BarChart></ResponsiveContainer>
+           <div style={{ flex: 1, minHeight: '250px' }}>
+             {waiterRanking.length > 0 ? (
+               <div style={{ width: '100%', height: '250px' }}>
+                 <ResponsiveContainer width="99%" height="100%" debounce={50}>
+                   <BarChart data={waiterRanking}>
+                     <XAxis dataKey="name" fontSize={10} />
+                     <YAxis fontSize={10} />
+                     <Tooltip />
+                     <Bar dataKey="mesaCount" fill="#10b981" />
+                   </BarChart>
+                 </ResponsiveContainer>
+               </div>
+             ) : (
+               <div className="d-flex items-center justify-center h-full opacity-40" style={{ height: '100%', fontSize: '0.8rem' }}>
+                 Nenhuma venda registrada por garçons hoje.
+               </div>
+             )}
            </div>
         </div>
         <div className="card" style={{ padding: '1.25rem' }}>
