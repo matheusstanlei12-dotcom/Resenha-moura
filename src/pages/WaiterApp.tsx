@@ -230,7 +230,6 @@ export const Garcom = () => {
     if(!confirm("Pedir conta ao caixa?")) return;
     try {
       await supabase.from('mesas').update({ status: 'aguardando conta' }).eq('id', mesaId);
-      alert("Sucesso!");
       fetchData();
       setSelectedMesa(null);
     } catch (err) {
@@ -244,7 +243,6 @@ export const Garcom = () => {
     await supabase.from('pedidos').update({ mesa_id: targetMesaId }).eq('mesa_id', selectedMesa.id).neq('status', 'finalizado');
     await supabase.from('mesas').update({ status: 'livre', precisa_garcom: false }).eq('id', selectedMesa.id);
     await supabase.from('mesas').update({ status: selectedMesa.status, precisa_garcom: selectedMesa.precisa_garcom }).eq('id', targetMesaId);
-    alert(`Transferido!`);
     setShowTransferModal(false);
     setTargetMesaId('');
     setSelectedMesa(null);
@@ -258,7 +256,6 @@ export const Garcom = () => {
     setIsCheckingOut(true);
     const success = await checkout(selectedMesa.id, profile?.id);
     if (success) {
-      alert("Pedido enviado!");
       setShowAddMenu(false);
       fetchData();
     } else {

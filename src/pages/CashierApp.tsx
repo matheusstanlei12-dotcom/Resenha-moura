@@ -446,7 +446,6 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
         setCarrinho([]);
       }
       
-      alert("Venda finalizada com sucesso! 💰");
       setIsCheckoutOpen(false);
       fetchData();
     } catch (err: any) {

@@ -40,7 +40,6 @@ export const AberturaCaixa = ({ onOpen }: AberturaCaixaProps) => {
       localStorage.setItem('turno_inicio', data.aberto_em);
       localStorage.setItem('fundo_troco', valor.toFixed(2));
       
-      alert(`Caixa Aberto com Sucesso!\nO.S. Número: #${data.os_number || '---'}`);
       onOpen();
     } catch (err: any) {
       alert('Erro ao abrir o caixa: ' + err.message);

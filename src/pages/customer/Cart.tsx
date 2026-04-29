@@ -16,7 +16,6 @@ export const Cart = () => {
     setLoading(false);
     
     if (success) {
-      alert("Pedido enviado com sucesso para a Cozinha e Bar!");
       navigate(`/c/${qr_code}`);
     } else {
       alert("Erro ao enviar pedido. Verifique o banco de dados.");

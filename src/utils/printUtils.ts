@@ -78,7 +78,6 @@ const processQueue = () => {
 };
 
 export const silentPrint = (htmlContent: string) => {
-  if (!confirm("Deseja enviar este documento para a impressora?")) return;
   printQueue.push(htmlContent);
   processQueue();
 };
