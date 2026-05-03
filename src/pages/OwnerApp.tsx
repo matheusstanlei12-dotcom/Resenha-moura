@@ -8,7 +8,7 @@ import {
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  TrendingUp, Users as UsersIcon, Package, Utensils, 
+  TrendingUp, TrendingDown, Users as UsersIcon, Package, Utensils, 
   Clock, Star, LogOut, LayoutDashboard,
   PieChart as PieIcon, LayoutGrid,
   QrCode, Banknote, CreditCard, Lock, History as HistoryIcon,
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { FechamentoCaixa } from '../components/FechamentoCaixa';
 
-type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 'comandas' | 'caixa';
+type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 'comandas' | 'caixa' | 'ganhos_mensais' | 'gastos_mensais';
 
 
 const COLORS = ['#d4af37', '#eab308', '#f59e0b', '#10b981', '#3b82f6'];
@@ -75,6 +75,12 @@ export const Dono = () => {
   const [selectedPaymentDetail, setSelectedPaymentDetail] = useState<string | null>(null);
   const [filterDate, setFilterDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [detailSearch, setDetailSearch] = useState('');
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(null);
+  
+  const [gastos, setGastos] = useState<any[]>([]);
+  const [showAddGasto, setShowAddGasto] = useState(false);
+  const [novoGasto, setNovoGasto] = useState({ descricao: '', valor: '', categoria: 'Fornecedores', forma_pagamento: 'PIX', data: new Date().toISOString().split('T')[0] });
+  const [gastosMonthFilter, setGastosMonthFilter] = useState<string>(new Date().toISOString().substring(0, 7));
 
 
   // Modal Novo Colaborador
@@ -120,9 +126,15 @@ export const Dono = () => {
       today.setHours(0, 0, 0, 0);
       const todayStart = today.toISOString();
 
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      const startOfMonthISO = startOfMonth.toISOString();
+
       const { data: allFinalizadosStatus } = await supabase.from('pedidos')
         .select('total')
-        .eq('status', 'finalizado');
+        .eq('status', 'finalizado')
+        .gte('finalizado_at', startOfMonthISO);
       setFaturamento(allFinalizadosStatus?.reduce((acc, p) => acc + Number(p.total), 0) || 0);
 
       const { data: pFinalizadosHoje } = await supabase.from('pedidos')
@@ -191,7 +203,8 @@ export const Dono = () => {
         .from('turnos_caixa')
         .select(`
           *, 
-          profiles:operador_id(full_name)
+          profiles:operador_id(full_name),
+          pedidos(*, mesas(numero))
         `)
         .order('aberto_em', { ascending: false })
         .limit(100);
@@ -200,7 +213,7 @@ export const Dono = () => {
         console.error("Erro crítico ao buscar turnos:", turnosError);
         const { data: simpleTurnos } = await supabase
           .from('turnos_caixa')
-          .select('*, profiles:operador_id(full_name)')
+          .select('*, profiles:operador_id(full_name), pedidos(*, mesas(numero))')
           .order('aberto_em', { ascending: false })
           .limit(50);
         setTurnosHistorico(simpleTurnos || []);
@@ -237,6 +250,9 @@ export const Dono = () => {
         .order('criado_em', { ascending: false })
         .limit(100);
       setAuditoriaExclusoes(audits || []);
+
+      const { data: gastosData } = await supabase.from('gastos').select('*').order('data_gasto', { ascending: false });
+      setGastos(gastosData || []);
 
     } catch (err: any) {
       console.error("Fetch error:", err);
@@ -590,25 +606,30 @@ export const Dono = () => {
 
   const paymentTotals = useMemo(() => {
     const totals = { pix: 0, dinheiro: 0, debito: 0, credito: 0, outrosCartoes: 0 };
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
     historicoCompleto.forEach(p => {
-      if (!p.forma_pagamento) return;
-      
-      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9.]+)\)/gi);
-      if (matches) {
-        matches.forEach((m: string) => {
-          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
-          const valMatch = m.match(/R\$([0-9.]+)/);
-          if (typeMatch && valMatch) {
-            const type = typeMatch[1].toUpperCase();
-            const val = parseFloat(valMatch[1]);
-            
-            if (type === 'PIX') totals.pix += val;
-            else if (type === 'DINHEIRO') totals.dinheiro += val;
-            else if (type === 'DÉBITO' || type === 'DEBITO') totals.debito += val;
-            else if (type === 'CRÉDITO' || type === 'CREDITO') totals.credito += val;
-            else if (type === 'CARTAO' || type === 'CARTÃO') totals.outrosCartoes += val;
-          }
-        });
+      const d = new Date(p.finalizado_at || p.data_hora);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        if (!p.forma_pagamento) return;
+        
+        const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9.]+)\)/gi);
+        if (matches) {
+          matches.forEach((m: string) => {
+            const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
+            const valMatch = m.match(/R\$([0-9.]+)/);
+            if (typeMatch && valMatch) {
+              const type = typeMatch[1].toUpperCase();
+              const val = parseFloat(valMatch[1]);
+              
+              if (type === 'PIX') totals.pix += val;
+              else if (type === 'DINHEIRO') totals.dinheiro += val;
+              else if (type === 'DÉBITO' || type === 'DEBITO') totals.debito += val;
+              else if (type === 'CRÉDITO' || type === 'CREDITO') totals.credito += val;
+              else if (type === 'CARTAO' || type === 'CARTÃO') totals.outrosCartoes += val;
+            }
+          });
+        }
       }
     });
     return totals;
@@ -1754,6 +1775,285 @@ export const Dono = () => {
     );
   };
 
+  const ganhosMensais = useMemo(() => {
+    const groups: Record<string, { total: number, pedidos: any[], payments: any }> = {};
+    historicoCompleto.forEach(p => {
+      const d = new Date(p.finalizado_at || p.data_hora);
+      if (isNaN(d.getTime())) return;
+      const monthStr = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).toUpperCase();
+      if (!groups[monthStr]) {
+        groups[monthStr] = { 
+          total: 0, 
+          pedidos: [], 
+          payments: { pix: 0, dinheiro: 0, debito: 0, credito: 0 } 
+        };
+      }
+      const val = Number(p.total);
+      groups[monthStr].total += val;
+      groups[monthStr].pedidos.push(p);
+
+      if (p.forma_pagamento) {
+          const typeMatch = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO)/i);
+          const valMatch = p.forma_pagamento.match(/R\$([0-9.]+)/);
+          if (typeMatch && valMatch) {
+            const type = typeMatch[1].toUpperCase();
+            const v = parseFloat(valMatch[1]);
+            if (type === 'PIX') groups[monthStr].payments.pix += v;
+            else if (type === 'DINHEIRO') groups[monthStr].payments.dinheiro += v;
+            else if (type === 'DÉBITO' || type === 'DEBITO') groups[monthStr].payments.debito += v;
+            else if (type === 'CRÉDITO' || type === 'CREDITO') groups[monthStr].payments.credito += v;
+          }
+      }
+    });
+    return Object.entries(groups).sort((a, b) => {
+        const d1 = new Date(b[1].pedidos[0].finalizado_at || b[1].pedidos[0].data_hora);
+        const d2 = new Date(a[1].pedidos[0].finalizado_at || a[1].pedidos[0].data_hora);
+        return d1.getTime() - d2.getTime();
+    });
+  }, [historicoCompleto]);
+
+  const renderGanhosMensais = () => {
+    return (
+      <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+        <div className="mb-8">
+            <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>Ganhos Mensais</h2>
+            <p className="text-muted" style={{ fontSize: isMobile ? '0.8rem' : '1rem' }}>Histórico completo de faturamento agrupado por mês.</p>
+        </div>
+
+        <div className="d-flex flex-col gap-4">
+            {ganhosMensais.length === 0 && (
+                <div className="card text-center" style={{ padding: '3rem', opacity: 0.5 }}>
+                    Nenhum histórico encontrado.
+                </div>
+            )}
+            {ganhosMensais.map(([monthStr, data]) => {
+                const isExpanded = expandedMonth === monthStr;
+                return (
+                    <div key={monthStr} className="card" style={{ padding: 0, overflow: 'hidden', border: isExpanded ? '1px solid var(--primary-color)' : '1px solid rgba(255,255,255,0.05)' }}>
+                        <div 
+                            onClick={() => setExpandedMonth(isExpanded ? null : monthStr)}
+                            style={{ 
+                                padding: isMobile ? '1rem' : '1.2rem 1.5rem', 
+                                background: isExpanded ? 'rgba(212,175,55,0.05)' : 'rgba(255,255,255,0.01)', 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}
+                        >
+                            <div className="d-flex items-center gap-3 md:gap-4">
+                                <div style={{ background: 'rgba(212,175,55,0.1)', padding: isMobile ? '8px' : '10px', borderRadius: '10px' }}>
+                                    <HistoryIcon size={isMobile ? 20 : 24} color="#d4af37" />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: isMobile ? '1rem' : '1.2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>MÊS: {monthStr}</div>
+                                    <div style={{ fontSize: '0.65rem', opacity: 0.5, fontWeight: 700 }}>{data.pedidos.length} PEDIDOS ARQUIVADOS</div>
+                                </div>
+                            </div>
+                            <div className="d-flex items-center gap-4 md:gap-6">
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontSize: '0.55rem', opacity: 0.4 }}>FATURAMENTO</div>
+                                    <div style={{ fontWeight: 900, color: 'var(--primary-color)', fontSize: isMobile ? '0.9rem' : '1.1rem' }}>R$ {data.total.toFixed(2)}</div>
+                                </div>
+                                {isExpanded ? <ChevronUp size={isMobile ? 16 : 20} opacity={0.5} /> : <ChevronDown size={isMobile ? 16 : 20} opacity={0.5} />}
+                            </div>
+                        </div>
+                        {isExpanded && (
+                            <div style={{ padding: isMobile ? '1rem' : '1.5rem', background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '0.75rem' }}>
+                                    <div className="p-2 rounded-lg" style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                        <div style={{ fontSize: '0.55rem', opacity: 0.6, color: '#10b981', fontWeight: 800 }}>PIX</div>
+                                        <div style={{ fontWeight: 800, color: '#10b981', fontSize: '0.9rem' }}>R$ {data.payments.pix.toFixed(2)}</div>
+                                    </div>
+                                    <div className="p-2 rounded-lg" style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                        <div style={{ fontSize: '0.55rem', opacity: 0.6, color: '#f59e0b', fontWeight: 800 }}>DINHEIRO</div>
+                                        <div style={{ fontWeight: 800, color: '#f59e0b', fontSize: '0.9rem' }}>R$ {data.payments.dinheiro.toFixed(2)}</div>
+                                    </div>
+                                    <div className="p-2 rounded-lg" style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                        <div style={{ fontSize: '0.55rem', opacity: 0.6, color: '#3b82f6', fontWeight: 800 }}>DÉBITO</div>
+                                        <div style={{ fontWeight: 800, color: '#3b82f6', fontSize: '0.9rem' }}>R$ {data.payments.debito.toFixed(2)}</div>
+                                    </div>
+                                    <div className="p-2 rounded-lg" style={{ background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                                        <div style={{ fontSize: '0.55rem', opacity: 0.6, color: '#8b5cf6', fontWeight: 800 }}>CRÉDITO</div>
+                                        <div style={{ fontWeight: 800, color: '#8b5cf6', fontSize: '0.9rem' }}>R$ {data.payments.credito.toFixed(2)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+      </div>
+    );
+  };
+
+  const handleAddGasto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!novoGasto.descricao || !novoGasto.valor) return;
+    
+    const { error } = await supabase.from('gastos').insert({
+      descricao: novoGasto.descricao,
+      valor: parseFloat(novoGasto.valor.replace(',', '.')),
+      categoria: novoGasto.categoria,
+      forma_pagamento: novoGasto.forma_pagamento,
+      data_gasto: new Date(novoGasto.data + 'T12:00:00').toISOString()
+    });
+    
+    if (!error) {
+      setShowAddGasto(false);
+      setNovoGasto({ descricao: '', valor: '', categoria: 'Fornecedores', forma_pagamento: 'PIX', data: new Date().toISOString().split('T')[0] });
+      fetchData();
+    } else {
+      alert("Erro ao adicionar gasto: " + error.message);
+    }
+  };
+
+  const handleDeleteGasto = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir este gasto?")) {
+      await supabase.from('gastos').delete().eq('id', id);
+      fetchData();
+    }
+  };
+
+  const renderGastosMensais = () => {
+    const [yearStr, monthStr] = gastosMonthFilter.split('-');
+    const currentMonthGastos = gastos.filter(g => {
+        const d = new Date(g.data_gasto);
+        return d.getFullYear() === parseInt(yearStr) && (d.getMonth() + 1) === parseInt(monthStr);
+    });
+
+    const totalGasto = currentMonthGastos.reduce((acc, g) => acc + Number(g.valor), 0);
+    
+    const categoryTotals = currentMonthGastos.reduce((acc: any, g) => {
+        if (!acc[g.categoria]) acc[g.categoria] = 0;
+        acc[g.categoria] += Number(g.valor);
+        return acc;
+    }, {});
+    const chartData = Object.keys(categoryTotals).map(c => ({ name: c, valor: categoryTotals[c] }));
+
+    const dailyTotals = currentMonthGastos.reduce((acc: any, g) => {
+        const d = new Date(g.data_gasto).getDate().toString().padStart(2, '0');
+        if (!acc[d]) acc[d] = 0;
+        acc[d] += Number(g.valor);
+        return acc;
+    }, {});
+    const dailyChartData = Object.keys(dailyTotals).sort().map(d => ({ dia: d, valor: dailyTotals[d] }));
+
+    return (
+      <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+        <div className="d-flex justify-between items-center mb-8 flex-wrap gap-4">
+            <div>
+              <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>Painel de Gastos</h2>
+              <p className="text-muted" style={{ fontSize: isMobile ? '0.8rem' : '1rem' }}>Gestão completa de despesas e contas a pagar.</p>
+            </div>
+            <div className="d-flex gap-3">
+                <input 
+                    type="month" 
+                    value={gastosMonthFilter} 
+                    onChange={e => setGastosMonthFilter(e.target.value)}
+                    className="input-field"
+                    style={{ width: 'auto', background: '#222', border: '1px solid #333' }}
+                />
+                <button className="btn-primary" onClick={() => setShowAddGasto(true)} style={{ width: 'auto', padding: '0.8rem 1.5rem', background: 'var(--danger-color)' }}>+ Lançar Gasto</button>
+            </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div className="card" style={{ borderLeft: '4px solid var(--danger-color)' }}>
+                <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700, letterSpacing: '1px' }}>TOTAL DO MÊS</div>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--danger-color)', marginTop: '0.5rem' }}>R$ {totalGasto.toFixed(2)}</div>
+            </div>
+            <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
+                <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700, letterSpacing: '1px' }}>TOTAL DE TRANSAÇÕES</div>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: '#f59e0b', marginTop: '0.5rem' }}>{currentMonthGastos.length}</div>
+            </div>
+            <div className="card" style={{ borderLeft: '4px solid #3b82f6' }}>
+                <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700, letterSpacing: '1px' }}>MÉDIA DIÁRIA</div>
+                <div style={{ fontSize: '2rem', fontWeight: 900, color: '#3b82f6', marginTop: '0.5rem' }}>R$ {(dailyChartData.length > 0 ? totalGasto / dailyChartData.length : 0).toFixed(2)}</div>
+            </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div className="card">
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Gastos por Categoria</h3>
+                <div style={{ width: '100%', height: 250 }}>
+                    {chartData.length > 0 ? (
+                    <ResponsiveContainer>
+                        <PieChart>
+                            <Pie data={chartData} dataKey="valor" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}>
+                                {chartData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                            </Pie>
+                            <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: '8px' }} formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    ) : (
+                      <div className="d-flex items-center justify-center h-full text-muted opacity-50">Sem dados para exibir</div>
+                    )}
+                </div>
+            </div>
+            <div className="card">
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Evolução Diária</h3>
+                <div style={{ width: '100%', height: 250 }}>
+                    {dailyChartData.length > 0 ? (
+                    <ResponsiveContainer>
+                        <BarChart data={dailyChartData}>
+                            <XAxis dataKey="dia" stroke="#666" />
+                            <YAxis stroke="#666" />
+                            <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: '8px' }} cursor={{ fill: 'rgba(255,255,255,0.05)' }} formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)} />
+                            <Bar dataKey="valor" fill="var(--danger-color)" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                    ) : (
+                      <div className="d-flex items-center justify-center h-full text-muted opacity-50">Sem dados para exibir</div>
+                    )}
+                </div>
+            </div>
+        </div>
+
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+            <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Lançamentos de {gastosMonthFilter.split('-').reverse().join('/')}</h3>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', fontSize: '0.9rem', minWidth: '600px' }}>
+                  <thead style={{ opacity: 0.5, background: 'rgba(0,0,0,0.2)' }}>
+                    <tr>
+                      <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>DATA</th>
+                      <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>DESCRIÇÃO</th>
+                      <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>CATEGORIA</th>
+                      <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>PAGAMENTO</th>
+                      <th style={{ textAlign: 'right', padding: '1rem 1.5rem' }}>VALOR</th>
+                      <th style={{ padding: '1rem 1.5rem' }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentMonthGastos.length === 0 ? (
+                        <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center', opacity: 0.5 }}>Nenhum gasto neste mês.</td></tr>
+                    ) : currentMonthGastos.map(g => (
+                      <tr key={g.id} style={{ borderTop: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                        <td style={{ padding: '1rem 1.5rem' }}>{new Date(g.data_gasto).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                        <td style={{ padding: '1rem 1.5rem', fontWeight: 700 }}>{g.descricao}</td>
+                        <td style={{ padding: '1rem 1.5rem' }}>
+                          <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 }}>{g.categoria}</span>
+                        </td>
+                        <td style={{ padding: '1rem 1.5rem', opacity: 0.7 }}>{g.forma_pagamento || 'Outros'}</td>
+                        <td style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--danger-color)', fontWeight: 900 }}>- R$ {Number(g.valor).toFixed(2)}</td>
+                        <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
+                          <button onClick={() => handleDeleteGasto(g.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '8px', color: '#ef4444' }}>
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard': return renderDashboard();
@@ -1763,6 +2063,8 @@ export const Dono = () => {
       case 'comandas': return renderComandas();
       case 'avaliacoes': return renderAvaliacoes();
       case 'caixa': return renderCaixa();
+      case 'ganhos_mensais': return renderGanhosMensais();
+      case 'gastos_mensais': return renderGastosMensais();
       default: return renderDashboard();
     }
   };
@@ -1785,6 +2087,8 @@ export const Dono = () => {
 
 
           <SidebarItem active={activeTab === 'caixa'} icon={<Lock size={20}/>} label="Banco de fechamento de caixa" onClick={() => setActiveTab('caixa')} />
+          <SidebarItem active={activeTab === 'ganhos_mensais'} icon={<HistoryIcon size={20}/>} label="Ganhos Mensais" onClick={() => setActiveTab('ganhos_mensais')} />
+          <SidebarItem active={activeTab === 'gastos_mensais'} icon={<TrendingDown size={20}/>} label="Gastos Mensais" onClick={() => setActiveTab('gastos_mensais')} color="var(--danger-color)" />
         </nav>
 
 
@@ -1917,6 +2221,59 @@ export const Dono = () => {
         )}
       </AnimatePresence>
 
+      {/* Modal Lançar Gasto */}
+      <AnimatePresence>
+        {showAddGasto && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '1.5rem' }}>Lançar Gasto</h2>
+              
+              <form onSubmit={handleAddGasto}>
+                <div className="mb-4">
+                  <label className="label-field">DESCRIÇÃO</label>
+                  <input type="text" value={novoGasto.descricao} onChange={e => setNovoGasto({...novoGasto, descricao: e.target.value})} className="input-field" required placeholder="Ex: Fornecedor de Carnes" />
+                </div>
+                <div className="mb-4">
+                  <label className="label-field">VALOR (R$)</label>
+                  <input type="number" step="0.01" value={novoGasto.valor} onChange={e => setNovoGasto({...novoGasto, valor: e.target.value})} className="input-field" required placeholder="0.00" />
+                </div>
+                <div className="mb-4">
+                  <label className="label-field">CATEGORIA</label>
+                  <select value={novoGasto.categoria} onChange={e => setNovoGasto({...novoGasto, categoria: e.target.value})} className="input-field" style={{ background: '#222', color: '#fff' }}>
+                    <option value="Fornecedores">Fornecedores / Insumos</option>
+                    <option value="Funcionários">Funcionários / Diárias</option>
+                    <option value="Contas">Contas (Água, Luz, Aluguel, etc)</option>
+                    <option value="Equipamentos">Equipamentos / Manutenção</option>
+                    <option value="Impostos">Impostos / Taxas</option>
+                    <option value="Outros">Outros</option>
+                  </select>
+                </div>
+                <div className="mb-4">
+                  <label className="label-field">FORMA DE PAGAMENTO</label>
+                  <select value={novoGasto.forma_pagamento} onChange={e => setNovoGasto({...novoGasto, forma_pagamento: e.target.value})} className="input-field" style={{ background: '#222', color: '#fff' }}>
+                    <option value="PIX">PIX</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Boleto">Boleto / Transferência</option>
+                    <option value="Outros">Outros</option>
+                  </select>
+                </div>
+                <div className="mb-6">
+                  <label className="label-field">DATA DO GASTO</label>
+                  <input type="date" value={novoGasto.data} onChange={e => setNovoGasto({...novoGasto, data: e.target.value})} className="input-field" required />
+                </div>
+
+                <div className="d-flex gap-3">
+                  <button type="button" onClick={() => setShowAddGasto(false)} className="btn-outline">Cancelar</button>
+                  <button type="submit" className="btn-primary" style={{ background: 'var(--danger-color)', color: '#fff' }}>Registrar Gasto</button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

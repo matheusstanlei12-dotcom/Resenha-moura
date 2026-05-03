@@ -122,7 +122,7 @@ export const CustomerApp = () => {
 
   if (showAvaliacao) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg-color)', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
         {toast && <Toast message={toast.message} type={toast.type} />}
         <h2 style={{ fontSize: '1.8rem', color: 'var(--primary-color)', textAlign: 'center', marginBottom: '0.5rem' }}>Obrigado pela preferência!</h2>
         <p className="text-muted text-center" style={{ marginBottom: '2rem' }}>Sua mesa foi finalizada. O que achou da experiência no Resenha do Moura?</p>
@@ -157,7 +157,7 @@ export const CustomerApp = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {toast && <Toast message={toast.message} type={toast.type} />}
 
       <header style={{ 
@@ -198,7 +198,7 @@ export const CustomerApp = () => {
         position: 'fixed', bottom: 0, left: 0, right: 0, 
         backgroundColor: 'rgba(26, 26, 26, 0.95)',
         borderTop: '1px solid rgba(212, 175, 55, 0.1)', 
-        padding: '0.75rem 0 1.5rem',
+        padding: '0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom))',
         display: 'flex', justifyContent: 'space-around', alignItems: 'center', 
         zIndex: 1000,
         backdropFilter: 'blur(15px)'

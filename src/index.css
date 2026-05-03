@@ -86,6 +86,12 @@ select option {
   padding: 10px;
 }
 
+/* Fix para ícones de calendário/relógio no tema escuro (input type date/month) */
+::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
 .mt-2 { margin-top: 0.5rem; }
 .mt-4 { margin-top: 1rem; }
 .mt-6 { margin-top: 1.5rem; }
