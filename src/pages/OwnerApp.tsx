@@ -1953,7 +1953,7 @@ export const Dono = () => {
                     value={gastosMonthFilter} 
                     onChange={e => setGastosMonthFilter(e.target.value)}
                     className="input-field"
-                    style={{ width: 'auto', background: '#222', border: '1px solid #333' }}
+                    style={{ width: 'auto', background: '#222', border: '1px solid #333', textAlign: 'center', fontWeight: 600 }}
                 />
                 <button className="btn-primary" onClick={() => setShowAddGasto(true)} style={{ width: 'auto', padding: '0.8rem 1.5rem', background: 'var(--danger-color)' }}>+ Lançar Gasto</button>
             </div>
