@@ -97,8 +97,8 @@ export const Menu = () => {
         position: 'sticky',
         top: '70px',
         zIndex: 10,
-        margin: '0 -1.25rem 1rem -1.25rem',
-        paddingLeft: '1.25rem'
+        margin: '0 -0.8rem 1rem -0.8rem',
+        paddingLeft: '0.8rem'
       }}>
         {categories.map(cat => (
           <button 

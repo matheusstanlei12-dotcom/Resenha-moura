@@ -46,7 +46,10 @@ button { cursor: pointer; border: none; background: none; font-size: 1rem; }
   backdrop-filter: blur(8px);
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
-.container { max-width: 1200px; margin: 0 auto; padding: 1.25rem; }
+.container { max-width: 1200px; margin: 0 auto; padding: 1.25rem; width: 100%; }
+@media (max-width: 768px) {
+  .container { padding: 0.8rem; }
+}
 
 .input-field {
   width: 100%;
