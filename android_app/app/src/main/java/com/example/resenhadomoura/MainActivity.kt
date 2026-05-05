@@ -9,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -202,11 +204,16 @@ fun GastosScreen(token: String) {
     val cardColor = Color(0xFF1e293b).copy(alpha = 0.7f)
     val accentRed = Color(0xFFef4444)
 
-    // Efeito para carregar cartões
+    var totalGastosMes by remember { mutableStateOf(0.0) }
+    var totalReceitaMes by remember { mutableStateOf(0.0) }
+    var isLoadingFinance by remember { mutableStateOf(true) }
+
+    // Efeito para carregar cartões e dados financeiros
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             try {
-                val list = withContext(Dispatchers.IO) {
+                // 1. Carregar Cartões
+                val listCartoes = withContext(Dispatchers.IO) {
                     val url = URL("${SUPABASE_URL}/rest/v1/cartoes_gastos?select=*")
                     val conn = url.openConnection() as HttpURLConnection
                     conn.setRequestProperty("apikey", SUPABASE_KEY)
@@ -229,9 +236,50 @@ fun GastosScreen(token: String) {
                         result
                     } else emptyList()
                 }
-                cartoes = list
+                cartoes = listCartoes
+
+                // 2. Carregar Resumo Financeiro do Mês
+                val cal = java.util.Calendar.getInstance()
+                cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd")
+                val startOfMonth = sdf.format(cal.time)
+
+                var tReceita = 0.0
+                var tGastos = 0.0
+
+                withContext(Dispatchers.IO) {
+                    // Pedidos
+                    val urlP = URL("${SUPABASE_URL}/rest/v1/pedidos?select=total&status=eq.finalizado&finalizado_at=gte.$startOfMonth")
+                    val connP = urlP.openConnection() as HttpURLConnection
+                    connP.setRequestProperty("apikey", SUPABASE_KEY)
+                    connP.setRequestProperty("Authorization", "Bearer $token")
+                    if (connP.responseCode in 200..299) {
+                        val arrayP = JSONArray(connP.inputStream.bufferedReader().readText())
+                        for (i in 0 until arrayP.length()) {
+                            tReceita += arrayP.getJSONObject(i).optDouble("total", 0.0)
+                        }
+                    }
+
+                    // Gastos
+                    val urlG = URL("${SUPABASE_URL}/rest/v1/gastos?select=valor&data_gasto=gte.$startOfMonth")
+                    val connG = urlG.openConnection() as HttpURLConnection
+                    connG.setRequestProperty("apikey", SUPABASE_KEY)
+                    connG.setRequestProperty("Authorization", "Bearer $token")
+                    if (connG.responseCode in 200..299) {
+                        val arrayG = JSONArray(connG.inputStream.bufferedReader().readText())
+                        for (i in 0 until arrayG.length()) {
+                            tGastos += arrayG.getJSONObject(i).optDouble("valor", 0.0)
+                        }
+                    }
+                }
+                
+                totalReceitaMes = tReceita
+                totalGastosMes = tGastos
+                isLoadingFinance = false
+
             } catch (e: Exception) {
                 e.printStackTrace()
+                isLoadingFinance = false
             }
         }
     }
@@ -315,12 +363,48 @@ fun GastosScreen(token: String) {
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(Brush.verticalGradient(listOf(bgColor, Color(0xFF1e1b4b))))
-                .padding(horizontal = 24.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text("CENTRAL DE COMANDO", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = accentRed, letterSpacing = 2.sp)
+            Text("Resumo Financeiro", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.White)
+
             Spacer(modifier = Modifier.height(16.dp))
+
+            if (isLoadingFinance) {
+                CircularProgressIndicator(color = accentRed)
+                Spacer(modifier = Modifier.height(16.dp))
+            } else {
+                val lucro = totalReceitaMes - totalGastosMes
+                val lucroColor = if (lucro >= 0) Color(0xFF10b981) else accentRed
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = cardColor),
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.fillMaxWidth().border(1.dp, Color.White.copy(alpha = 0.1f), RoundedCornerShape(24.dp))
+                ) {
+                    Column(modifier = Modifier.padding(20.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("LUCRO LÍQUIDO", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.5f))
+                        Text(String.format("R$ %.2f", lucro), fontSize = 32.sp, fontWeight = FontWeight.Black, color = lucroColor)
+                        
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("RECEITA (MÊS)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.5f))
+                                Text(String.format("R$ %.2f", totalReceitaMes), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color(0xFFd4af37))
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("GASTOS (MÊS)", fontSize = 10.sp, color = Color.White.copy(alpha = 0.5f))
+                                Text(String.format("R$ %.2f", totalGastosMes), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = accentRed)
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+
             Text("NOVO GASTO", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = accentRed, letterSpacing = 2.sp)
-            Text("Gestão de Despesas", fontSize = 26.sp, fontWeight = FontWeight.Black, color = Color.White)
+            Text("Gestão de Despesas", fontSize = 22.sp, fontWeight = FontWeight.Black, color = Color.White)
 
             Spacer(modifier = Modifier.height(24.dp))
 
