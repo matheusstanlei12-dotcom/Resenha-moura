@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   BarChart, Bar, XAxis, YAxis, Tooltip, Tooltip as RechartsTooltip, ResponsiveContainer, 
-  AreaChart, Area, PieChart, Pie, Cell
+  AreaChart, Area, PieChart, Pie, Cell, Legend, ComposedChart, Line
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -12,14 +12,15 @@ import {
   Clock, Star, LogOut, LayoutDashboard,
   PieChart as PieIcon, LayoutGrid,
   QrCode, Banknote, CreditCard, Lock, History as HistoryIcon,
-  ChevronDown, ChevronUp, Folder, FileText, Trash2, Search
+  ChevronDown, ChevronUp, Folder, FileText, Trash2, Search, Plus, CreditCard as CreditCardIcon,
+  Zap, BarChart3
 } from 'lucide-react';
 import { FechamentoCaixa } from '../components/FechamentoCaixa';
 
 type TabType = 'dashboard' | 'usuarios' | 'produtos' | 'mesas' | 'avaliacoes' | 'comandas' | 'caixa' | 'ganhos_mensais' | 'gastos_mensais';
 
 
-const COLORS = ['#d4af37', '#eab308', '#f59e0b', '#10b981', '#3b82f6'];
+const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
 
 const KPIItem = ({ title, value, icon, color, trend, onClick }: any) => (
   <div className="card" onClick={onClick} style={{ padding: '1.25rem', position: 'relative', cursor: onClick ? 'pointer' : 'default', transition: 'all 0.3s ease' }}>
@@ -79,8 +80,12 @@ export const Dono = () => {
   
   const [gastos, setGastos] = useState<any[]>([]);
   const [showAddGasto, setShowAddGasto] = useState(false);
-  const [novoGasto, setNovoGasto] = useState({ descricao: '', valor: '', categoria: 'Fornecedores', forma_pagamento: 'PIX', data: new Date().toISOString().split('T')[0] });
+  const [novoGasto, setNovoGasto] = useState<any>({ descricao: '', valor: '', categoria: 'Fornecedores', forma_pagamento: 'PIX', cartao_id: '', data: new Date().toISOString().split('T')[0] });
   const [gastosMonthFilter, setGastosMonthFilter] = useState<string>(new Date().toISOString().substring(0, 7));
+
+  const [cartoes, setCartoes] = useState<any[]>([]);
+  const [showAddCartao, setShowAddCartao] = useState(false);
+  const [novoCartao, setNovoCartao] = useState({ nome: '', bandeira: 'Visa', banco: '', cor: '#3b82f6' });
 
 
   // Modal Novo Colaborador
@@ -120,6 +125,16 @@ export const Dono = () => {
     });
   }, [produtos, searchTermEstoque]);
 
+  const totalGastosMes = useMemo(() => {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+    return gastos.filter(g => new Date(g.data_gasto) >= startOfMonth)
+                 .reduce((acc, g) => acc + Number(g.valor), 0);
+  }, [gastos]);
+
+  const lucroLiquido = useMemo(() => faturamento - totalGastosMes, [faturamento, totalGastosMes]);
+
   const fetchData = async () => {
     try {
       const today = new Date();
@@ -135,7 +150,17 @@ export const Dono = () => {
         .select('total')
         .eq('status', 'finalizado')
         .gte('finalizado_at', startOfMonthISO);
-      setFaturamento(allFinalizadosStatus?.reduce((acc, p) => acc + Number(p.total), 0) || 0);
+      const revTotal = allFinalizadosStatus?.reduce((acc, p) => acc + Number(p.total), 0) || 0;
+      setFaturamento(revTotal);
+
+      // Buscar gastos do mês atual
+      const { data: gastosMes } = await supabase.from('gastos')
+        .select('valor')
+        .gte('data_gasto', startOfMonthISO);
+      const expTotal = gastosMes?.reduce((acc, g) => acc + Number(g.valor), 0) || 0;
+      // Podemos armazenar isso em um novo estado se quisermos, ou calcular no render.
+      // Vou usar o estado 'gastos' que já existe para o filtro do mês atual.
+
 
       const { data: pFinalizadosHoje } = await supabase.from('pedidos')
         .select('total')
@@ -251,7 +276,10 @@ export const Dono = () => {
         .limit(100);
       setAuditoriaExclusoes(audits || []);
 
-      const { data: gastosData } = await supabase.from('gastos').select('*').order('data_gasto', { ascending: false });
+      const { data: cartoesData } = await supabase.from('cartoes_gastos').select('*').order('nome', { ascending: true });
+      setCartoes(cartoesData || []);
+
+      const { data: gastosData } = await supabase.from('gastos').select('*, cartoes_gastos(*)').order('data_gasto', { ascending: false });
       setGastos(gastosData || []);
 
     } catch (err: any) {
@@ -713,19 +741,116 @@ export const Dono = () => {
     return entries;
   }, [historicoCompleto]);
 
+  const cashFlowData = useMemo(() => {
+    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const currentYear = new Date().getFullYear();
+    return months.map((m, i) => {
+      const rev = historicoCompleto.filter(p => {
+        const d = new Date(p.finalizado_at || p.data_hora);
+        return d.getMonth() === i && d.getFullYear() === currentYear;
+      }).reduce((acc, p) => acc + Number(p.total), 0);
+      
+      const exp = gastos.filter(g => {
+        const d = new Date(g.data_gasto);
+        return d.getMonth() === i && d.getFullYear() === currentYear;
+      }).reduce((acc, g) => acc + Number(g.valor), 0);
+      
+      return { name: m, receita: rev, gastos: exp, lucro: rev - exp };
+    });
+  }, [historicoCompleto, gastos]);
+
+  const KPIItem = ({ title, value, icon, color, trend, onClick }: any) => (
+    <div className="card h-full" onClick={onClick} style={{ 
+      cursor: onClick ? 'pointer' : 'default',
+      border: '1px solid rgba(255,255,255,0.03)',
+      transition: 'all 0.2s ease',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
+      minHeight: '140px'
+    }}>
+      <div className="d-flex justify-between items-start mb-4">
+        <div style={{ background: `${color}15`, padding: '10px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {icon}
+        </div>
+        {trend && (
+          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--text-muted)', background: 'rgba(255,255,255,0.03)', padding: '4px 8px', borderRadius: '20px' }}>
+            {trend.toUpperCase()}
+          </span>
+        )}
+      </div>
+      <div>
+        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '0.5px', marginBottom: '4px' }}>{title}</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff' }}>{value}</div>
+      </div>
+    </div>
+  );
+
   const renderDashboard = () => (
-    <div className="animate-fade-in">
-      <div className="d-flex justify-between items-center mb-6">
+    <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? '1.5rem' : '2rem', color: '#fff', fontWeight: 800 }}>Olá, {profile?.full_name?.split(' ')[0] || 'Gestor'}! ✨</h1>
-          <p className="text-muted" style={{ fontSize: '0.85rem' }}>Painel VIP - Gestão em Tempo Real.</p>
+           <div style={{ color: 'var(--primary-color)', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '2px', marginBottom: '6px' }}>CENTRAL DE COMANDO</div>
+           <h1 style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', fontWeight: 900, letterSpacing: '-1px' }}>Olá, {profile?.full_name?.split(' ')[0] || 'Gestor'}! 👑</h1>
+           <p className="text-muted" style={{ fontSize: '0.9rem' }}>Aqui está o resumo financeiro do seu negócio hoje.</p>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'right' }}>
+           <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 800 }}>STATUS DO SISTEMA</div>
+           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontWeight: 700, fontSize: '0.9rem' }}>
+              <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 10px #10b981' }}></div> Online
+           </div>
         </div>
       </div>
-      <div className="stat-grid mb-6">
-        <KPIItem title="Receita Bruta (TOTAL)" value={`R$ ${faturamento.toFixed(2).replace('.', ',')}`} icon={<TrendingUp color="#d4af37" />} color="#d4af37" trend="Acumulado" />
-        <KPIItem title="Faturamento Hoje" value={`R$ ${faturamentoHoje.toFixed(2).replace('.', ',')}`} icon={<Banknote color="#10b981" />} color="#10b981" trend="Diário" />
-        <KPIItem title="Pedidos Ativos" value={pedidosAtivosCount.toString()} icon={<Utensils color="#3b82f6" />} color="#3b82f6" trend="Cozinha" />
-        <KPIItem title="Top Garçom" value={waiterRanking[0]?.name?.split(' ')[0] || 'Nenhum'} icon={<Star color="#8b5cf6" />} color="#8b5cf6" trend={waiterRanking.length > 0 ? "Destaque" : "Sem dados"} />
+
+      {/* KPIs Financeiros de Elite */}
+      <div className="stat-grid mb-8">
+        <KPIItem 
+            title="RECEITA BRUTA (MÊS)" 
+            value={`R$ ${faturamento.toFixed(2).replace('.', ',')}`} 
+            icon={<TrendingUp size={24} color="#d4af37" />} 
+            color="#d4af37" 
+            trend="Faturamento total" 
+        />
+        <KPIItem 
+            title="GASTOS TOTAIS (MÊS)" 
+            value={`R$ ${totalGastosMes.toFixed(2).replace('.', ',')}`} 
+            icon={<TrendingDown size={24} color="#ef4444" />} 
+            color="#ef4444" 
+            trend="Despesas operacionais" 
+        />
+        <KPIItem 
+            title="LUCRO LÍQUIDO" 
+            value={`R$ ${lucroLiquido.toFixed(2).replace('.', ',')}`} 
+            icon={<Zap size={24} color={lucroLiquido >= 0 ? "#10b981" : "#ef4444"} />} 
+            color={lucroLiquido >= 0 ? "#10b981" : "#ef4444"} 
+            trend="Resultado final" 
+        />
+        <KPIItem 
+            title="TICKET MÉDIO" 
+            value={`R$ ${(historicoCompleto.length > 0 ? faturamento / historicoCompleto.length : 0).toFixed(2).replace('.', ',')}`} 
+            icon={<BarChart3 size={24} color="#3b82f6" />} 
+            color="#3b82f6" 
+            trend="Média por pedido" 
+        />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2.5rem' }}>
+        <div className="card" style={{ padding: '1.25rem', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+            <div style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 800 }}>VENDAS HOJE</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>R$ {faturamentoHoje.toFixed(2)}</div>
+        </div>
+        <div className="card" style={{ padding: '1.25rem', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
+            <div style={{ fontSize: '0.7rem', color: '#3b82f6', fontWeight: 800 }}>PEDIDOS ATIVOS</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{pedidosAtivosCount}</div>
+        </div>
+        <div className="card" style={{ padding: '1.25rem', border: '1px solid rgba(245, 158, 11, 0.1)' }}>
+            <div style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 800 }}>MESAS OCUPADAS</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{mesas.filter(m => m.status === 'ocupada').length}</div>
+        </div>
+        <div className="card" style={{ padding: '1.25rem', border: '1px solid rgba(139, 92, 246, 0.1)' }}>
+            <div style={{ fontSize: '0.7rem', color: '#8b5cf6', fontWeight: 800 }}>AVALIAÇÕES</div>
+            <div style={{ fontSize: '1.5rem', fontWeight: 900 }}>{avaliacoes.length}</div>
+        </div>
       </div>
       
       <h3 style={{ fontSize: '1.1rem', marginBottom: '1rem', color: '#fff' }}>Receita por Forma de Pagamento</h3>
@@ -918,16 +1043,25 @@ export const Dono = () => {
       </AnimatePresence>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-        <div className="card" style={{ padding: '1.25rem', gridColumn: isMobile ? 'span 1' : '1 / -1' }}>
-           <h3 style={{ fontSize: '1rem', marginBottom: '1.25rem' }}>Vendas Diárias (Últimos 7 dias)</h3>
-           <div style={{ height: isMobile ? '200px' : '250px' }}>
+        <div className="card" style={{ padding: '1.5rem', gridColumn: isMobile ? 'span 1' : '1 / -1', border: '1px solid rgba(255,255,255,0.03)' }}>
+           <div className="d-flex justify-between items-center mb-6">
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800 }}>Fluxo de Caixa Anual</h3>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Comparativo Mensal: Receita vs Despesas</div>
+           </div>
+           <div style={{ height: isMobile ? '250px' : '320px' }}>
              <ResponsiveContainer width="100%" height="100%">
-               <AreaChart data={dynamicChartData}>
-                 <XAxis dataKey="name" fontSize={10} />
-                 <YAxis fontSize={10} tickFormatter={(value) => `R$${value}`} />
-                 <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Vendas']} />
-                 <Area type="monotone" dataKey="valor" stroke="#d4af37" fill="rgba(212,175,55,0.2)" />
-               </AreaChart>
+               <ComposedChart data={cashFlowData}>
+                 <XAxis dataKey="name" fontSize={11} axisLine={false} tickLine={false} stroke="rgba(255,255,255,0.3)" />
+                 <YAxis fontSize={11} axisLine={false} tickLine={false} stroke="rgba(255,255,255,0.3)" tickFormatter={(val) => `R$${val}`} />
+                 <RechartsTooltip 
+                    contentStyle={{ background: 'rgba(0,0,0,0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', backdropFilter: 'blur(10px)' }} 
+                    formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)}
+                 />
+                 <Legend verticalAlign="top" height={40} iconType="circle" wrapperStyle={{ fontSize: '12px', paddingBottom: '20px' }} />
+                 <Bar dataKey="receita" name="Receita" fill="#10b981" radius={[6, 6, 0, 0]} barSize={25} />
+                 <Bar dataKey="gastos" name="Despesas" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={25} />
+                 <Line type="monotone" dataKey="lucro" name="Lucro Líquido" stroke="var(--primary-color)" strokeWidth={4} dot={{ r: 5, fill: 'var(--primary-color)', strokeWidth: 2, stroke: '#000' }} />
+               </ComposedChart>
              </ResponsiveContainer>
            </div>
         </div>
@@ -1894,18 +2028,38 @@ export const Dono = () => {
     
     const { error } = await supabase.from('gastos').insert({
       descricao: novoGasto.descricao,
-      valor: parseFloat(novoGasto.valor.replace(',', '.')),
+      valor: parseFloat(novoGasto.valor.toString().replace(',', '.')),
       categoria: novoGasto.categoria,
       forma_pagamento: novoGasto.forma_pagamento,
+      cartao_id: novoGasto.cartao_id || null,
       data_gasto: new Date(novoGasto.data + 'T12:00:00').toISOString()
     });
     
     if (!error) {
       setShowAddGasto(false);
-      setNovoGasto({ descricao: '', valor: '', categoria: 'Fornecedores', forma_pagamento: 'PIX', data: new Date().toISOString().split('T')[0] });
+      setNovoGasto({ descricao: '', valor: '', categoria: 'Fornecedores', forma_pagamento: 'PIX', cartao_id: '', data: new Date().toISOString().split('T')[0] });
       fetchData();
     } else {
       alert("Erro ao adicionar gasto: " + error.message);
+    }
+  };
+
+  const handleAddCartao = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.from('cartoes_gastos').insert(novoCartao);
+    if (!error) {
+      setShowAddCartao(false);
+      setNovoCartao({ nome: '', bandeira: 'Visa', banco: '', cor: '#3b82f6' });
+      fetchData();
+    } else {
+      alert("Erro ao adicionar cartão: " + error.message);
+    }
+  };
+
+  const handleDeleteCartao = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir este cartão? Gastos vinculados a ele podem ser afetados.")) {
+      await supabase.from('cartoes_gastos').delete().eq('id', id);
+      fetchData();
     }
   };
 
@@ -1932,8 +2086,16 @@ export const Dono = () => {
     }, {});
     const chartData = Object.keys(categoryTotals).map(c => ({ name: c, valor: categoryTotals[c] }));
 
+    const paymentTotals = currentMonthGastos.reduce((acc: any, g) => {
+        const method = g.forma_pagamento || 'Outros';
+        if (!acc[method]) acc[method] = 0;
+        acc[method] += Number(g.valor);
+        return acc;
+    }, {});
+    const paymentChartData = Object.keys(paymentTotals).map(p => ({ name: p, valor: paymentTotals[p] }));
+
     const dailyTotals = currentMonthGastos.reduce((acc: any, g) => {
-        const d = new Date(g.data_gasto).getDate().toString().padStart(2, '0');
+        const d = new Date(g.data_gasto).getUTCDate().toString().padStart(2, '0');
         if (!acc[d]) acc[d] = 0;
         acc[d] += Number(g.valor);
         return acc;
@@ -1942,70 +2104,113 @@ export const Dono = () => {
 
     return (
       <div className="animate-fade-in" style={{ paddingBottom: '3rem' }}>
-        <div className="d-flex justify-between items-center mb-8 flex-wrap gap-4">
-            <div>
-              <h2 style={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 900, letterSpacing: '-0.5px' }}>Painel de Gastos</h2>
-              <p className="text-muted" style={{ fontSize: isMobile ? '0.8rem' : '1rem' }}>Gestão completa de despesas e contas a pagar.</p>
-            </div>
-            <div className="d-flex gap-3">
-                <input 
-                    type="month" 
-                    value={gastosMonthFilter} 
-                    onChange={e => setGastosMonthFilter(e.target.value)}
-                    className="input-field"
-                    style={{ width: 'auto', background: '#222', border: '1px solid #333', textAlign: 'center', fontWeight: 600 }}
-                />
-                <button className="btn-primary" onClick={() => setShowAddGasto(true)} style={{ width: 'auto', padding: '0.8rem 1.5rem', background: 'var(--danger-color)' }}>+ Lançar Gasto</button>
-            </div>
+        {/* Header Elegante */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem', flexWrap: 'wrap', gap: '20px' }}>
+          <div>
+             <div style={{ color: 'var(--primary-color)', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '2px', marginBottom: '8px' }}>RELATÓRIO FINANCEIRO</div>
+             <h2 style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', fontWeight: 900, letterSpacing: '-1px' }}>Gestão de Gastos</h2>
+             <p className="text-muted" style={{ fontSize: '0.9rem', marginTop: '4px' }}>Controle detalhado de despesas e cartões ativos.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', background: '#111', borderRadius: '12px', padding: '0 12px', border: '1px solid #333' }}>
+                    <input 
+                        type="month" 
+                        value={gastosMonthFilter} 
+                        onChange={e => setGastosMonthFilter(e.target.value)}
+                        style={{ background: 'transparent', border: 'none', color: '#fff', padding: '10px 0', fontSize: '0.9rem', fontWeight: 700, outline: 'none' }}
+                    />
+                </div>
+                <button onClick={() => setShowAddCartao(true)} style={{ background: '#111', color: '#fff', border: '1px solid #333', padding: '12px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary-color)'} onMouseLeave={e => e.currentTarget.style.borderColor = '#333'}>
+                    <CreditCardIcon size={16} /> Cartões
+                </button>
+                <button className="btn-primary" onClick={() => setShowAddGasto(true)} style={{ width: 'auto', padding: '12px 24px', background: 'var(--danger-color)', borderRadius: '12px', fontWeight: 800, fontSize: '0.85rem', boxShadow: '0 4px 15px rgba(239, 68, 68, 0.2)' }}>
+                    + Lançar Gasto
+                </button>
+          </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div className="card" style={{ borderLeft: '4px solid var(--danger-color)' }}>
-                <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700, letterSpacing: '1px' }}>TOTAL DO MÊS</div>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--danger-color)', marginTop: '0.5rem' }}>R$ {totalGasto.toFixed(2)}</div>
-            </div>
-            <div className="card" style={{ borderLeft: '4px solid #f59e0b' }}>
-                <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700, letterSpacing: '1px' }}>TOTAL DE TRANSAÇÕES</div>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: '#f59e0b', marginTop: '0.5rem' }}>{currentMonthGastos.length}</div>
-            </div>
-            <div className="card" style={{ borderLeft: '4px solid #3b82f6' }}>
-                <div style={{ fontSize: '0.8rem', opacity: 0.6, fontWeight: 700, letterSpacing: '1px' }}>MÉDIA DIÁRIA</div>
-                <div style={{ fontSize: '2rem', fontWeight: 900, color: '#3b82f6', marginTop: '0.5rem' }}>R$ {(dailyChartData.length > 0 ? totalGasto / dailyChartData.length : 0).toFixed(2)}</div>
-            </div>
+        {/* KPIs Premium */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)', gap: '1.5rem', marginBottom: '2.5rem' }}>
+            {[
+                { label: 'TOTAL DO MÊS', value: `R$ ${totalGasto.toFixed(2)}`, color: '#ef4444', icon: <TrendingDown size={18} /> },
+                { label: 'Lançamentos', value: currentMonthGastos.length, color: '#f59e0b', icon: <FileText size={18} /> },
+                { label: 'MÉDIA DIÁRIA', value: `R$ ${(dailyChartData.length > 0 ? totalGasto / dailyChartData.length : 0).toFixed(2)}`, color: '#3b82f6', icon: <Clock size={18} /> },
+                { label: 'CARTÕES ATIVOS', value: cartoes.length, color: '#10b981', icon: <CreditCardIcon size={18} /> }
+            ].map((kpi, idx) => (
+                <div key={idx} className="card" style={{ position: 'relative', overflow: 'hidden', padding: '1.5rem', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: '4px', background: kpi.color }}></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', letterSpacing: '1px' }}>{kpi.label}</span>
+                        <div style={{ color: kpi.color, opacity: 0.5 }}>{kpi.icon}</div>
+                    </div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: kpi.color }}>{kpi.value}</div>
+                </div>
+            ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div className="card">
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Gastos por Categoria</h3>
-                <div style={{ width: '100%', height: 250 }}>
+        {/* Gráficos em Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1.2fr', gap: '1.5rem', marginBottom: '2rem' }}>
+            <div className="card" style={{ border: '1px solid rgba(255,255,255,0.03)' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary-color)' }}></div>
+                    Categorias
+                </h3>
+                <div style={{ width: '100%', height: 240 }}>
                     {chartData.length > 0 ? (
                     <ResponsiveContainer>
                         <PieChart>
-                            <Pie data={chartData} dataKey="valor" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5}>
+                            <Pie data={chartData} dataKey="valor" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={5} stroke="none">
                                 {chartData.map((_, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                             </Pie>
-                            <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: '8px' }} formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)} />
+                            <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: '12px', fontSize: '12px' }} formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)} />
+                            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                         </PieChart>
                     </ResponsiveContainer>
                     ) : (
-                      <div className="d-flex items-center justify-center h-full text-muted opacity-50">Sem dados para exibir</div>
+                      <div className="d-flex items-center justify-center h-full text-muted opacity-30" style={{ fontSize: '0.9rem' }}>Nenhum dado registrado</div>
                     )}
                 </div>
             </div>
-            <div className="card">
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: '1.5rem' }}>Evolução Diária</h3>
-                <div style={{ width: '100%', height: 250 }}>
+
+            <div className="card" style={{ border: '1px solid rgba(255,255,255,0.03)' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6' }}></div>
+                    Meios de Pagamento
+                </h3>
+                <div style={{ width: '100%', height: 240 }}>
+                    {paymentChartData.length > 0 ? (
+                    <ResponsiveContainer>
+                        <PieChart>
+                            <Pie data={paymentChartData} dataKey="valor" nameKey="name" cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={5} stroke="none">
+                                {paymentChartData.map((_, index) => <Cell key={`cell-p-${index}`} fill={['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'][index % 5]} />)}
+                            </Pie>
+                            <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: '12px', fontSize: '12px' }} formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)} />
+                            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    ) : (
+                      <div className="d-flex items-center justify-center h-full text-muted opacity-30" style={{ fontSize: '0.9rem' }}>Nenhum dado registrado</div>
+                    )}
+                </div>
+            </div>
+
+            <div className="card" style={{ border: '1px solid rgba(255,255,255,0.03)' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></div>
+                    Evolução Diária
+                </h3>
+                <div style={{ width: '100%', height: 240 }}>
                     {dailyChartData.length > 0 ? (
                     <ResponsiveContainer>
                         <BarChart data={dailyChartData}>
-                            <XAxis dataKey="dia" stroke="#666" />
-                            <YAxis stroke="#666" />
-                            <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: '8px' }} cursor={{ fill: 'rgba(255,255,255,0.05)' }} formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)} />
-                            <Bar dataKey="valor" fill="var(--danger-color)" radius={[4, 4, 0, 0]} />
+                            <XAxis dataKey="dia" stroke="#444" fontSize={10} axisLine={false} tickLine={false} />
+                            <YAxis stroke="#444" fontSize={10} axisLine={false} tickLine={false} />
+                            <RechartsTooltip contentStyle={{ background: '#111', border: '1px solid #333', borderRadius: '12px' }} cursor={{ fill: 'rgba(255,255,255,0.03)' }} formatter={(val: any) => 'R$ ' + Number(val).toFixed(2)} />
+                            <Bar dataKey="valor" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={20} />
                         </BarChart>
                     </ResponsiveContainer>
                     ) : (
-                      <div className="d-flex items-center justify-center h-full text-muted opacity-50">Sem dados para exibir</div>
+                      <div className="d-flex items-center justify-center h-full text-muted opacity-30" style={{ fontSize: '0.9rem' }}>Nenhum dado registrado</div>
                     )}
                 </div>
             </div>
@@ -2037,7 +2242,20 @@ export const Dono = () => {
                         <td style={{ padding: '1rem 1.5rem' }}>
                           <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 }}>{g.categoria}</span>
                         </td>
-                        <td style={{ padding: '1rem 1.5rem', opacity: 0.7 }}>{g.forma_pagamento || 'Outros'}</td>
+                        <td style={{ padding: '1rem 1.5rem', opacity: 0.7 }}>
+                          <div className="d-flex items-center gap-2">
+                            {g.cartoes_gastos ? (
+                              <div title={g.cartoes_gastos.nome} style={{ background: g.cartoes_gastos.cor, padding: '4px', borderRadius: '4px', color: '#fff', display: 'flex' }}>
+                                <CreditCardIcon size={12} />
+                              </div>
+                            ) : (
+                              <div style={{ background: 'rgba(255,255,255,0.1)', padding: '4px', borderRadius: '4px', color: 'var(--text-muted)', display: 'flex' }}>
+                                <Banknote size={12} />
+                              </div>
+                            )}
+                            {g.forma_pagamento || 'Outros'}
+                          </div>
+                        </td>
                         <td style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--danger-color)', fontWeight: 900 }}>- R$ {Number(g.valor).toFixed(2)}</td>
                         <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
                           <button onClick={() => handleDeleteGasto(g.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '8px', color: '#ef4444' }}>
@@ -2260,6 +2478,27 @@ export const Dono = () => {
                     <option value="Outros">Outros</option>
                   </select>
                 </div>
+
+                {novoGasto.forma_pagamento.includes('Cartão') && (
+                  <div className="mb-4 animate-fade-in">
+                    <label className="label-field">SELECIONE O CARTÃO</label>
+                    <select 
+                      value={novoGasto.cartao_id} 
+                      onChange={e => setNovoGasto({...novoGasto, cartao_id: e.target.value})} 
+                      className="input-field" 
+                      style={{ background: '#222', color: '#fff', borderColor: 'var(--primary-color)' }}
+                      required
+                    >
+                      <option value="">Selecione um cartão...</option>
+                      {cartoes.map(c => (
+                        <option key={c.id} value={c.id}>{c.nome} ({c.bandeira})</option>
+                      ))}
+                    </select>
+                    {cartoes.length === 0 && (
+                      <p style={{ fontSize: '0.7rem', color: 'var(--danger-color)', marginTop: '4px' }}>Nenhum cartão cadastrado. Vá em "Gerenciar Cartões" primeiro.</p>
+                    )}
+                  </div>
+                )}
                 <div className="mb-6">
                   <label className="label-field">DATA DO GASTO</label>
                   <input type="date" value={novoGasto.data} onChange={e => setNovoGasto({...novoGasto, data: e.target.value})} className="input-field" required />
@@ -2270,6 +2509,77 @@ export const Dono = () => {
                   <button type="submit" className="btn-primary" style={{ background: 'var(--danger-color)', color: '#fff' }}>Registrar Gasto</button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Gerenciar Cartões */}
+      <AnimatePresence>
+        {showAddCartao && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+              <div className="d-flex justify-between items-center mb-6">
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 900 }}>Meus Cartões</h2>
+                <button onClick={() => setShowAddCartao(false)} className="btn-outline" style={{ width: 'auto', padding: '5px 10px' }}>Fechar</button>
+              </div>
+
+              <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                <h4 style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--primary-color)' }}>CADASTRAR NOVO CARTÃO</h4>
+                <form onSubmit={handleAddCartao}>
+                  <div className="mb-3">
+                    <label className="label-field">NOME DO CARTÃO (Ex: Nubank Matheus)</label>
+                    <input type="text" value={novoCartao.nome} onChange={e => setNovoCartao({...novoCartao, nome: e.target.value})} className="input-field" required placeholder="Nome para identificação" />
+                  </div>
+                  <div className="d-flex gap-3 mb-3">
+                    <div style={{ flex: 1 }}>
+                      <label className="label-field">BANDEIRA</label>
+                      <select value={novoCartao.bandeira} onChange={e => setNovoCartao({...novoCartao, bandeira: e.target.value})} className="input-field" style={{ background: '#222', color: '#fff' }}>
+                        <option value="Visa">Visa</option>
+                        <option value="Mastercard">Mastercard</option>
+                        <option value="Elo">Elo</option>
+                        <option value="Amex">Amex</option>
+                        <option value="Hipercard">Hipercard</option>
+                        <option value="Outra">Outra</option>
+                      </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label className="label-field">COR</label>
+                      <input type="color" value={novoCartao.cor} onChange={e => setNovoCartao({...novoCartao, cor: e.target.value})} className="input-field" style={{ height: '42px', padding: '5px' }} />
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="label-field">BANCO (Opcional)</label>
+                    <input type="text" value={novoCartao.banco} onChange={e => setNovoCartao({...novoCartao, banco: e.target.value})} className="input-field" placeholder="Ex: Banco do Brasil" />
+                  </div>
+                  <button type="submit" className="btn-primary" style={{ width: '100%' }}>+ Salvar Cartão</button>
+                </form>
+              </div>
+
+              <div>
+                <h4 style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '1rem' }}>CARTÕES CADASTRADOS</h4>
+                <div className="d-flex flex-column gap-3">
+                  {cartoes.length === 0 ? (
+                    <p style={{ opacity: 0.5, fontSize: '0.9rem', textAlign: 'center' }}>Nenhum cartão cadastrado.</p>
+                  ) : cartoes.map(c => (
+                    <div key={c.id} style={{ background: '#222', padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${c.cor}33` }}>
+                      <div className="d-flex items-center gap-3">
+                        <div style={{ background: c.cor, padding: '10px', borderRadius: '8px', color: '#fff' }}>
+                          <CreditCardIcon size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{c.nome}</div>
+                          <div style={{ fontSize: '0.75rem', opacity: 0.6 }}>{c.bandeira} {c.banco ? `• ${c.banco}` : ''}</div>
+                        </div>
+                      </div>
+                      <button onClick={() => handleDeleteCartao(c.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

@@ -14,6 +14,7 @@ import { Caixa } from './pages/CashierApp';
 import { Administracao } from './pages/AdminApp';
 import { Dono } from './pages/OwnerApp';
 import { LoginPage } from './pages/LoginPage';
+import { GastosApp } from './pages/GastosApp';
 
 const RootRedirect = () => {
   const { user, profile, loading, signOut } = useAuth();
@@ -82,6 +83,9 @@ export default function App() {
           <Route path="/caixa" element={<ProtectedRoute allowedRoles={['caixa', 'garcom']}><Caixa /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><Administracao /></ProtectedRoute>} />
           <Route path="/dono" element={<ProtectedRoute allowedRoles={['dono']}><Dono /></ProtectedRoute>} />
+          
+          {/* Rota App de Gastos Direto */}
+          <Route path="/gastos" element={<ProtectedRoute allowedRoles={['dono', 'admin']}><GastosApp /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
