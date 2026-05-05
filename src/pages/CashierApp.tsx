@@ -564,10 +564,10 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
   const categories = ['TODOS', 'PETISCO', 'BEBIDAS', 'COQUETÉIS', 'DESTILADOS (DOSE)', 'OUTROS'];
 
-  if (loading) return <div className="layout-container d-flex justify-center items-center" style={{height: '100vh', background: '#000', color: 'var(--primary-color)'}}>CARREGANDO CAIXA RESENHA...</div>;
+  if (loading) return <div className="layout-container d-flex justify-center items-center" style={{height: '100vh', background: 'transparent', color: 'var(--primary-color)'}}>CARREGANDO CAIXA RESENHA...</div>;
 
   return (
-    <div className="layout-container" style={{ background: '#0a0a0a', color: '#fff' }}>
+    <div className="layout-container" style={{ background: 'transparent', color: '#fff' }}>
       {!isEmbedded && (
         <aside className="sidebar" style={{ width: '100px' }}>
            <div style={{ marginBottom: '3rem' }}>
@@ -644,7 +644,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                     <div className="d-flex flex-col gap-3">
                        <div style={{ position: 'relative' }}>
                           <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.4 }} />
-                          <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: '#111', border: '1px solid #222', borderRadius: '10px', color: '#fff' }} />
+                          <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '10px', color: '#fff' }} />
                        </div>
                        <div className="mb-2">
                           <select 
@@ -653,7 +653,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                             style={{ 
                               width: '100%',
                               padding: '0.70rem',
-                              background: '#111',
+                              background: 'rgba(0,0,0,0.3)',
                               border: '1px solid var(--primary-color)',
                               borderRadius: '10px',
                               color: '#fff',
@@ -753,8 +753,8 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
       </main>
       <AnimatePresence>
         {isCheckoutOpen && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', zIndex: 10000 }}>
-             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="card" style={{ width: '100vw', height: '100vh', maxWidth: 'none', maxHeight: 'none', borderRadius: 0, padding: 0, overflowY: 'auto', display: 'grid', gridTemplateColumns: window.innerWidth > 992 ? '1fr 380px' : '1fr', alignItems: 'stretch' }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(10px)', zIndex: 10000 }}>
+             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="card" style={{ width: '100vw', height: '100vh', maxWidth: 'none', maxHeight: 'none', borderRadius: 0, padding: 0, overflowY: 'auto', display: 'grid', gridTemplateColumns: window.innerWidth > 992 ? '1fr 380px' : '1fr', alignItems: 'stretch', background: 'transparent' }}>
                 {/* Coluna Esquerda: Itens e Conferência */}
                 <div style={{ padding: '1.2rem', borderRight: '1px solid #222', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                    <div className="d-flex justify-between items-center mb-4">
@@ -902,7 +902,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                 </div>
 
                 {/* Coluna Direita: Pagamentos */}
-                <div style={{ background: '#111', padding: '1.2rem', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.2rem', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
                     <div className="mb-4">
                        <span style={{ fontSize: '0.7rem', opacity: 0.4 }}>VALOR TOTAL</span>
                        <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary-color)' }}>R$ {totalComTaxa.toFixed(2)}</div>

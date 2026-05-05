@@ -414,7 +414,7 @@ export const Administracao = () => {
   }, [historicoVendas]);
 
   if (loading) return (
-    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#050505' }}>
+    <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}>
       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
         style={{ width: '40px', height: '40px', border: '3px solid #d4af37', borderTopColor: 'transparent', borderRadius: '50%' }}
       />
@@ -439,7 +439,7 @@ export const Administracao = () => {
   );
 
   return (
-    <div className="layout-container" style={{ background: '#060608', color: '#fff' }}>
+    <div className="layout-container" style={{ background: 'transparent', color: '#fff' }}>
       {/* SIDEBAR */}
       <aside className="sidebar" style={{ width: '240px' }}>
 
@@ -576,7 +576,7 @@ export const Administracao = () => {
                     <h3 style={{ fontWeight: 800, marginBottom: '1rem', color: '#d4af37', fontSize: '0.9rem' }}>✚ ADICIONAR PRODUTO</h3>
                     <form onSubmit={handleAddProduto} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto auto auto', gap: '10px', alignItems: 'end' }}>
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>NOME</label>
-                        <input name="nome" placeholder="Ex: Heineken 600ml" required style={{ width: '100%', padding: '0.7rem', background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff', outline: 'none' }} />
+                        <input name="nome" placeholder="Ex: Heineken 600ml" required style={{ width: '100%', padding: '0.7rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', outline: 'none' }} />
                       </div>
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>CATEGORIA</label>
                         <select name="categoria" className="input-field">
@@ -584,10 +584,10 @@ export const Administracao = () => {
                         </select>
                       </div>
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>PREÇO</label>
-                        <input name="preco" type="number" step="0.01" placeholder="0.00" required style={{ width: '90px', padding: '0.7rem', background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff', outline: 'none' }} />
+                        <input name="preco" type="number" step="0.01" placeholder="0.00" required style={{ width: '90px', padding: '0.7rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', outline: 'none' }} />
                       </div>
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>ESTOQUE</label>
-                        <input name="estoque" type="number" placeholder="Qtd" required style={{ width: '80px', padding: '0.7rem', background: '#111', border: '1px solid #333', borderRadius: '8px', color: '#fff', outline: 'none' }} />
+                        <input name="estoque" type="number" placeholder="Qtd" required style={{ width: '80px', padding: '0.7rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', outline: 'none' }} />
                       </div>
                       <button type="submit" style={{ background: '#d4af37', color: '#000', border: 'none', borderRadius: '8px', padding: '0.7rem 1.2rem', fontWeight: 800, cursor: 'pointer' }}>Salvar</button>
                     </form>
@@ -645,7 +645,7 @@ export const Administracao = () => {
                             <input type="number" defaultValue={p.estoque} key={p.estoque}
                               onBlur={e => handleDirectStockInput(p.id, e.target.value)}
                               onKeyDown={e => e.key === 'Enter' && handleDirectStockInput(p.id, (e.target as HTMLInputElement).value)}
-                              style={{ width: '52px', padding: '4px 6px', background: '#111', border: '1px solid #333', borderRadius: '7px', color: stockColor, fontWeight: 800, textAlign: 'center', outline: 'none', fontSize: '0.9rem' }}
+                              style={{ width: '52px', padding: '4px 6px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '7px', color: stockColor, fontWeight: 800, textAlign: 'center', outline: 'none', fontSize: '0.9rem' }}
                             />
                             <button onClick={() => handleUpdateEstoque(p.id, p.estoque, 1)} style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <Plus size={12}/>

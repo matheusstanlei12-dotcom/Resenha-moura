@@ -57,8 +57,8 @@ export const LoginPage = () => {
       className="d-flex items-center justify-center" 
       style={{ 
         minHeight: '100vh',
-        backgroundImage: 'url("/background.jpg")',
-        backgroundSize: 'contain',
+        backgroundImage: 'linear-gradient(to bottom, rgba(2, 6, 23, 0.8), rgba(30, 27, 75, 0.8)), url("/background.jpg")',
+        backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
         position: 'relative',
@@ -70,7 +70,7 @@ export const LoginPage = () => {
         style={{
           position: 'absolute',
           top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.65)',
+          backgroundColor: 'rgba(2, 6, 23, 0.7)',
           zIndex: 0
         }}
       />
@@ -84,8 +84,8 @@ export const LoginPage = () => {
           zIndex: 1, 
           position: 'relative', 
           backdropFilter: 'blur(12px)', 
-          backgroundColor: 'rgba(20, 20, 20, 0.75)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          backgroundColor: 'var(--surface-color)',
+          border: '1px solid var(--border-color)',
           boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.5)'
         }}
       >
@@ -111,7 +111,7 @@ export const LoginPage = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               style={{
-                padding: '0.8rem', backgroundColor: '#222', border: '1px solid var(--border-color)',
+                padding: '0.8rem', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)',
                 borderRadius: '8px', color: 'white', outline: 'none'
               }}
               placeholder="seu@email.com"
@@ -127,7 +127,7 @@ export const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 style={{
-                  width: '100%', padding: '0.8rem', paddingRight: '2.5rem', backgroundColor: '#222', border: '1px solid var(--border-color)',
+                  width: '100%', padding: '0.8rem', paddingRight: '2.5rem', backgroundColor: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)',
                   borderRadius: '8px', color: 'white', outline: 'none'
                 }}
                 placeholder="••••••••"

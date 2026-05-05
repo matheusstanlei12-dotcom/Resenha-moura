@@ -2412,7 +2412,7 @@ export const Dono = () => {
         {isNameModalOpen && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
+              style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem' }}>Alterar Nome</h2>
               <p style={{ fontSize: '0.85rem', opacity: 0.6, marginBottom: '1.5rem' }}>Especifique o novo nome completo para <b>{selectedUserForName?.full_name}</b>.</p>
               
@@ -2424,7 +2424,7 @@ export const Dono = () => {
                   onChange={e => setNewNameForUser(e.target.value)} 
                   className="input-field"
                   placeholder="Digite o nome completo"
-                  style={{ background: '#222', color: '#fff', border: '1px solid #333' }}
+                  style={{ background: 'rgba(0,0,0,0.3)', color: '#fff', border: '1px solid var(--border-color)' }}
                 />
               </div>
 
@@ -2444,7 +2444,7 @@ export const Dono = () => {
         {showAddGasto && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
+              style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem' }}>
               <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '1.5rem' }}>Lançar Gasto</h2>
               
               <form onSubmit={handleAddGasto}>
@@ -2458,7 +2458,7 @@ export const Dono = () => {
                 </div>
                 <div className="mb-4">
                   <label className="label-field">CATEGORIA</label>
-                  <select value={novoGasto.categoria} onChange={e => setNovoGasto({...novoGasto, categoria: e.target.value})} className="input-field" style={{ background: '#222', color: '#fff' }}>
+                  <select value={novoGasto.categoria} onChange={e => setNovoGasto({...novoGasto, categoria: e.target.value})} className="input-field" style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
                     <option value="Fornecedores">Fornecedores / Insumos</option>
                     <option value="Funcionários">Funcionários / Diárias</option>
                     <option value="Contas">Contas (Água, Luz, Aluguel, etc)</option>
@@ -2469,7 +2469,7 @@ export const Dono = () => {
                 </div>
                 <div className="mb-4">
                   <label className="label-field">FORMA DE PAGAMENTO</label>
-                  <select value={novoGasto.forma_pagamento} onChange={e => setNovoGasto({...novoGasto, forma_pagamento: e.target.value})} className="input-field" style={{ background: '#222', color: '#fff' }}>
+                  <select value={novoGasto.forma_pagamento} onChange={e => setNovoGasto({...novoGasto, forma_pagamento: e.target.value})} className="input-field" style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
                     <option value="PIX">PIX</option>
                     <option value="Dinheiro">Dinheiro</option>
                     <option value="Cartão de Crédito">Cartão de Crédito</option>
@@ -2519,7 +2519,7 @@ export const Dono = () => {
         {showAddCartao && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-              style={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
+              style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '500px', padding: '2rem', maxHeight: '90vh', overflowY: 'auto' }}>
               <div className="d-flex justify-between items-center mb-6">
                 <h2 style={{ fontSize: '1.4rem', fontWeight: 900 }}>Meus Cartões</h2>
                 <button onClick={() => setShowAddCartao(false)} className="btn-outline" style={{ width: 'auto', padding: '5px 10px' }}>Fechar</button>
@@ -2535,7 +2535,7 @@ export const Dono = () => {
                   <div className="d-flex gap-3 mb-3">
                     <div style={{ flex: 1 }}>
                       <label className="label-field">BANDEIRA</label>
-                      <select value={novoCartao.bandeira} onChange={e => setNovoCartao({...novoCartao, bandeira: e.target.value})} className="input-field" style={{ background: '#222', color: '#fff' }}>
+                      <select value={novoCartao.bandeira} onChange={e => setNovoCartao({...novoCartao, bandeira: e.target.value})} className="input-field" style={{ background: 'rgba(0,0,0,0.3)', color: '#fff' }}>
                         <option value="Visa">Visa</option>
                         <option value="Mastercard">Mastercard</option>
                         <option value="Elo">Elo</option>
@@ -2563,7 +2563,7 @@ export const Dono = () => {
                   {cartoes.length === 0 ? (
                     <p style={{ opacity: 0.5, fontSize: '0.9rem', textAlign: 'center' }}>Nenhum cartão cadastrado.</p>
                   ) : cartoes.map(c => (
-                    <div key={c.id} style={{ background: '#222', padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${c.cor}33` }}>
+                    <div key={c.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: `1px solid ${c.cor}33` }}>
                       <div className="d-flex items-center gap-3">
                         <div style={{ background: c.cor, padding: '10px', borderRadius: '8px', color: '#fff' }}>
                           <CreditCardIcon size={20} />
