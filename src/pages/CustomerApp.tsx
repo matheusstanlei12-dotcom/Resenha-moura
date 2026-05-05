@@ -161,19 +161,19 @@ export const CustomerApp = () => {
       {toast && <Toast message={toast.message} type={toast.type} />}
 
       <header style={{ 
-        padding: '1.2rem 1.5rem', backgroundColor: 'rgba(0, 0, 0, 0.4)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        padding: '0.8rem 1.25rem', backgroundColor: 'rgba(0, 0, 0, 0.4)', borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
         position: 'sticky', top: 0, zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         backdropFilter: 'blur(10px)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <img src="/logo.png" alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '12px', objectFit: 'contain' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img src="/logo.png" alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'contain' }} />
           <div>
-            <h2 style={{ fontSize: '1.3rem', margin: 0, color: '#d4af37', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1 }}>RESENHA DO MOURA</h2>
-            <div style={{ fontSize: '0.8rem', color: '#fff', fontWeight: 600, marginTop: '4px', opacity: 0.8 }}>MESA {mesaNum}</div>
+            <h2 style={{ fontSize: '1.1rem', margin: 0, color: '#d4af37', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', lineHeight: 1.1 }}>RESENHA DO MOURA</h2>
+            <div style={{ fontSize: '0.7rem', color: '#fff', fontWeight: 600, marginTop: '2px', opacity: 0.8 }}>MESA {mesaNum}</div>
           </div>
         </div>
-        <div style={{ border: '1px solid rgba(212, 175, 55, 0.5)', padding: '8px 12px', borderRadius: '10px', backgroundColor: 'rgba(212, 175, 55, 0.05)' }}>
-           <span style={{ fontSize: '0.7rem', color: 'var(--primary-color)', fontWeight: 800, letterSpacing: '0.5px' }}>CARDÁPIO DIGITAL</span>
+        <div className="mobile-hide" style={{ border: '1px solid rgba(212, 175, 55, 0.5)', padding: '6px 10px', borderRadius: '8px', backgroundColor: 'rgba(212, 175, 55, 0.05)' }}>
+           <span style={{ fontSize: '0.6rem', color: 'var(--primary-color)', fontWeight: 800, letterSpacing: '0.5px' }}>CARDÁPIO DIGITAL</span>
         </div>
       </header>
 

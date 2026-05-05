@@ -66,7 +66,7 @@ export const Menu = () => {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '2rem' }}>
       {/* Barra de Pesquisa Global */}
-      <div style={{ marginBottom: '1.5rem' }}>
+      <div style={{ marginBottom: '1rem' }}>
         <input 
           type="text" 
           placeholder="🔍 O que você procura?" 
@@ -74,12 +74,12 @@ export const Menu = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
             width: '100%',
-            padding: '1rem 1.5rem',
+            padding: '0.8rem 1.2rem',
             background: 'var(--surface-color)',
             border: '1px solid var(--border-color)',
-            borderRadius: '15px',
+            borderRadius: '12px',
             color: '#fff',
-            fontSize: '1rem',
+            fontSize: '0.9rem',
             outline: 'none',
             boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
           }}
@@ -89,15 +89,15 @@ export const Menu = () => {
       {/* Categoria Tabs - Estilo Screenshot (Arredondado) */}
       <div className="no-scrollbar" style={{ 
         display: 'flex', 
-        gap: '0.8rem', 
+        gap: '0.6rem', 
         overflowX: 'auto', 
         WebkitOverflowScrolling: 'touch', 
-        marginBottom: '2rem', 
-        padding: '1rem 0',
+        marginBottom: '1.2rem', 
+        padding: '0.5rem 0',
         position: 'sticky',
-        top: '75px',
+        top: '70px',
         zIndex: 10,
-        margin: '0 -1.25rem 1.5rem -1.25rem',
+        margin: '0 -1.25rem 1rem -1.25rem',
         paddingLeft: '1.25rem'
       }}>
         {categories.map(cat => (
@@ -105,16 +105,16 @@ export const Menu = () => {
             key={cat} 
             onClick={() => setActiveTab(cat)}
             style={{
-              padding: '0.8rem 1.5rem', 
-              borderRadius: '20px', 
+              padding: '0.6rem 1.2rem', 
+              borderRadius: '16px', 
               whiteSpace: 'nowrap', 
               textTransform: 'uppercase',
-              fontSize: '0.8rem',
-              letterSpacing: '1px',
+              fontSize: '0.75rem',
+              letterSpacing: '0.5px',
               backgroundColor: activeTab === cat ? '#facc15' : 'rgba(255,255,255,0.1)',
               color: activeTab === cat ? '#000' : '#fff',
               fontWeight: 800,
-              boxShadow: activeTab === cat ? '0 4px 15px rgba(250, 204, 21, 0.3)' : 'none',
+              boxShadow: activeTab === cat ? '0 4px 12px rgba(250, 204, 21, 0.3)' : 'none',
               transition: 'all 0.2s'
             }}
           >
@@ -123,27 +123,28 @@ export const Menu = () => {
         ))}
       </div>
 
-      {/* Grid de Itens (Cards como estava antes) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Grid de Itens (Cards mais compactos para mobile) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
         {filtered.map(product => (
           <div key={product.id} className="card" style={{ 
-            padding: '1.5rem', 
+            padding: '1rem', 
             background: 'var(--surface-color)',
             border: '1px solid var(--border-color)',
-            borderRadius: '20px',
+            borderRadius: '16px',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-              <div style={{ flex: 1 }}>
-                <h4 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#fff', marginBottom: '4px' }}>{product.nome}</h4>
-                <div style={{ fontSize: '0.7rem', color: 'var(--primary-color)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>{product.categoria}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ flex: 1, paddingRight: '1rem' }}>
+                <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#fff', marginBottom: '2px', lineHeight: '1.2' }}>{product.nome}</h4>
+                <div style={{ fontSize: '0.65rem', color: 'var(--primary-color)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{product.categoria}</div>
               </div>
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', minWidth: 'fit-content' }}>
                 <div style={{ 
                   color: 'var(--primary-color)', 
                   fontWeight: 900, 
-                  fontSize: '1.3rem',
+                  fontSize: '1.1rem',
                   textShadow: '0 2px 10px rgba(0,0,0,0.3)'
                 }}>
                   R$ {product.preco?.toFixed(2).replace('.', ',')}
@@ -153,14 +154,14 @@ export const Menu = () => {
             
             {product.estoque <= 0 && (
               <div style={{ 
-                marginTop: '10px', 
+                marginTop: '8px', 
                 color: 'var(--danger-color)', 
-                fontSize: '0.7rem', 
+                fontSize: '0.6rem', 
                 fontWeight: 900, 
                 textTransform: 'uppercase',
                 letterSpacing: '1px',
                 background: 'rgba(239, 68, 68, 0.1)',
-                padding: '4px 8px',
+                padding: '2px 6px',
                 borderRadius: '4px',
                 display: 'inline-block'
               }}>
