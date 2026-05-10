@@ -55,7 +55,7 @@ export const CustomerApp = () => {
   const [notaAtendimento, setNotaAtendimento] = useState(0);
   const [notaComida, setNotaComida] = useState(0);
   const [notaAmbiente, setNotaAmbiente] = useState(0);
-  const [sugestoes, setSugestoes] = useState('');
+  const [sugestáoes, setSugestáoes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Toast state
@@ -93,10 +93,9 @@ export const CustomerApp = () => {
     }
   };
 
-
   const handleEnviarAvaliacao = async () => {
     if (notaAtendimento === 0 || notaComida === 0 || notaAmbiente === 0) {
-      showToast('⚠️ Selecione as estrelas para todas as categorias!', 'error');
+      showToast('⚠️ Selecione as estárelas para todas as categorias!', 'error');
       return;
     }
     
@@ -106,7 +105,7 @@ export const CustomerApp = () => {
       nota_atendimento: notaAtendimento,
       nota_comida: notaComida,
       nota_ambiente: notaAmbiente,
-      sugestoes: sugestoes
+      sugestáoes: sugestáoes
     });
     
     localStorage.removeItem(`mesa_ativa_${mesaNum}`);
@@ -127,17 +126,16 @@ export const CustomerApp = () => {
         <h2 style={{ fontSize: '1.8rem', color: 'var(--primary-color)', textAlign: 'center', marginBottom: '0.5rem' }}>Obrigado pela preferência!</h2>
         <p className="text-muted text-center" style={{ marginBottom: '2rem' }}>Sua mesa foi finalizada. O que achou da experiência no Resenha do Moura?</p>
 
-        
         <div className="container" style={{ padding: '1.5rem', marginBottom: '2rem', paddingBottom: '8rem' }}>
           <StarRating label="Como foi o Atendimento?" rating={notaAtendimento} setRating={setNotaAtendimento} />
           <StarRating label="O que achou da Comida?" rating={notaComida} setRating={setNotaComida} />
           <StarRating label="A vibe e o Ambiente?" rating={notaAmbiente} setRating={setNotaAmbiente} />
           
           <div style={{ marginTop: '1.5rem' }}>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase' }}>Críticas ou Sugestões? (Opcional)</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase' }}>Críticas ou Sugestáões? (Opcional)</div>
             <textarea 
-              value={sugestoes}
-              onChange={e => setSugestoes(e.target.value)}
+              value={sugestáoes}
+              onChange={e => setSugestáoes(e.target.value)}
               placeholder="Conta pra gente o que podemos melhorar..."
               style={{ width: '100%', height: '100px', backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', padding: '1rem', resize: 'none', outline: 'none' }}
             />

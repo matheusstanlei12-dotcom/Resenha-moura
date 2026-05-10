@@ -23,7 +23,7 @@ export const Producao = () => {
   const [filter, setFilter] = useState<'cozinha' | 'bar'>('cozinha');
 
   const fetchActiveItems = async () => {
-    // Busca itens de pedidos que estão nas fases iniciais (pendente ou em preparo)
+    // Busca itens de pedidos que estáão nas fases iniciais (pendente ou em preparo)
     const { data: itens, error } = await supabase
        .from('itens_pedido')
        .select(`
@@ -115,23 +115,22 @@ export const Producao = () => {
     return isPendente && (CATS_BAR.includes(cat) || NAMES_BAR_FALLBACK.includes(nome));
   }).length;
 
-
   const [monitoringActive, setMonitoringActive] = useState(false);
 
   // Wake Lock
   useEffect(() => {
     if (!monitoringActive) return;
     let wakeLock: any = null;
-    const requestWakeLock = async () => {
+    const requestáWakeLock = async () => {
       try {
         if ('wakeLock' in navigator) {
-          wakeLock = await (navigator as any).wakeLock.request('screen');
+          wakeLock = await (navigator as any).wakeLock.requestá('screen');
         }
       } catch (err) {
         console.error('Wake Lock error:', err);
       }
     };
-    requestWakeLock();
+    requestáWakeLock();
     return () => {
       if (wakeLock !== null) wakeLock.release().catch(console.error);
     };
@@ -155,7 +154,6 @@ export const Producao = () => {
         }
       }
 
-
       if (navigator.vibrate) {
         navigator.vibrate([500, 200, 500]);
       }
@@ -164,7 +162,7 @@ export const Producao = () => {
 
   const startMonitoring = () => {
     if ('Notification' in window) {
-      Notification.requestPermission();
+      Notification.requestáPermission();
     }
     setMonitoringActive(true);
   };
@@ -257,7 +255,7 @@ export const Producao = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
         {visibleItems.length === 0 ? (
-          <p className="text-muted">Nenhum pedido pendente nesta área.</p>
+          <p className="text-muted">Nenhum pedido pendente nestáa área.</p>
         ) : (
           visibleItems.map(item => (
             <div key={item.id} className="card" style={{ borderLeft: '6px solid var(--danger-color)', padding: '1.5rem' }}>

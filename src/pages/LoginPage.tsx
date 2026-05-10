@@ -95,7 +95,6 @@ export const LoginPage = () => {
           <p style={{ color: '#ccc' }}>Área Privada - Resenha do Moura</p>
         </div>
 
-
         {message.text && (
           <div className={`mb-4 p-3 rounded text-center ${message.type === 'error' ? 'bg-danger-light text-danger' : 'bg-success-light text-success'}`} style={{ fontSize: '0.85rem' }}>
             {message.text}

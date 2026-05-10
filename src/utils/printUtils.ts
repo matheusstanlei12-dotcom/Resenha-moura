@@ -270,7 +270,7 @@ export const printContaMesa = (
       <span>Hora: ${time}</span>
     </div>
     <div class="bold mb-5" style="font-size: 14px; text-align: center;">
-      ${mesaNumero ? `MESA: ${mesaNumero}` : 'VENDA DE BALCÃO'}
+      ${mesaNumero ? `MESA: ${mesaNumero}` : 'VENDA DE BALCíO'}
     </div>
     <div class="divider"></div>
     

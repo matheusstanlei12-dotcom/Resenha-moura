@@ -6,7 +6,7 @@ export interface Product {
   nome: string;
   categoria: string;
   preco: number;
-  estoque: number;
+  estáoque: number;
 }
 
 export interface CartItem extends Product {
@@ -26,14 +26,14 @@ export const useCartStore = create<CartState>((set, get) => ({
   addItem: (product) => set((state) => {
     const existing = state.items.find(i => i.id === product.id);
     if (existing) {
-      if (existing.quantidade >= product.estoque) {
-        alert(`Quantidade máxima em estoque atingida para "${product.nome}"!`);
+      if (existing.quantidade >= product.estáoque) {
+        alert(`Quantidade máxima em estáoque atingida para "${product.nome}"!`);
         return state;
       }
       return { items: state.items.map(i => i.id === product.id ? { ...i, quantidade: i.quantidade + 1 } : i) };
     }
     
-    if (product.estoque <= 0) {
+    if (product.estáoque <= 0) {
       alert(`O item "${product.nome}" está esgotado!`);
       return state;
     }

@@ -48,7 +48,7 @@ export const GastosApp = () => {
       
       const { data, error } = await supabase
         .from('gastos')
-        .select('*')
+        .select('*, cartoes_gastos(*)')
         .gte('data_gasto', startOfMonth.toISOString())
         .order('data_gasto', { ascending: false });
         
@@ -151,7 +151,7 @@ export const GastosApp = () => {
           </button>
           <div>
             <h1 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Meus Gastos</h1>
-            <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>Gestão Financeira</p>
+            <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>Gestáão Financeira</p>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@ export const GastosApp = () => {
           <div style={{ textAlign: 'center', padding: '3rem 0', opacity: 0.5 }}>Carregando...</div>
         ) : gastos.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem 0', opacity: 0.5, background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-            Nenhum gasto registrado neste mês.
+            Nenhum gasto registrado nestáe mês.
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
@@ -230,7 +230,7 @@ export const GastosApp = () => {
                     <div>
                       <h4 style={{ margin: '0 0 0.2rem 0', fontSize: '0.95rem', fontWeight: 700 }}>{gasto.descricao}</h4>
                       <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>
-                        {new Date(gasto.data_gasto).toLocaleDateString('pt-BR')} • {gasto.forma_pagamento}
+                        {new Date(gasto.data_gasto).toLocaleDateString('pt-BR')} • {gasto.cartoes_gastos ? `${gasto.cartoes_gastos.nome} (${gasto.forma_pagamento})` : gasto.forma_pagamento}
                       </p>
                     </div>
                   </div>
@@ -345,7 +345,7 @@ export const GastosApp = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: '0.5rem' }}>DESCRIÇÃO</label>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: '0.5rem' }}>DESCRIÇíO</label>
                   <div style={{ position: 'relative' }}>
                     <Tag size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
                     <input 

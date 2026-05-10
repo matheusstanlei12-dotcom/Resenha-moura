@@ -86,6 +86,9 @@ export default function App() {
           
           {/* Rota App de Gastos Direto */}
           <Route path="/gastos" element={<ProtectedRoute allowedRoles={['dono', 'admin']}><GastosApp /></ProtectedRoute>} />
+
+          {/* Fallback para rotas não encontradas */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
