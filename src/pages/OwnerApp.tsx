@@ -4765,8 +4765,6 @@ export const Dono = () => {
 
       <aside className="sidebar mobile-hide">
 
-      <aside className="sidebar">
-
         <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '1.5rem 1rem' }}>
 
           <img src="/logo.png" alt="Logo" style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'contain', border: '1px solid var(--primary-color)' }} />
