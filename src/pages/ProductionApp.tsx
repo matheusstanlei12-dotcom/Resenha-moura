@@ -121,16 +121,16 @@ export const Producao = () => {
   useEffect(() => {
     if (!monitoringActive) return;
     let wakeLock: any = null;
-    const requestáWakeLock = async () => {
+    const requestWakeLock = async () => {
       try {
         if ('wakeLock' in navigator) {
-          wakeLock = await (navigator as any).wakeLock.requestá('screen');
+          wakeLock = await (navigator as any).wakeLock.request('screen');
         }
       } catch (err) {
         console.error('Wake Lock error:', err);
       }
     };
-    requestáWakeLock();
+    requestWakeLock();
     return () => {
       if (wakeLock !== null) wakeLock.release().catch(console.error);
     };
@@ -253,7 +253,7 @@ export const Producao = () => {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: '1.25rem' }}>
         {visibleItems.length === 0 ? (
           <p className="text-muted">Nenhum pedido pendente nesta área.</p>
         ) : (
@@ -269,10 +269,10 @@ export const Producao = () => {
               <h2 style={{ margin: '1rem 0', fontSize: '1.5rem', fontWeight: 800 }}>{item.quantidade}x {item.produto_nome}</h2>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Sessão: {item.categoria}</p>
               
-              <div className="d-flex gap-2">
+                            <div style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
                 <button 
                   className="btn-outline" 
-                  style={{ padding: '0.5rem 0.8rem', flexShrink: 0 }}
+                  style={{ width: '50px', height: '50px', flexShrink: 0, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px' }}
                   title="Reimprimir comanda"
                   onClick={() => printPetiscoTicket(
                     item.mesa.toString(),
@@ -281,9 +281,15 @@ export const Producao = () => {
                     [{ qtd: item.quantidade, nome: item.produto_nome }]
                   )}
                 >
-                  <Printer size={18} />
+                  <Printer size={22} />
                 </button>
-                <button className="btn-success w-full" style={{ padding: '0.5rem' }} onClick={() => handleStatusChange(item.id)}>Marcar Pronto</button>
+                <button 
+                  className="btn-success" 
+                  style={{ flex: 1, height: '50px', padding: 0, borderRadius: '12px', fontSize: '1rem', fontWeight: 800 }} 
+                  onClick={() => handleStatusChange(item.id)}
+                >
+                  MARCAR PRONTO
+                </button>
               </div>
             </div>
           ))
