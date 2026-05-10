@@ -28,7 +28,7 @@ import {
 
   ChevronDown, ChevronUp, Folder, FileText, Trash2, Search, Plus, CreditCard as CreditCardIcon,
 
-  Zap, BarChart3, Check, MoreVertical
+  Zap, BarChart3, Check, Menu, X
 
 } from 'lucide-react';
 
