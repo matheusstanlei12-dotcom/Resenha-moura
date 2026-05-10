@@ -4715,7 +4715,7 @@ export const Dono = () => {
             border: '2px solid rgba(0,0,0,0.1)'
           }}
         >
-          <MoreVertical size={24} />
+          <Menu size={24} />
         </button>
       </div>
 
@@ -4739,7 +4739,7 @@ export const Dono = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 0.5rem' }}>
                 <h2 style={{ fontSize: '1.2rem', color: 'var(--primary-color)', margin: 0 }}>Menu</h2>
                 <button onClick={() => setShowMobileMenu(false)} style={{ color: 'var(--text-muted)' }}>
-                  <MoreVertical size={24} style={{ transform: 'rotate(90deg)' }} />
+                  <X size={24} />
                 </button>
               </div>
 
