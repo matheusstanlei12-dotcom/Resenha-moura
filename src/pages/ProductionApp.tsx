@@ -255,7 +255,7 @@ export const Producao = () => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
         {visibleItems.length === 0 ? (
-          <p className="text-muted">Nenhum pedido pendente nestáa área.</p>
+          <p className="text-muted">Nenhum pedido pendente nesta área.</p>
         ) : (
           visibleItems.map(item => (
             <div key={item.id} className="card" style={{ borderLeft: '6px solid var(--danger-color)', padding: '1.5rem' }}>

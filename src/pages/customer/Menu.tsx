@@ -22,15 +22,15 @@ const formatCurrency = (val: number | string) => {
 
 const MOCK_PRODUCTS = [
 
-  { id: '1', nome: 'Frango a Passarinho', categoria: 'PETISCO', preco: 29.90, estáoque: 99 },
+  { id: '1', nome: 'Frango a Passarinho', categoria: 'PETISCO', preco: 29.90, estoque: 99 },
 
-  { id: '2', nome: 'Batata Turbinada', categoria: 'PETISCO', preco: 29.90, estáoque: 99 },
+  { id: '2', nome: 'Batata Turbinada', categoria: 'PETISCO', preco: 29.90, estoque: 99 },
 
-  { id: '3', nome: 'Heineken Long Neck', categoria: 'BEBIDAS', preco: 12.00, estáoque: 99 },
+  { id: '3', nome: 'Heineken Long Neck', categoria: 'BEBIDAS', preco: 12.00, estoque: 99 },
 
-  { id: '4', nome: 'Caipirinha Cachaça', categoria: 'COQUETÉIS', preco: 15.00, estáoque: 99 },
+  { id: '4', nome: 'Caipirinha Cachaça', categoria: 'COQUETÉIS', preco: 15.00, estoque: 99 },
 
-  { id: '5', nome: 'Johnnie Walker', categoria: 'DESTILADOS (DOSE)', preco: 15.00, estáoque: 99 }
+  { id: '5', nome: 'Johnnie Walker', categoria: 'DESTILADOS (DOSE)', preco: 15.00, estoque: 99 }
 
 ];
 
@@ -296,7 +296,7 @@ export const Menu = () => {
 
             </div>
 
-            {product.estáoque <= 0 && (
+            {product.estoque <= 0 && (
 
               <div style={{ 
 

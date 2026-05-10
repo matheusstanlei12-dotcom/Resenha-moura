@@ -600,11 +600,11 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
   const totalPago = pagamentos.reduce((acc, p) => acc + Number(p.amount), 0);
 
-  const totalRestáante = Math.max(0, totalComTaxa - totalPago);
+  const totalRestante = Math.max(0, totalComTaxa - totalPago);
 
   const valorIndividual = dividirPor > 1 ? totalComTaxa / dividirPor : totalComTaxa;
 
-  const suggestáedAmount = (dividirPor > 1 && totalRestáante >= valorIndividual - 0.01) ? valorIndividual : totalRestáante;
+  const suggestedAmount = (dividirPor > 1 && totalRestante >= valorIndividual - 0.01) ? valorIndividual : totalRestante;
 
   // Cálculo de troco reativo
 
@@ -618,7 +618,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
   const customAmountVal = parseFloat(customAmount) || 0;
 
-  const baseParaTroco = customAmountVal > 0 ? customAmountVal : totalRestáante;
+  const baseParaTroco = customAmountVal > 0 ? customAmountVal : totalRestante;
 
   const troco = valorInput > 0 ? Math.max(0, valorInput - baseParaTroco) : 0;
 
@@ -638,7 +638,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
   const handleFinalizar = async () => {
 
-    if (totalRestáante > 0.1) {
+    if (totalRestante > 0.1) {
 
       alert("A conta ainda não foi totalmente paga!");
 
@@ -668,7 +668,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
           console.warn("Mesa tentou ser fechada mas pedidos sumiram no DB:", selectedMesa.id);
 
-          throw new Error("Nenhum pedido ativo encontrado no banco para estáa mesa.");
+          throw new Error("Nenhum pedido ativo encontrado no banco para esta mesa.");
 
         }
 
@@ -1200,13 +1200,13 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                            {filteredProdutos.map(p => (
 
-                             <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: p.estáoque > 0 ? 'pointer' : 'not-allowed', opacity: p.estáoque > 0 ? 1 : 0.4 }} onClick={() => p.estáoque > 0 && addToCart(p)}>
+                             <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: p.estoque > 0 ? 'pointer' : 'not-allowed', opacity: p.estoque > 0 ? 1 : 0.4 }} onClick={() => p.estoque > 0 && addToCart(p)}>
 
                                 <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{p.nome}</div>
 
-                                <div style={{ color: p.estáoque > 0 ? 'var(--primary-color)' : '#666', fontWeight: 900 }}>R$ {formatCurrency(p.preco)}</div>
+                                <div style={{ color: p.estoque > 0 ? 'var(--primary-color)' : '#666', fontWeight: 900 }}>R$ {formatCurrency(p.preco)}</div>
 
-                                {p.estáoque <= 0 && <div style={{fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger-color)', marginTop: '4px'}}>ESGOTADO</div>}
+                                {p.estoque <= 0 && <div style={{fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger-color)', marginTop: '4px'}}>ESGOTADO</div>}
 
                              </div>
 
@@ -1750,7 +1750,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                              onChange={e => setCustomAmount(e.target.value)} 
 
-                             placeholder={suggestáedAmount.toFixed(2)}
+                             placeholder={suggestedAmount.toFixed(2)}
 
                              style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '2px solid #333', color: '#fff', padding: '0.2rem 0', marginBottom: '0.8rem', fontSize: '1.5rem', fontWeight: 900, outline: 'none' }} 
 
@@ -1806,7 +1806,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                                }
 
-                               const val = parseFloat(customAmount) || suggestáedAmount;
+                               const val = parseFloat(customAmount) || suggestedAmount;
 
                                handleAddPayment(selectedMethod, val);
 
@@ -1874,9 +1874,9 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                            <span style={{ fontSize: '0.8rem', opacity: 0.5 }}>RESTANTE</span>
 
-                           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: totalRestáante > 0 ? 'var(--danger-color)' : 'var(--success-color)' }}>
+                           <div style={{ fontSize: '1.5rem', fontWeight: 900, color: totalRestante > 0 ? 'var(--danger-color)' : 'var(--success-color)' }}>
 
-                             R$ {formatCurrency(totalRestáante)}
+                             R$ {formatCurrency(totalRestante)}
 
                            </div>
 
@@ -1894,15 +1894,15 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                              fontWeight: 900,
 
-                             background: totalRestáante <= 0.1 ? 'var(--success-color)' : '#222',
+                             background: totalRestante <= 0.1 ? 'var(--success-color)' : '#222',
 
-                             color: totalRestáante <= 0.1 ? '#000' : '#444'
+                             color: totalRestante <= 0.1 ? '#000' : '#444'
 
                            }}
 
                         >
 
-                           {totalRestáante <= 0.1 ? 'FINALIZAR VENDA' : 'PAGAMENTO PENDENTE'}
+                           {totalRestante <= 0.1 ? 'FINALIZAR VENDA' : 'PAGAMENTO PENDENTE'}
 
                         </button>
 

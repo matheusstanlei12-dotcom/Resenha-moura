@@ -40,7 +40,7 @@ const formatCurrency = (val: number | string) => {
 
 };
 
-type AdminTab = 'dashboard' | 'estáoque' | 'mesas' | 'equipe' | 'avaliacoes' | 'entregues' | 'fechamento';
+type AdminTab = 'dashboard' | 'estoque' | 'mesas' | 'equipe' | 'avaliacoes' | 'entregues' | 'fechamento';
 
 const ROLE_LABELS: Record<string, string> = {
 
@@ -274,7 +274,7 @@ export const Administracao = () => {
 
       img.onload = () => {
 
-        // Fundo com cor leve para destáacar bordas
+        // Fundo com cor leve para destacar bordas
 
         doc.setFillColor(252, 252, 252); 
 
@@ -468,9 +468,9 @@ export const Administracao = () => {
 
     const newValue = Math.max(0, current + delta);
 
-    await supabase.from('produtos').update({ estáoque: newValue }).eq('id', id);
+    await supabase.from('produtos').update({ estoque: newValue }).eq('id', id);
 
-    setProdutos(produtos.map(p => p.id === id ? { ...p, estáoque: newValue } : p));
+    setProdutos(produtos.map(p => p.id === id ? { ...p, estoque: newValue } : p));
 
   };
 
@@ -480,15 +480,15 @@ export const Administracao = () => {
 
     if (isNaN(newValue) || newValue < 0) return;
 
-    await supabase.from('produtos').update({ estáoque: newValue }).eq('id', id);
+    await supabase.from('produtos').update({ estoque: newValue }).eq('id', id);
 
-    setProdutos(produtos.map(p => p.id === id ? { ...p, estáoque: newValue } : p));
+    setProdutos(produtos.map(p => p.id === id ? { ...p, estoque: newValue } : p));
 
   };
 
   const handleLiberarMesa = async (mesaId: string) => {
 
-    if (!confirm("Deseja realmente liberar estáa mesa vazia?")) return;
+    if (!confirm("Deseja realmente liberar esta mesa vazia?")) return;
 
     try {
 
@@ -534,7 +534,7 @@ export const Administracao = () => {
 
       preco: parseFloat(data.preco as string),
 
-      estáoque: parseInt(data.estáoque as string), ativo: true
+      estoque: parseInt(data.estoque as string), ativo: true
 
     });
 
@@ -568,7 +568,7 @@ export const Administracao = () => {
 
   const handleDeleteMesa = async (id: string) => {
 
-    if (confirm('Excluir estáa mesa?')) { 
+    if (confirm('Excluir esta mesa?')) { 
 
       await supabase.from('mesas').delete().eq('id', id); 
 
@@ -660,9 +660,9 @@ export const Administracao = () => {
 
   const mesasOcupadas = mesas.filter(m => m.status !== 'livre').length;
 
-  const itensCriticos = produtos.filter(p => p.estáoque < 10).length;
+  const itensCriticos = produtos.filter(p => p.estoque < 10).length;
 
-  const itensEsgotados = produtos.filter(p => p.estáoque <= 0).length;
+  const itensEsgotados = produtos.filter(p => p.estoque <= 0).length;
 
   const mediaNota = avaliacoes.length
 
@@ -804,7 +804,7 @@ export const Administracao = () => {
 
           <SideItem id="dashboard" icon={<BarChart2 size={18}/>} label="Dashboard" />
 
-          <SideItem id="estáoque" icon={<Package size={18}/>} label="Estoque" />
+          <SideItem id="estoque" icon={<Package size={18}/>} label="Estoque" />
 
           <SideItem id="mesas" icon={<LayoutGrid size={18}/>} label="Mesas" />
 
@@ -948,15 +948,15 @@ export const Administracao = () => {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
-                    {produtos.filter(p => p.estáoque < 10).map(p => (
+                    {produtos.filter(p => p.estoque < 10).map(p => (
 
                       <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(245,158,11,0.06)', borderRadius: '8px' }}>
 
                         <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{p.nome}</span>
 
-                        <span style={{ color: p.estáoque <= 0 ? '#ef4444' : '#f59e0b', fontWeight: 800, fontSize: '0.85rem' }}>
+                        <span style={{ color: p.estoque <= 0 ? '#ef4444' : '#f59e0b', fontWeight: 800, fontSize: '0.85rem' }}>
 
-                          {p.estáoque <= 0 ? 'ESGOTADO' : `${p.estáoque} restáantes`}
+                          {p.estoque <= 0 ? 'ESGOTADO' : `${p.estoque} restantes`}
 
                         </span>
 
@@ -976,15 +976,15 @@ export const Administracao = () => {
 
           {/* === ESTOQUE === */}
 
-          {activeTab === 'estáoque' && (
+          {activeTab === 'estoque' && (
 
-            <motion.div key="estáoque" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <motion.div key="estoque" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
 
                 <div>
 
-                  <h1 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Gestáão de Estoque</h1>
+                  <h1 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Gestão de Estoque</h1>
 
                   <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>{produtos.length} itens no cardápio</p>
 
@@ -1044,7 +1044,7 @@ export const Administracao = () => {
 
                       <div><label style={{ fontSize: '0.65rem', opacity: 0.5, display: 'block', marginBottom: '4px' }}>ESTOQUE</label>
 
-                        <input name="estáoque" type="number" placeholder="Qtd" required style={{ width: '80px', padding: '0.7rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', outline: 'none' }} />
+                        <input name="estoque" type="number" placeholder="Qtd" required style={{ width: '80px', padding: '0.7rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', outline: 'none' }} />
 
                       </div>
 
@@ -1092,7 +1092,7 @@ export const Administracao = () => {
 
                     {items.map((p: any, idx: number) => {
 
-                      const stockColor = p.estáoque <= 0 ? '#ef4444' : p.estáoque < 10 ? '#f59e0b' : '#10b981';
+                      const stockColor = p.estoque <= 0 ? '#ef4444' : p.estoque < 10 ? '#f59e0b' : '#10b981';
 
                       return (
 
@@ -1134,23 +1134,23 @@ export const Administracao = () => {
 
                           </div>
 
-                          <StockBar value={p.estáoque} />
+                          <StockBar value={p.estoque} />
 
                           <span style={{ color: stockColor, fontWeight: 800, fontSize: '0.85rem', minWidth: '50px', textAlign: 'center' }}>
 
-                            {p.estáoque <= 0 ? 'SEM' : p.estáoque}
+                            {p.estoque <= 0 ? 'SEM' : p.estoque}
 
                           </span>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
 
-                            <button onClick={() => handleUpdateEstoque(p.id, p.estáoque, -1)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button onClick={() => handleUpdateEstoque(p.id, p.estoque, -1)} style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
                               <Minus size={12}/>
 
                             </button>
 
-                            <input type="number" defaultValue={p.estáoque} key={p.estáoque}
+                            <input type="number" defaultValue={p.estoque} key={p.estoque}
 
                               onBlur={e => handleDirectStockInput(p.id, e.target.value)}
 
@@ -1160,7 +1160,7 @@ export const Administracao = () => {
 
                             />
 
-                            <button onClick={() => handleUpdateEstoque(p.id, p.estáoque, 1)} style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button onClick={() => handleUpdateEstoque(p.id, p.estoque, 1)} style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981', width: '28px', height: '28px', borderRadius: '7px', cursor: 'pointer', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
 
                               <Plus size={12}/>
 
@@ -1200,7 +1200,7 @@ export const Administracao = () => {
 
                 <div>
 
-                  <h1 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Gestáão de Mesas</h1>
+                  <h1 style={{ fontSize: '1.8rem', fontWeight: 900 }}>Gestão de Mesas</h1>
 
                   <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.85rem' }}>{mesas.length} mesas configuradas · {mesasOcupadas} ocupadas</p>
 
@@ -1536,7 +1536,7 @@ export const Administracao = () => {
 
                     const items = pedido?.itens_pedido || [];
 
-                    if (items.length === 0) return <p style={{ textAlign: 'center', opacity: 0.5, padding: '2rem' }}>Nenhum item lançado nestáa mesa.</p>;
+                    if (items.length === 0) return <p style={{ textAlign: 'center', opacity: 0.5, padding: '2rem' }}>Nenhum item lançado nesta mesa.</p>;
 
                     return (
 
@@ -1670,7 +1670,7 @@ export const Administracao = () => {
 
                       <FileText size={40} style={{ margin: '0 auto 1rem', opacity: 0.1 }} />
 
-                      <p style={{ opacity: 0.5, marginBottom: '2rem' }}>Nenhum item lançado nestáa mesa.</p>
+                      <p style={{ opacity: 0.5, marginBottom: '2rem' }}>Nenhum item lançado nesta mesa.</p>
 
                       <button 
 

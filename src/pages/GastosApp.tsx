@@ -151,7 +151,7 @@ export const GastosApp = () => {
           </button>
           <div>
             <h1 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800 }}>Meus Gastos</h1>
-            <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>Gestáão Financeira</p>
+            <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.6 }}>Gestão Financeira</p>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@ export const GastosApp = () => {
           <div style={{ textAlign: 'center', padding: '3rem 0', opacity: 0.5 }}>Carregando...</div>
         ) : gastos.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem 0', opacity: 0.5, background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-            Nenhum gasto registrado nestáe mês.
+            Nenhum gasto registrado neste mês.
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>

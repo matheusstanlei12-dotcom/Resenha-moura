@@ -708,7 +708,7 @@ export const Garcom = () => {
 
                           {filteredProdutosAtendimento.map(p => (
 
-                             <div key={p.id} onClick={() => p.estáoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estáoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
+                             <div key={p.id} onClick={() => p.estoque > 0 && addItem(p)} className="card text-center" style={{ padding: '0.5rem', opacity: p.estoque > 0 ? 1 : 0.5, cursor: 'pointer' }}>
 
                                <div style={{fontSize: '0.8rem', fontWeight: 600}}>{p.nome}</div>
 
