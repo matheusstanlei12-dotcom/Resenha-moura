@@ -4611,7 +4611,7 @@ export const Dono = () => {
 
           <SidebarItem active={activeTab === 'avaliacoes'} icon={<Star size={20}/>} label="Avaliações" onClick={() => setActiveTab('avaliacoes')} />
 
-          <SidebarItem active={activeTab === 'caixa'} icon={<Lock size={20}/>} label="Banco de fechamento de caixa" onClick={() => setActiveTab('caixa')} />
+          <SidebarItem active={activeTab === 'caixa'} icon={<Lock size={20}/>} label="Caixa" onClick={() => setActiveTab('caixa')} />
 
           <SidebarItem active={activeTab === 'ganhos_mensais'} icon={<HistoryIcon size={20}/>} label="Ganhos Mensais" onClick={() => setActiveTab('ganhos_mensais')} />
 
@@ -4631,7 +4631,7 @@ export const Dono = () => {
 
           {[
 
-            { label: 'Garçom', path: '/garcom', emoji: 'ðŸ½ï¸' },
+            { label: 'Garçom', path: '/garcom', emoji: '🤵' },
 
             { label: 'Caixa', path: '/caixa', emoji: '💳' },
 
