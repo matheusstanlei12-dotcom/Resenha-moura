@@ -162,7 +162,7 @@ export const Producao = () => {
 
   const startMonitoring = () => {
     if ('Notification' in window) {
-      Notification.requestáPermission();
+      Notification.requestPermission();
     }
     setMonitoringActive(true);
   };

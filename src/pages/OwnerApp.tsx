@@ -537,7 +537,7 @@ export const Dono = () => {
 
   const [showAddCartao, setShowAddCartao] = useState(false);
 
-  const [novoCartao, setNovoCartao] = useState({ nome: '', bandeira: 'Visa', banco: '', cor: '#3b82f6' });
+  const [novoCartao, setNovoCartao] = useState<any>({ nome: '', bandeira: 'Visa', banco: '', cor: '#3b82f6', bancoPersonalizado: '' });
 
   // Modal Novo Colaborador
 

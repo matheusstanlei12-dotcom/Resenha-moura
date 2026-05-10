@@ -268,7 +268,7 @@ export const Garcom = () => {
 
       try {
 
-        await Notification.requestáPermission();
+        await Notification.requestPermission();
 
       } catch (e) {}
 
