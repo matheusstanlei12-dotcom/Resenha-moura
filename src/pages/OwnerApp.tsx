@@ -4156,25 +4156,24 @@ export const Dono = () => {
   };
 
   const handleAddCartao = async (e: React.FormEvent) => {
-
     e.preventDefault();
 
-    const { error } = await supabase.from('cartoes_gastos').insert(novoCartao);
+    // Preparar os dados para inserção, mapeando o banco personalizado se necessário
+    const { bancoPersonalizado, ...cardData } = novoCartao;
+    const finalData = {
+      ...cardData,
+      banco: novoCartao.banco === 'Outro' ? (bancoPersonalizado || 'Outro') : novoCartao.banco
+    };
+
+    const { error } = await supabase.from('cartoes_gastos').insert(finalData);
 
     if (!error) {
-
       setShowAddCartao(false);
-
-      setNovoCartao({ nome: '', bandeira: 'Visa', banco: '', cor: '#3b82f6' });
-
+      setNovoCartao({ nome: '', bandeira: 'Visa', banco: '', cor: '#3b82f6', bancoPersonalizado: '' });
       fetchData();
-
     } else {
-
       alert("Erro ao adicionar cartão: " + error.message);
-
     }
-
   };
 
   const handleDeleteCartao = async (id: string) => {
