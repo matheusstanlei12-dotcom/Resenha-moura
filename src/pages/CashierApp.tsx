@@ -1156,99 +1156,105 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
               {activeTab === 'balcao' && (
 
-                <motion.div key="balcao" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+                 <motion.div key="balcao" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
 
-                  style={{ display: 'grid', gridTemplateColumns: window.innerWidth > 768 ? '1fr 350px' : '1fr', gap: '1.5rem', height: 'auto' }}>
+                   style={{ 
+                     display: 'grid', 
+                     gridTemplateColumns: window.innerWidth > 768 ? '1fr 350px' : '1fr', 
+                     gap: '1.5rem', 
+                     height: window.innerWidth > 768 ? 'calc(100vh - 170px)' : 'auto',
+                     maxHeight: window.innerWidth > 768 ? 'calc(100vh - 170px)' : 'none'
+                   }}>
 
-                    <div className="d-flex flex-col gap-3">
+                     <div className="d-flex flex-col gap-3" style={{ height: window.innerWidth > 768 ? '100%' : 'auto', overflow: 'hidden' }}>
 
-                       <div style={{ position: 'relative' }}>
+                        <div style={{ position: 'relative' }}>
 
-                          <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.4 }} />
+                           <Search size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.4 }} />
 
-                          <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '10px', color: '#fff' }} />
+                           <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', borderRadius: '10px', color: '#fff' }} />
 
-                       </div>
+                        </div>
 
-                       <div className="mb-2">
+                        <div className="mb-2">
 
-                          <select 
+                           <select 
 
-                            value={selectedCategory} 
+                             value={selectedCategory} 
 
-                            onChange={(e) => { setSelectedCategory(e.target.value); setSearchTerm(''); }} 
+                             onChange={(e) => { setSelectedCategory(e.target.value); setSearchTerm(''); }} 
 
-                            style={{ 
+                             style={{ 
 
-                              width: '100%',
+                               width: '100%',
 
-                              padding: '0.70rem',
+                               padding: '0.70rem',
 
-                              background: 'rgba(0,0,0,0.3)',
+                               background: 'rgba(0,0,0,0.3)',
 
-                              border: '1px solid var(--primary-color)',
+                               border: '1px solid var(--primary-color)',
 
-                              borderRadius: '10px',
+                               borderRadius: '10px',
 
-                              color: '#fff',
+                               color: '#fff',
 
-                              fontSize: '1rem',
+                               fontSize: '1rem',
 
-                              fontWeight: 800,
+                               fontWeight: 800,
 
-                              outline: 'none',
+                               outline: 'none',
 
-                              appearance: 'none',
+                               appearance: 'none',
 
-                              backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
+                               backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E\")",
 
-                              backgroundRepeat: 'no-repeat',
+                               backgroundRepeat: 'no-repeat',
 
-                              backgroundPosition: 'right 1rem center'
+                               backgroundPosition: 'right 1rem center'
 
-                            }}
+                             }}
 
-                          >
+                           >
 
-                            {categories.map(cat => (
+                             {categories.map(cat => (
 
-                              <option key={cat} value={cat}>{cat}</option>
+                               <option key={cat} value={cat}>{cat}</option>
+
+                             ))}
+
+                           </select>
+
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: '0.8rem', overflowY: 'auto', flex: window.innerWidth > 768 ? 1 : 'none' }}>
+
+                            {filteredProdutos.map(p => (
+
+                              <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: p.estoque > 0 ? 'pointer' : 'not-allowed', opacity: p.estoque > 0 ? 1 : 0.4 }} onClick={() => p.estoque > 0 && addToCart(p)}>
+
+                                 <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{p.nome}</div>
+
+                                 <div style={{ color: p.estoque > 0 ? 'var(--primary-color)' : '#666', fontWeight: 900 }}>R$ {formatCurrency(p.preco)}</div>
+
+                                 {p.estoque <= 0 && <div style={{fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger-color)', marginTop: '4px'}}>ESGOTADO</div>}
+
+                              </div>
 
                             ))}
 
-                          </select>
+                        </div>
+
+                     </div>
+
+                    <div className="card d-flex flex-col" style={{ padding: '0', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '16px', color: 'var(--text-main)', fontFamily: 'monospace', height: window.innerWidth > 768 ? '100%' : 'auto', maxHeight: window.innerWidth > 768 ? '100%' : 'none', display: 'flex', flexDirection: 'column' }}>
+
+                       <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', textAlign: 'center', borderBottom: '2px dashed var(--border-color)' }}>
+
+                          <h3 style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--primary-color)' }}>RESENHA DO MOURA</h3>
 
                        </div>
 
-                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(135px, 1fr))', gap: '0.8rem', overflowY: 'auto' }}>
-
-                           {filteredProdutos.map(p => (
-
-                             <div key={p.id} className="card hover-surface text-center" style={{ padding: '0.8rem', cursor: p.estoque > 0 ? 'pointer' : 'not-allowed', opacity: p.estoque > 0 ? 1 : 0.4 }} onClick={() => p.estoque > 0 && addToCart(p)}>
-
-                                <div style={{ fontWeight: 700, fontSize: '0.8rem' }}>{p.nome}</div>
-
-                                <div style={{ color: p.estoque > 0 ? 'var(--primary-color)' : '#666', fontWeight: 900 }}>R$ {formatCurrency(p.preco)}</div>
-
-                                {p.estoque <= 0 && <div style={{fontSize: '0.55rem', fontWeight: 900, color: 'var(--danger-color)', marginTop: '4px'}}>ESGOTADO</div>}
-
-                             </div>
-
-                           ))}
-
-                       </div>
-
-                    </div>
-
-                   <div className="card d-flex flex-col" style={{ padding: '0', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '16px', color: 'var(--text-main)', fontFamily: 'monospace' }}>
-
-                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', textAlign: 'center', borderBottom: '2px dashed var(--border-color)' }}>
-
-                         <h3 style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--primary-color)' }}>RESENHA DO MOURA</h3>
-
-                      </div>
-
-                      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }} className="d-flex flex-col gap-2">
+                       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem' }} className="d-flex flex-col gap-2">
 
                          {carrinho.map(item => (
 
