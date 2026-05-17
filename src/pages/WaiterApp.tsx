@@ -228,7 +228,7 @@ export const Garcom = () => {
 
         try {
 
-          new Notification("🚨 ATENÇíO!", {
+          new Notification("🚨 ATENÇÃO!", {
 
             body: precisaGarcom ? "Mesa chamando atendimento!" : "Pedido pronto no balcão!",
 
@@ -510,7 +510,7 @@ export const Garcom = () => {
 
       <OwnerViewBanner panelName="Garçom" />
 
-      {/* HEADER DE NAVEGAÇíO PERMANENTE */}
+      {/* HEADER DE NAVEGAÇÃO PERMANENTE */}
 
       <header className="d-flex justify-between items-center mb-6" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
 

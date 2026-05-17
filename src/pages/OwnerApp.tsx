@@ -66,6 +66,32 @@ const formatCurrency = (val) => {
 
 };
 
+const parseRobustValue = (valStr: string) => {
+  const hasComma = valStr.includes(',');
+  const hasDot = valStr.includes('.');
+  if (hasComma && hasDot) {
+    const firstComma = valStr.indexOf(',');
+    const firstDot = valStr.indexOf('.');
+    if (firstComma < firstDot) {
+      return parseFloat(valStr.replace(/,/g, ''));
+    } else {
+      return parseFloat(valStr.replace(/\./g, '').replace(',', '.'));
+    }
+  } else if (hasComma) {
+    return parseFloat(valStr.replace(',', '.'));
+  } else if (hasDot) {
+    const parts = valStr.split('.');
+    const lastPart = parts[parts.length - 1];
+    if (lastPart.length === 3 && parts.length === 2) {
+      return parseFloat(valStr.replace(/\./g, ''));
+    } else {
+      return parseFloat(valStr);
+    }
+  } else {
+    return parseFloat(valStr);
+  }
+};
+
 const SidebarItem = ({ active, icon, label, onClick, color }: any) => (
 
   <div className={`sidebar-item ${active ? 'active' : ''}`} onClick={onClick} style={{ color: color || (active ? 'var(--primary-color)' : 'var(--text-muted)') }}>
@@ -615,8 +641,9 @@ export const Dono = () => {
   const [isUpdatingName, setIsUpdatingName] = useState(false);
 
   const [cardToDelete, setCardToDelete] = useState<any>(null);
-
-    const [isDeletingCard, setIsDeletingCard] = useState(false);
+  const [isDeletingCard, setIsDeletingCard] = useState(false);
+  const [gastoToDelete, setGastoToDelete] = useState<any>(null);
+  const [isDeletingGasto, setIsDeletingGasto] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const [searchTermEstoque, setSearchTermEstoque] = useState('');
@@ -1269,7 +1296,7 @@ export const Dono = () => {
 
         if (error || (data && data.error)) throw new Error(error?.message || data.error);
 
-        alert("Usurio removido com sucesso!");
+        alert("Usuário removido com sucesso!");
 
         fetchData();
 
@@ -1479,9 +1506,9 @@ export const Dono = () => {
 
     } catch (err: any) {
 
-      console.error("ERRO CRíTICO NA EXCLUSíƒO (DONO):", err);
+      console.error("ERRO CRÍTICO NA EXCLUSÃO (DONO):", err);
 
-      alert("⚠️ ï¸ FALHA NA EXCLUSíƒO:\n\n" + (err.message || 'Erro desconhecido. Verifique se a tabela de auditoria foi criada.'));
+      alert("⚠️  FALHA NA EXCLUSÃO:\n\n" + (err.message || 'Erro desconhecido. Verifique se a tabela de auditoria foi criada.'));
 
     } finally {
 
@@ -1507,21 +1534,21 @@ export const Dono = () => {
 
         if (!p.forma_pagamento) return;
 
-        const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)\s*\(R\$([0-9.]+)\)/gi);
+        const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9,.]+)\)/gi);
 
         if (matches) {
 
           matches.forEach((m: string) => {
 
-            const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)/i);
+            const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
 
-            const valMatch = m.match(/R\$([0-9.]+)/);
+            const valMatch = m.match(/R\$([0-9,.]+)/);
 
             if (typeMatch && valMatch) {
 
               const type = typeMatch[1].toUpperCase();
 
-              const val = parseFloat(valMatch[1]);
+              const val = parseRobustValue(valMatch[1]);
 
               if (type === 'PIX') totals.pix += val;
 
@@ -1531,7 +1558,7 @@ export const Dono = () => {
 
               else if (type === 'CRÉDITO' || type === 'CREDITO') totals.credito += val;
 
-              else if (type === 'CARTAO' || type === 'CARTíO') totals.outrosCartoes += val;
+              else if (type === 'CARTAO' || type === 'CARTÃO') totals.outrosCartoes += val;
 
             }
 
@@ -1559,7 +1586,7 @@ export const Dono = () => {
 
       'CRÉDITO': [], 
 
-      'CARTí•ES ANTIGOS': [] 
+      'CARTÕES ANTIGOS': [] 
 
     };
 
@@ -1567,13 +1594,13 @@ export const Dono = () => {
 
       if (!order.forma_pagamento) return;
 
-      const matches = order.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)\s*\(R\$([0-9.]+)\)/gi);
+      const matches = order.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9,.]+)\)/gi);
 
       if (matches) {
 
         matches.forEach((m: string) => {
 
-          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)/i);
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
 
           if (typeMatch) {
 
@@ -1585,7 +1612,7 @@ export const Dono = () => {
 
             if (type === 'CREDITO') key = 'CRÉDITO';
 
-            if (type === 'CARTAO' || type === 'CARTíO') key = 'CARTí•ES ANTIGOS';
+            if (type === 'CARTAO' || type === 'CARTÃO') key = 'CARTÕES ANTIGOS';
 
             if (groups[key]) {
 
@@ -1965,7 +1992,7 @@ export const Dono = () => {
 
           <KPIItem 
 
-            title="CARTí•ES ANTIGOS" 
+            title="CARTÕES ANTIGOS" 
 
             value={`R$ ${formatCurrency(paymentTotals.outrosCartoes)}`} 
 
@@ -1975,7 +2002,7 @@ export const Dono = () => {
 
             trend="Legado" 
 
-            onClick={() => setSelectedPaymentDetail(selectedPaymentDetail === 'CARTí•ES ANTIGOS' ? null : 'CARTí•ES ANTIGOS')}
+            onClick={() => setSelectedPaymentDetail(selectedPaymentDetail === 'CARTÕES ANTIGOS' ? null : 'CARTÕES ANTIGOS')}
 
           />
 
@@ -2297,7 +2324,7 @@ export const Dono = () => {
 
                  <Bar dataKey="receita" name="Receita" fill="#10b981" radius={[6, 6, 0, 0]} barSize={25} />
 
-                 <Bar dataKey="gastos" name="Despesas" fill="#ef4444" radius={[6, 6, 0, 0]} barSize={25} />
+                 <Line type="monotone" dataKey="gastos" name="Despesas" stroke="#ef4444" strokeWidth={4} dot={{ r: 5, fill: '#ef4444', strokeWidth: 2, stroke: '#000' }} />
 
                  <Line type="monotone" dataKey="lucro" name="Lucro Líquido" stroke="var(--primary-color)" strokeWidth={4} dot={{ r: 5, fill: 'var(--primary-color)', strokeWidth: 2, stroke: '#000' }} />
 
@@ -2405,7 +2432,7 @@ export const Dono = () => {
 
         <h2 style={{ fontSize: isMobile ? '1.4rem' : '1.8rem', fontWeight: 800 }}>Gestão de Equipe ({usuarios.length})</h2>
 
-        <button className="btn-success" onClick={() => setShowNewUser(!showNewUser)} style={{ width: 'auto', padding: isMobile ? '8px 12px' : '1rem', fontSize: isMobile ? '0.8rem' : '1rem' }}>{showNewUser ? 'Cancelar' : '+ Cadastrar Usurio'}</button>
+        <button className="btn-success" onClick={() => setShowNewUser(!showNewUser)} style={{ width: 'auto', padding: isMobile ? '8px 12px' : '1rem', fontSize: isMobile ? '0.8rem' : '1rem' }}>{showNewUser ? 'Cancelar' : '+ Cadastrar Usuário'}</button>
 
       </div>
 
@@ -2621,7 +2648,7 @@ export const Dono = () => {
 
           type="text" 
 
-          placeholder="ðŸ” Buscar no estoque (nome ou categoria)..." 
+          placeholder="🔍  Buscar no estoque (nome ou categoria)..." 
 
           value={searchTermEstoque} 
 
@@ -3313,7 +3340,7 @@ export const Dono = () => {
 
                         <td style={{ padding: '1rem', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'monospace' }}>#{displayId}</td>
 
-                        <td style={{ padding: '1rem' }}>{v.mesa_id ? <span style={{ color: 'var(--primary-color)', fontWeight: 700 }}>MESA {v.mesas?.numero}</span> : <span style={{ color: 'var(--success-color)', fontWeight: 700 }}>BALCíƒO</span>}</td>
+                        <td style={{ padding: '1rem' }}>{v.mesa_id ? <span style={{ color: 'var(--primary-color)', fontWeight: 700 }}>MESA {v.mesas?.numero}</span> : <span style={{ color: 'var(--success-color)', fontWeight: 700 }}>BALCÃO</span>}</td>
 
                         <td style={{ padding: '1rem' }}>R$ {formatCurrency(consumo)}</td>
 
@@ -3345,21 +3372,21 @@ export const Dono = () => {
 
       if (!p.forma_pagamento) return;
 
-      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)\s*\(R\$([0-9.]+)\)/gi);
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9,.]+)\)/gi);
 
       if (matches) {
 
         matches.forEach((m: string) => {
 
-          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)/i);
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
 
-          const valMatch = m.match(/R\$([0-9.]+)/);
+          const valMatch = m.match(/R\$([0-9,.]+)/);
 
           if (typeMatch && valMatch) {
 
             const type = typeMatch[1].toUpperCase();
 
-            const val = parseFloat(valMatch[1]);
+            const val = parseRobustValue(valMatch[1]);
 
             if (type === 'PIX') totals.pix += val;
 
@@ -3403,21 +3430,21 @@ export const Dono = () => {
 
       if (!p.forma_pagamento) return;
 
-      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)\s*\(R\$([0-9.]+)\)/gi);
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9,.]+)\)/gi);
 
       if (matches) {
 
         matches.forEach((m: string) => {
 
-          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)/i);
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
 
-          const valMatch = m.match(/R\$([0-9.]+)/);
+          const valMatch = m.match(/R\$([0-9,.]+)/);
 
           if (typeMatch && valMatch) {
 
             const type = typeMatch[1].toUpperCase();
 
-            const val = parseFloat(valMatch[1]);
+            const val = parseRobustValue(valMatch[1]);
 
             if (type === 'PIX') totals.pix += val;
 
@@ -3673,9 +3700,9 @@ export const Dono = () => {
 
                                     const esperado = fundo + (t.pedidos?.filter((p: any) => p.forma_pagamento?.includes('DINHEIRO')).reduce((acc: number, p: any) => {
 
-                                        const match = p.forma_pagamento?.match(/DINHEIRO\s*\(R\$([0-9.]+)\)/i);
+                                        const match = p.forma_pagamento?.match(/DINHEIRO\s*\(R\$([0-9,.]+)\)/i);
 
-                                        return acc + (match ? parseFloat(match[1]) : 0);
+                                        return acc + (match ? parseRobustValue(match[1]) : 0);
 
                                     }, 0) || 0);
 
@@ -3709,7 +3736,7 @@ export const Dono = () => {
 
                                                         <div style={{ fontWeight: 900, fontSize: '0.85rem', color: t.status === 'aberto' ? '#10b981' : '#fff' }}>O.S. #{t.os_number || '---'}</div>
 
-                                                        <div style={{ fontSize: '0.6rem', opacity: 0.5, fontWeight: 700 }}>{t.profiles?.full_name?.split(' ')[0]} â€¢ {new Date(t.aberto_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
+                                                        <div style={{ fontSize: '0.6rem', opacity: 0.5, fontWeight: 700 }}>{t.profiles?.full_name?.split(' ')[0]} • {new Date(t.aberto_em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
 
                                                     </div>
 
@@ -3755,7 +3782,7 @@ export const Dono = () => {
 
                                                         <div className="p-2 rounded-lg" style={{ background: `${statusColor}15`, border: `1px solid ${statusColor}30`, gridColumn: isMobile ? 'span 2' : 'auto' }}>
 
-                                                            <div style={{ fontSize: '0.5rem', color: statusColor, fontWeight: 700 }}>{t.status === 'aberto' ? 'STATUS: ABERTO' : Math.abs(diferenca) < 0.1 ? 'CONFERE âœ“' : diferenca > 0 ? `SOBRA: R$ {formatCurrency(diferenca)}` : `QUEBRA: R$ {formatCurrency(Math.abs(diferenca))}`}</div>
+                                                            <div style={{ fontSize: '0.5rem', color: statusColor, fontWeight: 700 }}>{t.status === 'aberto' ? 'STATUS: ABERTO' : Math.abs(diferenca) < 0.1 ? 'CONFERE ✓' : diferenca > 0 ? `SOBRA: R$ {formatCurrency(diferenca)}` : `QUEBRA: R$ {formatCurrency(Math.abs(diferenca))}`}</div>
 
                                                             <div style={{ fontWeight: 900, fontSize: '0.8rem', color: statusColor }}>{t.status === 'fechado' ? `Declarado: R$ {formatCurrency(declarado)}` : 'Em andamento...'}</div>
 
@@ -3817,7 +3844,7 @@ export const Dono = () => {
 
                                                         <div style={{ marginTop: '1.2rem' }}>
 
-                                                             <h4 style={{ fontSize: '0.65rem', fontWeight: 800, color: '#ef4444', marginBottom: '0.6rem', letterSpacing: '1px' }}>AUDITORIA: EXCLUSí•ES</h4>
+                                                             <h4 style={{ fontSize: '0.65rem', fontWeight: 800, color: '#ef4444', marginBottom: '0.6rem', letterSpacing: '1px' }}>AUDITORIA: EXCLUSÕES</h4>
 
                                                              <div className="card" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(239,68,68,0.2)', background: 'rgba(239,68,68,0.02)' }}>
 
@@ -3935,13 +3962,13 @@ export const Dono = () => {
 
           const typeMatch = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO)/i);
 
-          const valMatch = p.forma_pagamento.match(/R\$([0-9.]+)/);
+          const valMatch = p.forma_pagamento.match(/R\$([0-9,.]+)/);
 
           if (typeMatch && valMatch) {
 
             const type = typeMatch[1].toUpperCase();
 
-            const v = parseFloat(valMatch[1]);
+            const v = parseRobustValue(valMatch[1]);
 
             if (type === 'PIX') groups[monthStr].payments.pix += v;
 
@@ -4228,18 +4255,27 @@ export const Dono = () => {
 
   };
 
-  const handleDeleteGasto = async (id: string) => {
+  const handleDeleteGasto = (gasto: any) => {
+    setGastoToDelete(gasto);
+  };
 
-    if (window.confirm("Tem certeza que deseja excluir este gasto?")) {
-
-      const { error } = await supabase.from('gastos').delete().eq('id', id);
-
-      if (error) alert("Erro: " + error.message);
-
-      else fetchData();
-
+  const confirmDeleteGasto = async () => {
+    if (!gastoToDelete) return;
+    setIsDeletingGasto(true);
+    try {
+      const { error } = await supabase.from('gastos').delete().eq('id', gastoToDelete.id);
+      if (error) {
+        alert("Erro ao excluir gasto: " + error.message);
+      } else {
+        await fetchData();
+        setGastoToDelete(null);
+      }
+    } catch (err: any) {
+      console.error("Erro inesperado ao excluir gasto:", err);
+      alert("Erro inesperado: " + err.message);
+    } finally {
+      setIsDeletingGasto(false);
     }
-
   };
 
   const renderGastosMensais = () => {
@@ -4390,7 +4426,7 @@ export const Dono = () => {
 
                 { label: 'Lançamentos', value: currentMonthGastos.length, color: '#f59e0b', icon: <FileText size={18} /> },
 
-                { label: 'MÉDIA DIíRIA', value: `R$ ${(dailyChartData.length > 0 ? totalGasto / dailyChartData.length : 0).toFixed(2)}`, color: '#3b82f6', icon: <Clock size={18} /> },
+                { label: 'MÉDIA DIÁRIA', value: `R$ ${(dailyChartData.length > 0 ? totalGasto / dailyChartData.length : 0).toFixed(2)}`, color: '#3b82f6', icon: <Clock size={18} /> },
 
             ].map((kpi, idx) => (
 
@@ -4508,7 +4544,7 @@ export const Dono = () => {
 
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></div>
 
-                    Evolução Diria
+                    Evolução Diária
 
                 </h3>
 
@@ -4562,7 +4598,7 @@ export const Dono = () => {
 
                       <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>DATA</th>
 
-                      <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>DESCRIí‡íƒO</th>
+                      <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>DESCRIÇÃO</th>
 
                       <th style={{ textAlign: 'left', padding: '1rem 1.5rem' }}>CATEGORIA</th>
 
@@ -4612,7 +4648,7 @@ export const Dono = () => {
 
                                 <span style={{ fontWeight: 700, color: '#fff' }}>{g.cartoes_gastos.nome}</span>
 
-                                <span style={{ opacity: 0.5 }}>â€¢ {g.forma_pagamento}</span>
+                                <span style={{ opacity: 0.5 }}>• {g.forma_pagamento}</span>
 
                               </>
 
@@ -4640,7 +4676,7 @@ export const Dono = () => {
 
                         <td style={{ padding: '1rem 1.5rem', textAlign: 'center' }}>
 
-                          <button onClick={() => handleDeleteGasto(g.id)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '8px', color: '#ef4444' }}>
+                          <button onClick={() => handleDeleteGasto(g)} style={{ background: 'rgba(239, 68, 68, 0.1)', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '8px', color: '#ef4444' }}>
 
                             <Trash2 size={16} />
 
@@ -4743,7 +4779,7 @@ export const Dono = () => {
               </div>
 
               <nav className="sidebar-nav" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <SidebarItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={20}/>} label="Radar" onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false); }} />
+                <SidebarItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={20}/>} label="Painel de Gestão" onClick={() => { setActiveTab('dashboard'); setShowMobileMenu(false); }} />
                 <SidebarItem active={activeTab === 'produtos'} icon={<Package size={20}/>} label="Estoque" onClick={() => { setActiveTab('produtos'); setShowMobileMenu(false); }} />
                 <SidebarItem active={activeTab === 'mesas'} icon={<LayoutGrid size={20}/>} label="Mesas" onClick={() => { setActiveTab('mesas'); setShowMobileMenu(false); }} />
                 <SidebarItem active={activeTab === 'comandas'} icon={<FileText size={20}/>} label="Comandas" onClick={() => { setActiveTab('comandas'); setShowMobileMenu(false); }} />
@@ -4774,7 +4810,7 @@ export const Dono = () => {
 
         <nav className="sidebar-nav">
 
-          <SidebarItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={20}/>} label="Radar" onClick={() => setActiveTab('dashboard')} />
+          <SidebarItem active={activeTab === 'dashboard'} icon={<LayoutDashboard size={20}/>} label="Painel de Gestão" onClick={() => setActiveTab('dashboard')} />
 
           <SidebarItem active={activeTab === 'produtos'} icon={<Package size={20}/>} label="Estoque" onClick={() => setActiveTab('produtos')} />
 
@@ -4930,7 +4966,7 @@ export const Dono = () => {
 
               <div className="mb-6">
 
-                <label className="label-field">SELECIONE A NOVA FUNí‡íƒO</label>
+                <label className="label-field">SELECIONE A NOVA FUNÇÃO</label>
 
                 <select 
 
@@ -5048,7 +5084,7 @@ export const Dono = () => {
 
                 <div className="mb-4">
 
-                  <label className="label-field">DESCRIí‡íƒO</label>
+                  <label className="label-field">DESCRIÇÃO</label>
 
                   <input type="text" value={novoGasto.descricao} onChange={e => setNovoGasto({...novoGasto, descricao: e.target.value})} className="input-field" required placeholder="Ex: Fornecedor de Carnes" />
 
@@ -5070,9 +5106,9 @@ export const Dono = () => {
 
                     <option value="Fornecedores">Fornecedores / Insumos</option>
 
-                    <option value="Funcionários">Funcionários / Dirias</option>
+                    <option value="Funcionários">Funcionários / Diárias</option>
 
-                    <option value="Contas">Contas (ígua, Luz, Aluguel, etc)</option>
+                    <option value="Contas">Contas (Água, Luz, Aluguel, etc)</option>
 
                     <option value="Equipamentos">Equipamentos / Manutenção</option>
 
@@ -5110,7 +5146,7 @@ export const Dono = () => {
 
                   <div className="mb-6 animate-fade-in">
 
-                    <label className="label-field mb-3" style={{ display: 'block' }}>SELECIONE O CARTíO</label>
+                    <label className="label-field mb-3" style={{ display: 'block' }}>SELECIONE O CARTÃO</label>
 
                     <div className="card-slider no-scrollbar" style={{ padding: '10px 5px 20px', margin: '0 -10px' }}>
 
@@ -5204,13 +5240,13 @@ export const Dono = () => {
 
               <div style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
 
-                <h4 style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--primary-color)' }}>CADASTRAR NOVO CARTíO</h4>
+                <h4 style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '1rem', color: 'var(--primary-color)' }}>CADASTRAR NOVO CARTÃO</h4>
 
                 <form onSubmit={handleAddCartao}>
 
                   <div className="mb-3">
 
-                    <label className="label-field">NOME DO CARTíO (Ex: Nubank Matheus)</label>
+                    <label className="label-field">NOME DO CARTÃO (Ex: Nubank Matheus)</label>
 
                     <input type="text" value={novoCartao.nome} onChange={e => setNovoCartao({...novoCartao, nome: e.target.value})} className="input-field" required placeholder="Nome para identificação" />                  </div>
 
@@ -5338,7 +5374,7 @@ export const Dono = () => {
 
                       <div>
 
-                        <label className="label-field">ESCOLHA UMA COR PARA O CARTíO</label>
+                        <label className="label-field">ESCOLHA UMA COR PARA O CARTÃO</label>
 
                         <input type="color" value={novoCartao.cor} onChange={e => setNovoCartao({...novoCartao, cor: e.target.value})} className="input-field" style={{ height: '42px', padding: '5px' }} />
 
@@ -5358,7 +5394,7 @@ export const Dono = () => {
 
                 <h4 style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                  <CreditCardIcon size={16} /> MEUS CARTí•ES ATIVOS
+                  <CreditCardIcon size={16} /> MEUS CARTÕES ATIVOS
 
                 </h4>
 
@@ -5425,6 +5461,60 @@ export const Dono = () => {
                 <button onClick={confirmDeleteCartao} className="btn-primary" disabled={isDeletingCard} style={{ flex: 1, background: '#ef4444', color: '#fff' }}>
 
                   {isDeletingCard ? 'Excluindo...' : 'Sim, Excluir'}
+
+                </button>
+
+              </div>
+
+            </motion.div>
+
+          </div>
+
+        )}
+
+      </AnimatePresence>
+
+      <AnimatePresence>
+
+        {gastoToDelete && (
+
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 100002, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+
+            <motion.div 
+
+              initial={{ scale: 0.9, opacity: 0 }} 
+
+              animate={{ scale: 1, opacity: 1 }} 
+
+              exit={{ scale: 0.9, opacity: 0 }}
+
+              style={{ background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '24px', width: '100%', maxWidth: '400px', padding: '2rem', textAlign: 'center' }}>
+
+              <div style={{ background: 'rgba(239, 68, 68, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', color: '#ef4444' }}>
+
+                <Trash2 size={30} />
+
+              </div>
+
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: '0.5rem' }}>Excluir Gasto?</h2>
+
+              <p style={{ fontSize: '0.85rem', opacity: 0.7, marginBottom: '2rem' }}>
+
+                Tem certeza que deseja excluir o lançamento de gasto <strong style={{ color: '#fff' }}>"{gastoToDelete.descricao}"</strong> no valor de <strong style={{ color: '#ef4444' }}>- R$ {formatCurrency(gastoToDelete.valor)}</strong>?
+
+                <br/><br/>
+
+                Essa ação é permanente e não poderá ser desfeita.
+
+              </p>
+
+              <div className="d-flex gap-3">
+
+                <button onClick={() => setGastoToDelete(null)} className="btn-outline" style={{ flex: 1 }}>Cancelar</button>
+
+                <button onClick={confirmDeleteGasto} className="btn-primary" disabled={isDeletingGasto} style={{ flex: 1, background: '#ef4444', color: '#fff' }}>
+
+                  {isDeletingGasto ? 'Excluindo...' : 'Sim, Excluir'}
 
                 </button>
 

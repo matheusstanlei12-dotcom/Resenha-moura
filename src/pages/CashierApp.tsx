@@ -42,6 +42,32 @@ const formatCurrency = (val: number | string) => {
 
 };
 
+const parseRobustValue = (valStr: string) => {
+  const hasComma = valStr.includes(',');
+  const hasDot = valStr.includes('.');
+  if (hasComma && hasDot) {
+    const firstComma = valStr.indexOf(',');
+    const firstDot = valStr.indexOf('.');
+    if (firstComma < firstDot) {
+      return parseFloat(valStr.replace(/,/g, ''));
+    } else {
+      return parseFloat(valStr.replace(/\./g, '').replace(',', '.'));
+    }
+  } else if (hasComma) {
+    return parseFloat(valStr.replace(',', '.'));
+  } else if (hasDot) {
+    const parts = valStr.split('.');
+    const lastPart = parts[parts.length - 1];
+    if (lastPart.length === 3 && parts.length === 2) {
+      return parseFloat(valStr.replace(/\./g, ''));
+    } else {
+      return parseFloat(valStr);
+    }
+  } else {
+    return parseFloat(valStr);
+  }
+};
+
 type TabType = 'mesas' | 'balcao' | 'cozinha' | 'fechamento';
 
 type PaymentMethod = 'dinheiro' | 'pix' | 'cartao' | 'debito' | 'credito';
@@ -338,7 +364,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
       }
 
-      // 2. Histórico (Filtrar por turno_id se estáiver aberto, caso contrário últimas 24 horas)
+      // 2. Histórico (Filtrar por turno_id se estiver aberto, caso contrário últimas 24 horas)
 
       const currentTurnoId = localStorage.getItem('turno_id');
 
@@ -678,7 +704,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
         const otherIds = ids.slice(1);
 
-        // 1. Atualizar o pedido mestáre com o valor total e pagamento
+        // 1. Atualizar o pedido mestre com o valor total e pagamento
 
         const turnoId = localStorage.getItem('turno_id');
 
@@ -874,21 +900,21 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
       if (!p.forma_pagamento) return;
 
-      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)\s*\(R\$([0-9.]+)\)/gi);
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9,.]+)\)/gi);
 
       if (matches) {
 
         matches.forEach((m: string) => {
 
-          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)/i);
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
 
-          const valMatch = m.match(/R\$([0-9.]+)/);
+          const valMatch = m.match(/R\$([0-9,.]+)/);
 
           if (typeMatch && valMatch) {
 
             const type = typeMatch[1].toUpperCase();
 
-            const val = parseFloat(valMatch[1]);
+            const val = parseRobustValue(valMatch[1]);
 
             if (type === 'PIX') totals.pix += val;
 
@@ -1022,7 +1048,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
               <button onClick={() => setActiveTab('balcao')} style={{ background: 'none', border: 'none', color: activeTab === 'balcao' ? 'var(--primary-color)' : '#444', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
 
-                <ShoppingCart size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>BALCíO</span>
+                <ShoppingCart size={28} /> <span style={{ fontSize: '0.6rem', fontWeight: 700 }}>BALCÃO</span>
 
               </button>
 
@@ -1064,7 +1090,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
            <h1 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary-color)' }}>
 
-             {!isCaixaAberto ? 'STATUS DO SISTEMA' : (activeTab === 'mesas' ? 'GESTíO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCíO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : 'FECHAMENTO E LEITURA Z')}
+             {!isCaixaAberto ? 'STATUS DO SISTEMA' : (activeTab === 'mesas' ? 'GESTÃO DE MESAS' : activeTab === 'balcao' ? 'VENDA DE BALCÃO' : activeTab === 'cozinha' ? 'PEDIDOS COZINHA' : 'FECHAMENTO E LEITURA Z')}
 
            </h1>
 
@@ -1119,8 +1145,6 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
                        <Receipt size={80} style={{margin: '0 auto 1.5rem', opacity: 0.3}} />
 
                        <h3 style={{ opacity: 0.3 }}>Nenhuma mesa ativa no momento.</h3>
-
-                       <button onClick={handleSimularMesasCaixa} className="btn-outline mt-6">Simular Mesas</button>
 
                      </div>
 
@@ -1216,11 +1240,11 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                     </div>
 
-                   <div className="card d-flex flex-col" style={{ padding: '0', background: '#f8f8f8', border: '1px solid #ddd', borderRadius: '4px', color: '#111', fontFamily: 'monospace' }}>
+                   <div className="card d-flex flex-col" style={{ padding: '0', background: 'var(--surface-color)', border: '1px solid var(--border-color)', borderRadius: '16px', color: 'var(--text-main)', fontFamily: 'monospace' }}>
 
-                      <div style={{ background: '#eee', padding: '1rem', textAlign: 'center', borderBottom: '2px dashed #ccc' }}>
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', textAlign: 'center', borderBottom: '2px dashed var(--border-color)' }}>
 
-                         <h3 style={{ fontSize: '0.9rem', fontWeight: 900 }}>RESENHA DO MOURA</h3>
+                         <h3 style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--primary-color)' }}>RESENHA DO MOURA</h3>
 
                       </div>
 
@@ -1240,19 +1264,19 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                       </div>
 
-                      <div style={{ padding: '1rem', background: '#fff', borderTop: '2px dashed #ccc' }}>
+                      <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.01)', borderTop: '2px dashed var(--border-color)', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
 
                          <div className="d-flex justify-between mb-4">
 
                             <b>TOTAL GERAL:</b>
 
-                            <b style={{ fontSize: '1.5rem' }}>R$ {carrinho.reduce((acc, i) => acc + (i.preco * i.quantidade), 0).toFixed(2)}</b>
+                            <b style={{ fontSize: '1.5rem', color: 'var(--primary-color)' }}>R$ {carrinho.reduce((acc, i) => acc + (i.preco * i.quantidade), 0).toFixed(2)}</b>
 
                          </div>
 
                          <button className="btn-primary w-full py-4" onClick={openQuickCheckout}>RECEBER AGORA</button>
 
-                         <button className="w-full mt-2" style={{ background: 'none', border: 'none', color: '#666', fontSize: '0.6rem' }} onClick={() => setCarrinho([])}>CANCELAR TUDO</button>
+                         <button className="w-full mt-2" style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600 }} onClick={() => setCarrinho([])}>CANCELAR TUDO</button>
 
                       </div>
 
@@ -1504,7 +1528,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                       <div className="card mb-4" style={{ padding: '1rem', border: '1px solid var(--primary-color)', background: 'rgba(212, 175, 55, 0.05)' }}>
 
-                         <h4 className="mb-3" style={{ fontSize: '0.8rem', color: 'var(--primary-color)' }}>DIVISíO POR PESSOA</h4>
+                         <h4 className="mb-3" style={{ fontSize: '0.8rem', color: 'var(--primary-color)' }}>DIVISÃO POR PESSOA</h4>
 
                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', maxHeight: '200px', overflowY: 'auto', paddingRight: '5px' }}>
 
@@ -1626,7 +1650,7 @@ export const Caixa = ({ isEmbedded = false }: { isEmbedded?: boolean }) => {
 
                          >
 
-                           ADICIONAR PAGAMENTOS DA DIVISíO
+                           ADICIONAR PAGAMENTOS DA DIVISÃO
 
                          </button>
 

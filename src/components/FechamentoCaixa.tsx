@@ -64,7 +64,7 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
           setOsNumber(activeTurno.os_number?.toString() || null);
         }
       } else {
-        const { data: activeTurno } = await supabase
+        const { data: activeTurno, error: activeError } = await supabase
           .from('turnos_caixa')
           .select('*')
           .eq('id', currentId)
@@ -74,6 +74,13 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
           setFundoTroco(activeTurno.fundo_troco.toString());
           setTurnoInicio(activeTurno.aberto_em);
           setOsNumber(activeTurno.os_number?.toString() || null);
+        } else {
+          console.warn("Turno do localStorage não existe no DB (deletado ou limpo). Limpando localmente...");
+          localStorage.removeItem('turno_id');
+          localStorage.removeItem('turno_inicio');
+          localStorage.removeItem('fundo_troco');
+          localStorage.removeItem('movimentacoes_caixa');
+          setTurnoId(null);
         }
       }
 
@@ -232,7 +239,7 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
         localStorage.removeItem('movimentacoes_caixa');
         
         if (onClose) onClose();
-        // Não chamamos signOut() aqui para manter o usurio logado, apenas voltamos para "Iniciar Jornada"
+        // Não chamamos signOut() aqui para manter o usuário logado, apenas voltamos para "Iniciar Jornada"
         
       } catch (err: any) {
         alert('Erro ao fechar turno no banco: ' + err.message);
@@ -299,7 +306,7 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
         ))}
       </div>
 
-      {/* Total + Ticket Médio - Somente gestáor */}
+      {/* Total + Ticket Médio - Somente gestor */}
       {isGestor && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
           <div style={{ ...cardStyle('212,175,55'), gridColumn: 'span 2' }}>
@@ -325,7 +332,7 @@ export const FechamentoCaixa = ({ historicoVendas, paymentTotals, onRefresh, onC
         </div>
       )}
 
-      {/* Movimentações - Somente gestáor */}
+      {/* Movimentações - Somente gestor */}
       {isGestor && (
         <>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

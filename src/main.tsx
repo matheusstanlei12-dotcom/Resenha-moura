@@ -19,7 +19,7 @@ window.onunhandledrejection = function (event) {
     event.preventDefault();
     return;
   }
-  // Loga ao invés de exibir alert() — menos intrusivo para o usurio
+  // Loga ao invés de exibir alert() — menos intrusivo para o usuário
   console.warn('⚠️ Unhandled rejection:', event.reason);
 };
 

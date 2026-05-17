@@ -132,7 +132,7 @@ export const CustomerApp = () => {
           <StarRating label="A vibe e o Ambiente?" rating={notaAmbiente} setRating={setNotaAmbiente} />
           
           <div style={{ marginTop: '1.5rem' }}>
-            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase' }}>Críticas ou Sugestáões? (Opcional)</div>
+            <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 600, textTransform: 'uppercase' }}>Críticas ou Sugestões? (Opcional)</div>
             <textarea 
               value={sugestáoes}
               onChange={e => setSugestáoes(e.target.value)}

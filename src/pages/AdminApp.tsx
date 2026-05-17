@@ -40,6 +40,32 @@ const formatCurrency = (val: number | string) => {
 
 };
 
+const parseRobustValue = (valStr: string) => {
+  const hasComma = valStr.includes(',');
+  const hasDot = valStr.includes('.');
+  if (hasComma && hasDot) {
+    const firstComma = valStr.indexOf(',');
+    const firstDot = valStr.indexOf('.');
+    if (firstComma < firstDot) {
+      return parseFloat(valStr.replace(/,/g, ''));
+    } else {
+      return parseFloat(valStr.replace(/\./g, '').replace(',', '.'));
+    }
+  } else if (hasComma) {
+    return parseFloat(valStr.replace(',', '.'));
+  } else if (hasDot) {
+    const parts = valStr.split('.');
+    const lastPart = parts[parts.length - 1];
+    if (lastPart.length === 3 && parts.length === 2) {
+      return parseFloat(valStr.replace(/\./g, ''));
+    } else {
+      return parseFloat(valStr);
+    }
+  } else {
+    return parseFloat(valStr);
+  }
+};
+
 type AdminTab = 'dashboard' | 'estoque' | 'mesas' | 'equipe' | 'avaliacoes' | 'entregues' | 'fechamento';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -644,9 +670,9 @@ export const Administracao = () => {
 
     } catch (err: any) {
 
-      console.error("ERRO CRÍTICO NA EXCLUSíO:", err);
+      console.error("ERRO CRÍTICO NA EXCLUSÃO:", err);
 
-      alert("⚠️ FALHA NA EXCLUSíO:\n\n" + (err.message || 'Erro desconhecido no banco de dados. Verifique se a tabela de auditoria existe.'));
+      alert("⚠️ FALHA NA EXCLUSÃO:\n\n" + (err.message || 'Erro desconhecido no banco de dados. Verifique se a tabela de auditoria existe.'));
 
     } finally {
 
@@ -690,21 +716,21 @@ export const Administracao = () => {
 
       if (!p.forma_pagamento) return;
 
-      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)\s*\(R\$([0-9.]+)\)/gi);
+      const matches = p.forma_pagamento.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)\s*\(R\$([0-9,.]+)\)/gi);
 
       if (matches) {
 
         matches.forEach((m: string) => {
 
-          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTíO)/i);
+          const typeMatch = m.match(/(PIX|DINHEIRO|DÉBITO|DEBITO|CRÉDITO|CREDITO|CARTAO|CARTÃO)/i);
 
-          const valMatch = m.match(/R\$([0-9.]+)/);
+          const valMatch = m.match(/R\$([0-9,.]+)/);
 
           if (typeMatch && valMatch) {
 
             const type = typeMatch[1].toUpperCase();
 
-            const val = parseFloat(valMatch[1]);
+            const val = parseRobustValue(valMatch[1]);
 
             if (type === 'PIX') totals.pix += val;
 
@@ -790,7 +816,7 @@ export const Administracao = () => {
 
           </div>
 
-          <div className="mobile-hide" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginTop: '2px' }}>ADMINISTRAÇíO</div>
+          <div className="mobile-hide" style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.3)', letterSpacing: '2px', marginTop: '2px' }}>ADMINISTRAÇÃO</div>
 
           <div className="mobile-hide" style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>
 
@@ -1608,7 +1634,7 @@ export const Administracao = () => {
 
                    <button onClick={() => setSelectedMesaComanda(null)} style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#fff', padding: '0.8rem 2.5rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', width: '100%' }}>
 
-                     FECHAR VISUALIZAÇíO
+                     FECHAR VISUALIZAÇÃO
 
                    </button>
 
