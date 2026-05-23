@@ -296,28 +296,6 @@ export const Garcom = () => {
 
   const handleExcluirItem = async (itemId: string, item: any) => {
 
-    const categoriasCriticas = ['PETISCO', 'PETISCOS', 'COZINHA', 'COQUETÉIS', 'COQUETEIS', 'COQUITEIS'];
-
-    const categoriaItem = (item.produtos?.categoria || '').toUpperCase();
-
-    const ehGestor = profile?.role === 'dono' || profile?.role === 'admin';
-
-    if (item.status === 'pronto' && !ehGestor) {
-
-      alert(`⚠️ BLOQUEADO: Item pronto.`);
-
-      return;
-
-    }
-
-    if (categoriasCriticas.includes(categoriaItem) && item.status !== 'pendente' && !ehGestor) {
-
-      alert(`⚠️ BLOQUEADO: Item em preparo.`);
-
-      return;
-
-    }
-
     if(!confirm(`Deseja excluir "${item.produtos?.nome}"?`)) return;
 
     const { error: deleteError } = await supabase.from('itens_pedido').delete().eq('id', itemId);

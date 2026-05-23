@@ -90,7 +90,8 @@ export const useCartStore = create<CartState>((set, get) => ({
       pedido_id: pedido.id,
       produto_id: i.id,
       quantidade: i.quantidade,
-      preco_unitario: i.preco
+      preco_unitario: i.preco,
+      status: 'entregue'
     }));
 
     await supabase.from('itens_pedido').insert(itensInsert);

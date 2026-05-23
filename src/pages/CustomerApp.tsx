@@ -119,6 +119,46 @@ export const CustomerApp = () => {
     setShowAvaliacao(false);
   };
 
+  // CARDÁPIO DESATIVADO TEMPORARIAMENTE
+  return (
+    <div style={{ 
+      minHeight: '100dvh', 
+      backgroundColor: '#121212', 
+      color: '#fff',
+      padding: '2rem 1.5rem', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center',
+      justifyContent: 'center',
+      textAlign: 'center',
+      fontFamily: "'Inter', sans-serif"
+    }}>
+      <div style={{ 
+        background: 'rgba(212, 175, 55, 0.05)',
+        border: '1px solid rgba(212, 175, 55, 0.2)',
+        borderRadius: '24px',
+        padding: '2.5rem 1.5rem',
+        maxWidth: '400px',
+        boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+      }}>
+        <div style={{ fontSize: '3.5rem', marginBottom: '1rem' }}>🛎️</div>
+        <h2 style={{ fontSize: '1.6rem', color: '#d4af37', fontWeight: 900, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          Cardápio Indisponível
+        </h2>
+        <p style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+          Estamos realizando algumas atualizações no sistema para melhor atendê-lo.
+        </p>
+        <p style={{ fontSize: '1.05rem', fontWeight: 800, color: '#fff' }}>
+          Por favor, solicite o atendimento diretamente ao garçom!
+        </p>
+      </div>
+      <footer style={{ marginTop: '2rem', opacity: 0.5, fontSize: '0.8rem' }}>
+        Resenha do Moura • Agradecemos a compreensão
+      </footer>
+    </div>
+  );
+
+  /* Código original desativado temporariamente:
   if (showAvaliacao) {
     return (
       <div style={{ minHeight: '100dvh', backgroundColor: 'var(--bg-color)', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
@@ -191,7 +231,6 @@ export const CustomerApp = () => {
         </footer>
       </main>
 
-      {/* Bottom Nav - Refined Mobile Layout */}
       <div style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, 
         backgroundColor: 'rgba(26, 26, 26, 0.95)',
@@ -239,4 +278,5 @@ export const CustomerApp = () => {
       `}</style>
     </div>
   );
+  */
 };

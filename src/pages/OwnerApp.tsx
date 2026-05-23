@@ -4846,8 +4846,6 @@ export const Dono = () => {
 
             { label: 'Caixa', path: '/caixa', emoji: '💳' },
 
-            { label: 'Cozinha / Bar', path: '/producao', emoji: '🍳' },
-
             { label: 'Administrador', path: '/admin', emoji: '⚠️' },
 
           ].map(({ label, path, emoji }) => (
