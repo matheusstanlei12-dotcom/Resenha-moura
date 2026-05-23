@@ -278,7 +278,7 @@ export const Administracao = () => {
 
   const handleCopyLink = (qrCode: string) => {
 
-    navigator.clipboard.writeText(`${window.location.origin}/c/${qrCode}`);
+    navigator.clipboard.writeText(`https://trusttecnologia.com.br/c/${qrCode}`);
 
     alert("Link copiado para o clipboard! 🔗");
 
@@ -290,7 +290,7 @@ export const Administracao = () => {
 
       const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a6' });
 
-      const url = `${window.location.origin}/c/${qrCode}`;
+      const url = `https://trusttecnologia.com.br/c/${qrCode}`;
 
       const img = new Image();
 
@@ -418,7 +418,7 @@ export const Administracao = () => {
 
         const m = mesas[i];
 
-        const url = `${window.location.origin}/c/${m.qr_code}`;
+        const url = `https://trusttecnologia.com.br/c/${m.qr_code}`;
 
         const img = new Image();
 
@@ -1294,7 +1294,7 @@ export const Administracao = () => {
 
                       <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginBottom: '1rem', wordBreak: 'break-all' }}>
 
-                        {window.location.origin}/c/{m.qr_code}
+                        trusttecnologia.com.br/c/{m.qr_code}
 
                       </div>
 

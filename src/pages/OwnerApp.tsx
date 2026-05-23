@@ -988,7 +988,7 @@ export const Dono = () => {
 
   const handleCopyLink = (qrCode: string) => {
 
-    const url = `${window.location.origin}/c/${qrCode}`;
+    const url = `https://trusttecnologia.com.br/c/${qrCode}`;
 
     navigator.clipboard.writeText(url);
 
@@ -1002,7 +1002,7 @@ export const Dono = () => {
 
       const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a6' });
 
-      const url = `${window.location.origin}/c/${qrCode}`;
+      const url = `https://trusttecnologia.com.br/c/${qrCode}`;
 
       const img = new Image();
 
@@ -1130,7 +1130,7 @@ export const Dono = () => {
 
         const m = mesas[i];
 
-        const url = `${window.location.origin}/c/${m.qr_code}`;
+        const url = `https://trusttecnologia.com.br/c/${m.qr_code}`;
 
         const img = new Image();
 
